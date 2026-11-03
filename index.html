@@ -451,8 +451,6 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
  --btn-exp:#ffffff;--btn-exp-ink:#000000;--btn-inc:#ffffff;--btn-inc-ink:#000000;--btn-tr:#d9d9d9;--btn-tr-ink:#000000;
  --band:#000000;--band-ink:#ffffff;--band-mute:rgba(255,255,255,.72);--band-line:rgba(255,255,255,.22);--band-active:#ffffff;--band-active-ink:#000000;--band-field:rgba(255,255,255,.1);
  --shadow:0 4px 18px rgba(0,0,0,.6);--sip:#d9d9d9;--sip-ink:#000000;color-scheme:dark}
-:root[data-igt="lg"] .brand{display:flex;align-items:center;gap:10px}
-:root[data-igt="lg"] .brandmark{display:block;height:34px;width:auto}
 :root[data-igt="lg"] .brand b{font-size:22px;letter-spacing:-.01em}
 :root[data-igt="lg"] #igSplash{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
 :root[data-igt="lg"] #igSplash img{display:block;width:150px;height:auto}
@@ -470,22 +468,81 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
  --btn-exp:#000000;--btn-exp-ink:#ffffff;--btn-inc:#000000;--btn-inc-ink:#ffffff;--btn-tr:#2b2b2b;--btn-tr-ink:#ffffff;
  --band:#ffffff;--band-ink:#0a0a0a;--band-mute:rgba(0,0,0,.62);--band-line:rgba(0,0,0,.16);--band-active:#000000;--band-active-ink:#ffffff;--band-field:rgba(0,0,0,.06);
  --shadow:0 2px 14px rgba(0,0,0,.08);--sip:#222222;--sip-ink:#ffffff;color-scheme:light}
-:root[data-igt="lg"][data-theme="light"] .brandmark,:root[data-igt="lg"][data-theme="light"] #igSplash img,:root[data-igt="lg"][data-theme="light"] #fbAuth img{filter:invert(1)}
+:root[data-igt="lg"][data-theme="light"] #igSplash img,:root[data-igt="lg"][data-theme="light"] #fbAuth img{filter:invert(1)}
 :root[data-igt="lg"][data-theme="light"] #igSplash{background:#ffffff}
 :root[data-igt="lg"][data-theme="light"] .card.acc>.chead h2::before,:root[data-igt="lg"][data-theme="light"] .igfab{background:#000000;color:#ffffff}
 :root[data-igt="lg"][data-theme="light"] .igs .ring{background:linear-gradient(135deg,#000000,#9a9a9a)}
 :root[data-igt="lg"][data-theme="light"] .tab[aria-current="page"]::after{background:#000000}
 :root[data-igt="lg"][data-theme="light"] .gi.warn{border-left-color:#b26a00}
 html{background:var(--bg)}
+/* ===== v11: header, theme menu and Settings redesign (tokens only, so every theme works in light and dark) ===== */
+.band-top{flex-wrap:nowrap;align-items:center;gap:12px;padding-block:14px 12px}
+.brand{display:flex;align-items:center;gap:11px;flex:1 1 auto;min-width:0;flex-wrap:nowrap}
+.brandmark{display:block;flex:none;height:34px;aspect-ratio:320/275;background:currentColor;color:var(--band-ink);-webkit-mask:url(icons/logo-mark.png) center/contain no-repeat;mask:url(icons/logo-mark.png) center/contain no-repeat}
+.bt{display:flex;flex-direction:column;min-width:0;line-height:1.1}
+.brand b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prof{display:block;max-width:100%;margin:3px 0 0;padding:0;border:0;background:none;color:var(--band-mute);font:500 12px/1.3 var(--font-body,inherit);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;border-radius:6px}
+.prof.empty{text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.prof:hover{color:var(--band-ink)}
+.hbtns{display:flex;align-items:center;gap:2px;flex:none;padding:3px;border-radius:15px;background:var(--band-field);border:1px solid var(--band-line)}
+.hbtns .themebtn{position:relative;width:34px;height:34px;border-radius:12px;border:0;background:transparent;color:var(--band-ink);transition:background .15s,transform .1s}
+.hbtns .themebtn:hover{background:var(--band-line)}
+.hbtns .themebtn:active{transform:scale(.93)}
+.hbtns .themebtn:focus-visible,.prof:focus-visible,#igSet .sbar button:focus-visible{outline:2px solid var(--band-ink);outline-offset:2px}
+.sync{padding:0 0 10px;font-size:12px;color:var(--band-mute)}
+.sync:empty{display:none}
+@media(max-width:430px){:root .band .brand b,:root[data-igt] .band .brand b{font-size:23px}}
+/* theme + more menus */
+#igMenu,#igMore{top:64px;right:12px;padding:8px;border-radius:20px;border:1px solid var(--line);background:var(--surface);box-shadow:0 18px 50px rgba(0,0,0,.28);animation:igpop .16s ease both}
+@keyframes igpop{from{opacity:0;transform:translateY(-6px) scale(.98)}}
+@media(prefers-reduced-motion:reduce){#igMenu,#igMore{animation:none}}
+#igMenu{min-width:260px;max-height:min(70vh,540px);overflow:auto}
+#igMenu button{padding:10px 12px;border-radius:14px;gap:12px}
+#igMenu i{width:36px;height:36px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(128,128,128,.35)}
+#igMenu b{font-size:14px}#igMenu small{font-size:12px}
+#igMenu em{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--surface);font-size:12px}
+#igMore{min-width:210px}
+#igMore button{padding:12px 14px;border-radius:14px;font-size:14px}
+#igMore button[data-m="out"]{margin-top:6px;border-top:1px solid var(--line);border-radius:0 0 14px 14px;color:var(--neg)}
+/* Settings and Themes screen */
+#igSet{background:var(--bg)}
+#igSet .sbar{gap:12px;padding:12px 16px;box-shadow:0 1px 0 var(--band-line)}
+#igSet .sbar button{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;border:1px solid var(--band-line);background:var(--band-field);font-size:0}
+#igSet .sbar b{font-size:19px;font-weight:700;letter-spacing:-.01em}
+#igSet .sw{max-width:640px;padding:18px 16px 24px;display:grid;gap:16px}
+#igSet .card{margin:0;padding:18px;border-radius:20px;border:1px solid var(--line);background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+#igSet .card:hover{box-shadow:0 1px 2px rgba(0,0,0,.06);transform:none}
+#igSet .card::before{display:none}
+#igSet .chead{margin-bottom:6px}
+#igSet .card h2{font-size:12px;letter-spacing:.1em;color:var(--muted)}
+#igSet .srow{padding:13px 0;gap:12px;border-bottom:1px solid var(--line)}
+#igSet .srow small{font-size:12px;margin-top:2px}
+#igSet .tag{padding:3px 9px;font-size:11px;font-weight:600;margin-left:8px}
+#igSet .sform{gap:12px;margin-top:12px}
+#igSet label.fl{display:grid;gap:6px;font-size:12px;font-weight:600;color:var(--ink-2)}
+#igSet input,#igSet select{min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);transition:border-color .15s,box-shadow .15s}
+#igSet input:focus,#igSet select:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--glow,rgba(128,128,128,.3))}
+#igSet .btn2{min-height:40px;padding:9px 16px;border-radius:999px;font-weight:600;transition:background .15s}
+#igSet .btn2:hover{background:var(--hover)}
+#igSet .btn2:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#igSet .srow>.btn2[data-s="theme"]{min-height:56px;padding:8px 10px;border:0;border-radius:14px;background:none}
+#igSet .srow>.btn2[data-s="theme"] i{width:38px!important;height:38px!important;border-radius:12px!important;box-shadow:inset 0 0 0 1px rgba(128,128,128,.35)}
+#igSet .srow>.btn2[data-s="theme"] small{font-weight:400;color:var(--muted)}
+#igSet .srow:has(>b){background:var(--hover);border-radius:14px;padding-inline:6px;border-bottom-color:transparent}
+#igSet .srow>b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--surface)!important;font-size:13px}
+#igSet input[type=color]{width:52px;min-height:38px;border-radius:10px;padding:2px}
+#igSet input[type=checkbox]{width:22px;min-height:22px;accent-color:var(--accent)}
+#igSet .fine{color:var(--muted);line-height:1.5}
 </style>
 </head><body>
 <div id="igSplash" aria-hidden="true"><img src="icons/logo-mark.png" alt=""><span>My Wallet</span></div>
 <header class="band">
   <div class="wrap">
     <div class="band-top">
-      <div class="brand"><img class="brandmark" src="icons/logo-mark.png" alt=""><b>My Wallet</b><span>Income &amp; expense ledger · OMR / INR</span></div>
-      <div style="display:flex;align-items:center;gap:10px"><div class="sync" id="sync"></div><button class="themebtn" id="igDueBtn" type="button" hidden aria-label="Payments due" style="position:relative;order:8"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="4"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/></svg><span class="dueb" id="igDueN">0</span></button><button class="themebtn" id="igMoreBtn" type="button" aria-label="More options" style="order:9"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button><button class="themebtn" id="igThemeBtn" type="button" aria-label="Choose app theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/><circle cx="15.5" cy="10" r="1" fill="currentColor"/></svg></button><button class="themebtn" id="themebtn" type="button" aria-label="Switch between day and night mode"></button></div>
+      <div class="brand"><i class="brandmark" aria-hidden="true"></i><div class="bt"><b>My Wallet</b><button type="button" class="prof" id="prof"></button></div><span>Income &amp; expense ledger · OMR / INR</span></div>
+      <div class="hbtns"><button class="themebtn" id="igDueBtn" type="button" hidden aria-label="Payments due" style="position:relative;order:8"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="4"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/></svg><span class="dueb" id="igDueN">0</span></button><button class="themebtn" id="igMoreBtn" type="button" aria-label="More options" style="order:9"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button><button class="themebtn" id="igThemeBtn" type="button" aria-label="Choose app theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/><circle cx="15.5" cy="10" r="1" fill="currentColor"/></svg></button><button class="themebtn" id="themebtn" type="button" aria-label="Switch between day and night mode"></button></div>
     </div>
+    <div class="sync" id="sync"></div>
     <nav class="tabs" id="tabs" aria-label="Pages">
       <button class="tab" type="button" data-tab="entry">Entry</button>
       <button class="tab" type="button" data-tab="analysis">Analysis</button>
@@ -2615,8 +2672,8 @@ function setBal(a){return curs(a).map(function(c){return money(balanceOf(a,c,tod
 var setMode='set';
 function renderSet(){
   var p=SET.profile||{},act=actAccs().filter(function(a){return a!=='Cash'}),cl=ACCS.filter(function(a){return SET.closed.indexOf(a)>-1});
-  setEl.innerHTML='<div class="sbar"><button type="button" data-s="close" aria-label="Back">\u2190</button><b>Settings</b></div><div class="sw">'+
-  '<div class="card"><div class="chead"><h2>Personal details</h2></div><div class="sform"><input id="spName" placeholder="Your name" maxlength="40" value="'+esc(p.name||'')+'"><input id="spCountry" placeholder="Country you live in" maxlength="40" value="'+esc(p.country||'')+'"></div><div style="margin-top:10px"><button class="btn2" type="button" data-s="saveprof">Save</button> <span class="fine" id="spMsg"></span></div><p class="fine">Saved on this device only.</p></div>'+
+  setEl.innerHTML='<div class="sbar"><button type="button" data-s="close" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>Settings</b></div><div class="sw">'+
+  '<div class="card"><div class="chead"><h2>Personal details</h2></div><div class="sform"><label class="fl">Name<input id="spName" placeholder="Your name" maxlength="40" value="'+esc(p.name||'')+'"></label><label class="fl">Country<input id="spCountry" placeholder="Country you live in" maxlength="40" value="'+esc(p.country||'')+'"></label></div><div style="margin-top:10px"><button class="btn2" type="button" data-s="saveprof">Save</button> <span class="fine" id="spMsg"></span></div></div>'+
   themesHtml()+'<div class="card"><div class="chead"><h2>Accounts</h2></div>'+
   '<div class="srow"><span>Cash<span class="tag">OMR + INR</span><small>'+setBal('Cash')+'</small></span></div>'+
   act.map(function(a){return '<div class="srow"><span>'+esc(a)+'<span class="tag">'+curs(a).join(' + ')+'</span><small>Balance '+setBal(a)+'</small></span><button class="btn2" type="button" data-s="closeacc" data-a="'+esc(a)+'">Close</button></div>'}).join('')+
@@ -2639,7 +2696,7 @@ function afterAcc(){
 setEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-s]');if(!b)return;var k=b.dataset.s,a=b.dataset.a;
   if(k==='close'){setEl.hidden=true}
-  else if(k==='saveprof'){SET.profile={name:$('#spName').value.trim(),country:$('#spCountry').value.trim()};setSave();$('#spMsg').textContent='Saved'}
+  else if(k==='saveprof'){SET.profile={name:$('#spName').value.trim(),country:$('#spCountry').value.trim()};setSave();paintProfile();$('#spMsg').textContent='Saved'}
   else if(k==='addacc'){
     var n=$('#saName').value.trim().replace(/\s+/g,' '),m=$('#saMsg');
     if(n.length<2){m.textContent='Enter an account name.';return}
@@ -2721,6 +2778,14 @@ function ctSaveForm(){
   CTD=null;ctSave();igSetTheme(t.id);renderSet();
 }
 ctApply();igMenuPaint();igSetTheme(igCur());
+/* header profile line: name and country from Settings, updates the moment they are saved */
+function paintProfile(){
+  var el=document.getElementById('prof');if(!el)return;
+  var p=SET.profile||{},t=[(p.name||'').trim(),(p.country||'').trim()].filter(Boolean).join(' \u00b7 ');
+  el.textContent=t||'Set your profile';el.classList.toggle('empty',!t);el.title=t?'Edit in Settings':'Add your name and country in Settings';
+}
+document.getElementById('prof').addEventListener('click',function(){setMode='set';renderSet();setEl.hidden=false;setEl.scrollTop=0});
+paintProfile();
 function render(){
   ensurePlans();
   renderRecent();
@@ -2737,7 +2802,7 @@ function render(){
   var nt=$('#notice');
   if(S.mode==='local'){nt.hidden=false;nt.textContent='Entries are kept on this device only. Open the link while signed in to claude.ai to save them to your wallet and see them on every device.'}
   else nt.hidden=true;
-  $('#sync').textContent=S.mode==='cloud'?(navigator.onLine===false?'Offline. Saved on this device':'Synced to your account'):S.mode==='local'?'This device only':'';
+  paintProfile();$('#sync').textContent=S.mode==='cloud'?(navigator.onLine===false?'Offline. Saved on this device':''):S.mode==='local'?'This device only':'';
   if(S.bc.mode==='show'||S.bc.mode==='cred'||S.bc.mode==='debt')paintBC();
   if(S.ftype==='transfer'&&S.tab==='entry')paintTransfer();
 }
