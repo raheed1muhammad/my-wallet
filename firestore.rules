@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Secret sign-up code lives here. Nobody can read or write it from the app.
+    // Only the database owner edits it in the Firebase console.
+    match /config/{any} {
+      allow read, write: if false;
+    }
+
+    // A user becomes "invited" by supplying the correct code, checked on the server.
+    match /invited/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['code'])
+        && request.resource.data.code is string
+        && request.resource.data.code == get(/databases/$(database)/documents/config/signup).data.code;
+      allow update, delete: if false;
+    }
+
+    // Each user can only touch their own space, and only after being invited.
+    match /users/{uid}/{path=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid
+        && exists(/databases/$(database)/documents/invited/$(uid));
+    }
+  }
+}
