@@ -12,7 +12,7 @@
 window.__dbP=new Promise(function(r){window.__dbRes=r});
 window.claude={use:function(n){return n==='db'?window.__dbP:Promise.resolve(null)}};
 </script>
-<script>try{var t=localStorage.getItem("mywallet.igtheme"),c=localStorage.getItem("mywallet.customcss");if(c){var st=document.createElement("style");st.id="igCustom";st.textContent=c;document.documentElement.appendChild(st)}if(!t)t="lg";if(t==="lg"||t==="wa"||t==="tg"||t==="fb"||t==="sc"||t==="x"||/^c_/.test(t))document.documentElement.setAttribute("data-igt",t)}catch(e){}</script>
+<script>try{if(localStorage.getItem("mywallet.themev")!=="2"){localStorage.removeItem("mywallet.igtheme");localStorage.setItem("mywallet.themev","2")}var t=localStorage.getItem("mywallet.igtheme"),c=localStorage.getItem("mywallet.customcss");if(c){var st=document.createElement("style");st.id="igCustom";st.textContent=c;document.documentElement.appendChild(st)}if(!t)t="lg";if(t==="lg"||t==="wa"||t==="tg"||t==="fb"||t==="sc"||t==="x"||/^c_/.test(t))document.documentElement.setAttribute("data-igt",t)}catch(e){}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Nunito:wght@400;600;800&family=Montserrat:wght@400;500;700&family=Poppins:wght@400;500;700&family=Roboto:wght@400;500;700&family=Fredoka:wght@400;600&family=Inter:wght@400;500;800&display=swap">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -464,6 +464,19 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 :root[data-igt="lg"] .igfab{background:#ffffff;color:#000000}
 :root[data-igt="lg"] .tab[aria-current="page"]::after{background:#ffffff}
 :root[data-igt="lg"] .gi.warn{border-left-color:#ffd166}
+:root[data-igt="lg"][data-theme="light"]{--glow:rgba(0,0,0,.2);--on-grad:#fff;--grad:linear-gradient(135deg,#000000,#4a4a4a);--g1:#000000;--g2:#4a4a4a;--g3:#8a8a8a;--i1:#000000;--i2:#4a4a4a;--e1:#8a8a8a;--e2:#c62828;
+ --bg:#f3f3f3;--surface:#ffffff;--surface-2:#f0f0f0;--hover:rgba(0,0,0,.06);--ink:#0a0a0a;--ink-2:#3a3a3a;--muted:#666666;--line:#dcdcdc;--axis:#c4c4c4;
+ --accent:#000000;--inc:#111111;--exp:#8f8f8f;--pos:#0a7d4b;--neg:#c62828;--tr:#444444;
+ --btn-exp:#000000;--btn-exp-ink:#ffffff;--btn-inc:#000000;--btn-inc-ink:#ffffff;--btn-tr:#2b2b2b;--btn-tr-ink:#ffffff;
+ --band:#ffffff;--band-ink:#0a0a0a;--band-mute:rgba(0,0,0,.62);--band-line:rgba(0,0,0,.16);--band-active:#000000;--band-active-ink:#ffffff;--band-field:rgba(0,0,0,.06);
+ --shadow:0 2px 14px rgba(0,0,0,.08);--sip:#222222;--sip-ink:#ffffff;color-scheme:light}
+:root[data-igt="lg"][data-theme="light"] .brandmark,:root[data-igt="lg"][data-theme="light"] #igSplash img,:root[data-igt="lg"][data-theme="light"] #fbAuth img{filter:invert(1)}
+:root[data-igt="lg"][data-theme="light"] #igSplash{background:#ffffff}
+:root[data-igt="lg"][data-theme="light"] .card.acc>.chead h2::before,:root[data-igt="lg"][data-theme="light"] .igfab{background:#000000;color:#ffffff}
+:root[data-igt="lg"][data-theme="light"] .igs .ring{background:linear-gradient(135deg,#000000,#9a9a9a)}
+:root[data-igt="lg"][data-theme="light"] .tab[aria-current="page"]::after{background:#000000}
+:root[data-igt="lg"][data-theme="light"] .gi.warn{border-left-color:#b26a00}
+html{background:var(--bg)}
 </style>
 </head><body>
 <div id="igSplash" aria-hidden="true"><img src="icons/logo-mark.png" alt=""><span>My Wallet</span></div>
@@ -943,11 +956,12 @@ function savePrefs(){try{localStorage.setItem(PK,JSON.stringify({tab:S.tab,av:S.
 
 /* ---------- day / night mode ---------- */
 if(S.theme)document.documentElement.setAttribute('data-theme',S.theme);
-function effTheme(){var t=document.documentElement.getAttribute('data-theme');if(t==='light'||t==='dark')return t;return window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
+function effTheme(){var t=document.documentElement.getAttribute('data-theme');if(document.documentElement.getAttribute('data-igt')==='lg')return t==='light'?'light':'dark';if(t==='light'||t==='dark')return t;return window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
 function paintTheme(){
   var dark=effTheme()==='dark',b=document.getElementById('themebtn');if(!b)return;
   b.innerHTML=dark?'<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="3.6"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4"/></svg>':'<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 11.8A7 7 0 0 1 8.2 3.5a7 7 0 1 0 8.3 8.3z"/></svg>';
   b.title=dark?'Switch to day mode':'Switch to night mode';
+  if(document.documentElement.getAttribute('data-igt')==='lg'){var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.content=dark?'#000000':'#ffffff'}
 }
 document.getElementById('themebtn').addEventListener('click',function(){
   S.theme=effTheme()==='dark'?'light':'dark';

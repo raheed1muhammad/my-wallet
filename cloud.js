@@ -66,7 +66,7 @@ $e('fbForm').addEventListener('submit',function(ev){
 
 /* ---------- per-user local cleanup ---------- */
 function wipeLocal(){
-  try{Object.keys(localStorage).forEach(function(k){if(k.indexOf('mywallet.')===0&&k!=='mywallet.igtheme'&&k!=='mywallet.customthemes'&&k!=='mywallet.customcss')localStorage.removeItem(k)})}catch(e){}
+  try{Object.keys(localStorage).forEach(function(k){if(k.indexOf('mywallet.')===0&&k!=='mywallet.igtheme'&&k!=='mywallet.themev'&&k!=='mywallet.customthemes'&&k!=='mywallet.customcss')localStorage.removeItem(k)})}catch(e){}
 }
 function doSignOut(){signOut(auth).then(function(){wipeLocal();try{sessionStorage.removeItem(RELOADK)}catch(e){}location.reload()}).catch(function(){location.reload()})}
 
