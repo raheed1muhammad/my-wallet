@@ -50,7 +50,7 @@ $e('fbForm').addEventListener('submit',function(ev){
   if(view==='code'){
     var code=$e('fbCode').value.trim();if(!code){setMsg('Enter the sign-up code.');return}
     go.disabled=true;
-    setDoc(doc(fs,'invited',UID),{code:code}).then(function(){begin()}).catch(function(e){done();setMsg(friendly(e))});return;
+    setDoc(doc(fs,'invited',UID),{code:code}).then(function(){try{localStorage.setItem(INVK,UID)}catch(e){}begin()}).catch(function(e){done();setMsg(friendly(e))});return;
   }
   if(!em){setMsg('Enter your email.');return}
   if(view==='reset'){go.disabled=true;sendPasswordResetEmail(auth,em).then(function(){done();setMsg('Reset link sent. Check your email (also spam).',true)}).catch(function(e){done();setMsg(friendly(e))});return}
@@ -74,7 +74,8 @@ function doSignOut(){signOut(auth).then(function(){wipeLocal();try{sessionStorag
 function uref(path){return doc.apply(null,[fs,'users',UID].concat(path.split('/')))}
 function cref(name){return collection(fs,'users',UID,name)}
 function clean(v){return JSON.parse(JSON.stringify(v))}
-function soft(p){return new Promise(function(res,rej){var t=setTimeout(res,4000);p.then(function(){clearTimeout(t);res()},function(e){clearTimeout(t);rej(e)})})}
+function soft(p){if(navigator.onLine===false){p.catch(function(){});return Promise.resolve()}
+  return new Promise(function(res,rej){var t=setTimeout(res,4000);p.then(function(){clearTimeout(t);res()},function(e){clearTimeout(t);rej(e)})})}
 function dsnap(d){return{id:d.id,exists:true,data:function(){return clean(d.data())}}}
 function dbObj(){
   function docRef(r){return{
@@ -95,7 +96,7 @@ function begin(){
     wipeLocal();try{localStorage.setItem(UIDK,UID);sessionStorage.removeItem(RELOADK)}catch(e){}
     if(prev!==null){location.reload();return}
   }
-  getDoc(uref('settings/app')).then(function(s){
+  timeout(getDoc(uref('settings/app')),3000).then(function(s){
     var cloud=s.exists()?s.data().set:null,local=null;
     try{local=localStorage.getItem(SETK)}catch(e){}
     if(cloud&&cloud!==local){
@@ -111,14 +112,17 @@ function ready(){
   window.__cloud={email:EMAIL,signOut:doSignOut,exportData:exportData,importData:importData};
   window.__dbRes(dbObj());
 }
-var started=false;
+var started=false,INVK='mywallet.invok';
+function timeout(p,ms){return Promise.race([p,new Promise(function(_,j){setTimeout(function(){j(new Error('timeout'))},ms)})])}
 onAuthStateChanged(auth,function(user){
   if(!user){UID=null;EMAIL='';started=false;showAuth('login');return}
   UID=user.uid;EMAIL=user.email||'';
   if(started)return;
-  getDoc(doc(fs,'invited',UID)).then(function(s){
-    if(s.exists()){started=true;begin()}else showAuth('code')
-  }).catch(function(e){showAuth('login','Cannot reach the server. Check your internet and reload.')});
+  var known=false;try{known=localStorage.getItem(INVK)===UID}catch(e){}
+  if(known){started=true;begin();return}
+  timeout(getDoc(doc(fs,'invited',UID)),8000).then(function(s){
+    if(s.exists()){try{localStorage.setItem(INVK,UID)}catch(e){}started=true;begin()}else showAuth('code')
+  }).catch(function(e){showAuth('login','Cannot reach the server. Connect to the internet once to sign in.')});
 });
 
 /* ---------- backup: export / import ---------- */

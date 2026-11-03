@@ -2700,7 +2700,7 @@ function render(){
   var nt=$('#notice');
   if(S.mode==='local'){nt.hidden=false;nt.textContent='Entries are kept on this device only. Open the link while signed in to claude.ai to save them to your wallet and see them on every device.'}
   else nt.hidden=true;
-  $('#sync').textContent=S.mode==='cloud'?'Synced to your account':S.mode==='local'?'This device only':'';
+  $('#sync').textContent=S.mode==='cloud'?(navigator.onLine===false?'Offline. Saved on this device':'Synced to your account'):S.mode==='local'?'This device only':'';
   if(S.bc.mode==='show'||S.bc.mode==='cred'||S.bc.mode==='debt')paintBC();
   if(S.ftype==='transfer'&&S.tab==='entry')paintTransfer();
 }
@@ -3435,6 +3435,8 @@ $('#rec-list').addEventListener('click',function(ev){
   else if(y){var id=y.dataset.recYes;S.recDel=null;recDeleteOne(id).then(function(){toast('Recurring deleted');render()}).catch(function(e){toast(failMsg(e))});renderRecurring()}
 });
 
+window.addEventListener('offline',function(){toast('You are offline. Entries are saved on this device and sync later.');render()});
+window.addEventListener('online',function(){toast('Back online. Syncing your entries.');render()});
 /* ---------- init ---------- */
 S.amonth=curMk();plLoadLocal();fillAccountSelects();buildObRows();
 $('#to').value='Cash';$('#from').value='Federal Bank';
