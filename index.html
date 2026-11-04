@@ -598,7 +598,7 @@ body.ent #tabs{display:none}
 #notice,.sync{display:none}
 html body .trio{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 html body .trio>.htl:last-child:nth-child(odd){grid-column:1/-1}
-.htl.full{grid-column:1/-1}.htl .v.neg{color:var(--neg,#d93a3a)}
+.lg4{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:4px}.lg4 i{font-style:normal;font-size:10px;font-weight:600;color:var(--muted)}.lg4 b{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere}.lg4 b.pos{color:var(--pos)}.lg4 b.neg{color:var(--neg)}.htl .v.neg{color:var(--neg,#d93a3a)}
 .htl .v.s .num{font-size:16px;font-weight:700;display:block}
 </style>
 </head><body>
@@ -3635,10 +3635,10 @@ function renderHome(){
   +'<div class="qgrid">'+Q.map(function(q){return '<button type="button" class="qa" data-qa="'+q[0]+'"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+q[2]+'</svg></span>'+q[1]+'</button>'}).join('')+'</div>'
   +'<div class="hh"><b>This month</b><span>'+esc(mon)+'</span></div>'
   +'<div class="tiles"><div class="htl"><span class="lab">Spend</span><div class="v">−'+fnum(a.exp,'OMR')+'</div></div><div class="htl"><span class="lab">Income</span><div class="v pos">+'+fnum(a.inc,'OMR')+'</div></div>'
-  +'</div><div class="hh"><b>Loans</b><span>Right now</span></div><div class="tiles">'
-  +['owed','owe'].map(function(k){return ['OMR','INR'].map(function(c){var v=rnd(lt[k][c],c);return '<div class="htl"><span class="lab">'+(k==='owed'?'To receive':'To pay')+' · '+(c==='OMR'?'OMR':'₹ INR')+'</span><div class="v '+(k==='owed'?'pos':'neg')+'">'+(v?(k==='owed'?'+':'−')+fnum(v,c):fnum(0,c))+'</div></div>'}).join('')}).join('')
-  +'</div><div class="hh"><b>SIP</b><span>'+esc(mon)+'</span></div><div class="tiles">'
-  +'<div class="htl full"><span class="lab">Invested / target</span><div><div class="v s">'+(tg>0?'₹ '+fnum(si.inv,'INR').replace(/\.00$/,'')+' / '+fnum(tg,'INR').replace(/\.00$/,''):money(si.inv,'INR'))+'</div><div class="bar"><i style="width:'+pct.toFixed(0)+'%"></i></div></div></div></div>'
+  +'<div class="htl"><span class="lab">Loans</span><div class="lg4"><i>OMR</i><i>₹ INR</i>'
+  +['owed','owe'].map(function(k){return ['OMR','INR'].map(function(c){var v=rnd(lt[k][c],c),t=v?(k==='owed'?'+':'−')+fnum(v,c).replace(/\.00$/,''):'0';return '<b class="'+(v?(k==='owed'?'pos':'neg'):'')+'">'+t+'</b>'}).join('')}).join('')
+  +'</div></div>'
+  +'<div class="htl"><span class="lab">SIP</span><div><div class="v s">'+(tg>0?'₹ '+fnum(si.inv,'INR').replace(/\.00$/,'')+' / '+fnum(tg,'INR').replace(/\.00$/,''):money(si.inv,'INR'))+'</div><div class="bar"><i style="width:'+pct.toFixed(0)+'%"></i></div></div></div></div>'
   +'<div class="hh"><b>Recent entries</b><button type="button" class="lnk" data-qa="ledger">See all</button></div><div id="hrecent"></div>';
   renderRecent();
 }
