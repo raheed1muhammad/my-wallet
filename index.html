@@ -601,13 +601,30 @@ html body .trio>.htl:last-child:nth-child(odd){grid-column:1/-1}
 .lg4{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:4px}.lg4 i{font-style:normal;font-size:10px;font-weight:600;color:var(--muted)}.lg4 b{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere}.lg4 b.pos{color:var(--pos)}.lg4 b.neg{color:var(--neg)}.htl .v.neg{color:var(--neg,#d93a3a)}
 .htl .v.s .num{font-size:16px;font-weight:700;display:block}
 </style>
+<style id="xchcss">
+/* Exchange page */
+#xch{max-width:560px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:14px}
+.xhero{padding:18px 20px;border-radius:24px;background:var(--ink);color:var(--surface)}
+:root[data-igt]:not([data-igt=lg]) .xhero{background:var(--grad,var(--accent));color:var(--on-grad,#fff)}
+.xhero .xl{font-size:13px;font-weight:600;opacity:.75}.xhero .xv{font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:2px}.xhero .xs{font-size:12.5px;opacity:.85;margin-top:4px}
+.xc{display:flex;flex-direction:column;gap:12px}.xc .chead{margin:0}
+.xrow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}.xrow>*{flex:1 1 130px;min-width:0}
+.xout{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--hover);border-radius:14px;padding:12px 14px}.xout b{font-size:22px}
+.xprov{display:grid;grid-template-columns:1fr 100px;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.xnm{font-weight:650;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.xprov input{text-align:right;min-height:40px}
+.xres{grid-column:1/-1;display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.xtag{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--hover);color:var(--muted)}.xtag.best{background:var(--ink);color:var(--surface)}
+.xvd{font-weight:650;background:var(--hover);border-radius:12px;padding:10px 12px}.xsp{color:var(--accent)}
+.xst{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.xst>div{background:var(--hover);border-radius:12px;padding:8px 10px;min-width:0}.xst i{display:block;font-style:normal;font-size:11px;color:var(--muted);font-weight:600}.xst b{font-size:13px;font-variant-numeric:tabular-nums}
+#xch .neg{color:var(--neg,#b3261e)}
+</style>
 </head><body>
 <div id="igSplash" aria-hidden="true"><img src="icons/logo-mark.png" alt=""><span>My Wallet</span></div>
 <header class="band">
   <div class="wrap">
     <div class="band-top">
       <div class="brand"><i class="brandmark" aria-hidden="true"></i><div class="bt"><b>My Wallet</b><button type="button" class="prof" id="prof"></button></div><span>Income &amp; expense ledger · OMR / INR</span></div>
-      <div class="hbtns"><button class="themebtn" id="igDueBtn" type="button" hidden aria-label="Payments due" style="position:relative;order:8"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="4"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/></svg><span class="dueb" id="igDueN">0</span></button><button class="themebtn" id="igMoreBtn" type="button" aria-label="More options" style="order:9"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button><button class="themebtn" id="igThemeBtn" type="button" aria-label="Choose app theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/><circle cx="15.5" cy="10" r="1" fill="currentColor"/></svg></button><button class="themebtn" id="themebtn" type="button" aria-label="Switch between day and night mode"></button></div>
+      <div class="hbtns"><button class="themebtn" id="xchBtn" type="button" aria-label="Exchange" style="order:7;font-size:17px;line-height:1"><span aria-hidden="true">💱</span></button><button class="themebtn" id="igDueBtn" type="button" hidden aria-label="Payments due" style="position:relative;order:8"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="4"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/></svg><span class="dueb" id="igDueN">0</span></button><button class="themebtn" id="igMoreBtn" type="button" aria-label="More options" style="order:9"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button><button class="themebtn" id="igThemeBtn" type="button" aria-label="Choose app theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/><circle cx="15.5" cy="10" r="1" fill="currentColor"/></svg></button><button class="themebtn" id="themebtn" type="button" aria-label="Switch between day and night mode"></button></div>
     </div>
     <div class="sync" id="sync"></div>
     <nav class="tabs" id="tabs" aria-label="Pages">
@@ -625,6 +642,7 @@ html body .trio>.htl:last-child:nth-child(odd){grid-column:1/-1}
   <div class="notice" id="notice" hidden style="margin-bottom:16px"></div>
 
   <section class="page" id="p-home" aria-label="Home"><div id="home"></div></section>
+  <section class="page" id="p-exchange" aria-label="Exchange" hidden><div id="xch"></div></section>
   <!-- PAGE 1: ENTRY -->
   <section class="page" id="p-entry" aria-label="Entry">
     <div class="two">
@@ -2593,8 +2611,8 @@ $('#bal').addEventListener('click',function(ev){var b=ev.target.closest('[data-b
 
 /* ---------- Navigation: four main pages, sub headings inside ---------- */
 var SUBS={analysis:[['analysis','Income & expense'],['graph','Graph'],['sip','SIP'],['plan','Plan'],['loans','Loans'],['recurring','Recurring'],['tools','Tools']],balance:[['acc','Balances'],['cred','Creditor'],['debt','Debtor']]};
-var PAGES=['home','entry','analysis','ledger','loans','graph','sip','plan','balance','recurring','tools'];
-function groupOf(t){return t==='home'?'home':t==='entry'?'entry':t==='ledger'?'ledger':t==='balance'?'balance':'analysis'}
+var PAGES=['home','exchange','entry','analysis','ledger','loans','graph','sip','plan','balance','recurring','tools'];
+function groupOf(t){return t==='exchange'?'exchange':t==='home'?'home':t==='entry'?'entry':t==='ledger'?'ledger':t==='balance'?'balance':'analysis'}
 function paintSubnav(){
   var g=groupOf(S.tab),list=SUBS[g],el=$('#subnav');
   el.hidden=!list;if(!list){el.innerHTML='';return}
@@ -2863,6 +2881,7 @@ function render(){
   renderRecent();
   if(S.tab==='analysis'){renderAnalysis();igIns();igTagCard()}
   if(S.tab==='home')renderHome();
+  if(S.tab==='exchange')renderExchange();
   if(S.tab==='entry')catChips();
   if(S.tab==='ledger')renderLedger();
   if(S.tab==='loans')renderLoans();
@@ -3146,6 +3165,131 @@ async function refreshRates(){
   render();
 }
 $('#refresh').addEventListener('click',refreshRates);
+
+/* ---------- Exchange page (header 💱). Mid-market rate from a free API, provider rates typed by hand, saved on this device only. ---------- */
+var XK='mywallet.xch.v1',XKEY='mywallet.xchkey',XPROV=[['LuLu Exchange','lulu'],['UAE Exchange','uae'],['Xpress Money','xpress'],['Western Union','wu'],['Bank Muscat','bm']];
+var X={dir:'OMR',amt:'100',src:'best',custom:'',rates:{},hist:[],mid:null,busy:false,msg:''};
+try{var xs=JSON.parse(localStorage.getItem(XK)||'null');if(xs){X.rates=xs.rates||{};X.hist=Array.isArray(xs.hist)?xs.hist.filter(function(p){return p&&p.r>0&&typeof p.d==='string'}):[];X.mid=xs.mid&&xs.mid.r>0?xs.mid:null}}catch(e){}
+function xSave(){try{localStorage.setItem(XK,JSON.stringify({rates:X.rates,hist:X.hist,mid:X.mid}))}catch(e){}}
+function xNum(v){var n=parseFloat(String(v).replace(/,/g,''));return isFinite(n)?n:0}
+function xList(){return XPROV.map(function(p){return {n:p[0],k:p[1],r:xNum(X.rates[p[1]])}}).filter(function(x){return x.r>0}).sort(function(a,b){return b.r-a.r})}
+function xMid(){return X.mid&&X.mid.r>0?X.mid.r:rateFor(todayStr())}
+function xRate(){if(X.src==='mid')return xMid();if(X.src==='custom')return xNum(X.custom);var b=xList()[0];return b?b.r:0}
+function xI(v){return FMT.INR.format(v)}
+function xI4(v){return new Intl.NumberFormat('en-IN',{minimumFractionDigits:2,maximumFractionDigits:4}).format(v)}
+async function xFetchMid(force){
+  if(X.busy)return;
+  var age=X.mid?Date.now()-X.mid.t:Infinity;
+  if(age<36e5){if(force){X.msg='Updated '+Math.max(1,Math.round(age/6e4))+' min ago. This rate changes once a day.';xUpd()}return}
+  X.busy=true;X.msg='Fetching rate…';xUpd();
+  var key='';try{key=localStorage.getItem(XKEY)||''}catch(e){}
+  var urls=[];
+  if(/^[A-Za-z0-9]{16,40}$/.test(key))urls.push(['https://v6.exchangerate-api.com/v6/'+key+'/pair/OMR/INR','pair','ExchangeRate-API, your key']);
+  urls.push(['https://open.er-api.com/v6/latest/OMR','latest','ExchangeRate-API open']);
+  var got=null;
+  for(var i=0;i<urls.length&&!got;i++){
+    try{
+      var ctl=new AbortController(),to=setTimeout(function(){ctl.abort()},8000);
+      var res=await fetch(urls[i][0],{signal:ctl.signal,cache:'no-store'});clearTimeout(to);
+      if(!res.ok)throw 0;
+      var j=await res.json(),r=Number(urls[i][1]==='pair'?j.conversion_rate:(j.rates&&j.rates.INR));
+      if(j.result&&j.result!=='success')throw 0;
+      if(r>50&&r<1000)got={r:r,t:Date.now(),src:urls[i][2]};
+    }catch(e){}
+  }
+  X.busy=false;
+  if(got){X.mid=got;X.msg='';xSave()}else X.msg='Live rate not available now. Using your last saved rate.';
+  if(S.tab==='exchange')renderExchange(true);
+}
+function xPos(){
+  var b=xList()[0];if(!b)return null;
+  var past=X.hist.filter(function(p){return p.d!==todayStr()}).slice(-29).map(function(p){return p.r});
+  if(past.length<4)return {need:true,have:past.length};
+  var v=past.concat([b.r]),lo=Math.min.apply(null,v),hi=Math.max.apply(null,v),avg=v.reduce(function(a,c){return a+c},0)/v.length,pos=hi>lo?(b.r-lo)/(hi-lo):.5,vd;
+  if(b.r>=avg&&pos>=.6)vd='🟢 Good day: the best rate is in the upper part of your saved days';
+  else if(b.r>=avg)vd='🟡 Above the average of your saved days';
+  else vd='🔴 Below the average of your saved days';
+  return {v:v,lo:lo,hi:hi,avg:avg,b:b,vd:vd}
+}
+function xSpark(v,avg){
+  var W=340,H=110,l=36,r=10,t=10,bt=18,lo=Math.min.apply(null,v),hi=Math.max.apply(null,v);
+  if(hi-lo<.2){hi+=.1;lo-=.1}
+  var x=function(i){return l+(W-l-r)*i/(v.length-1)},y=function(n){return t+(H-t-bt)*(1-(n-lo)/(hi-lo))};
+  var d=v.map(function(n,i){return (i?'L':'M')+x(i).toFixed(1)+' '+y(n).toFixed(1)}).join('');
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Best rate over your saved days"><line x1="'+l+'" x2="'+(W-r)+'" y1="'+y(avg)+'" y2="'+y(avg)+'" stroke="currentColor" opacity=".35" stroke-dasharray="4 3"/>'
+   +'<path d="'+d+'L'+x(v.length-1)+' '+(H-bt)+'L'+l+' '+(H-bt)+'Z" fill="currentColor" opacity=".10"/><path d="'+d+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'
+   +'<circle cx="'+x(v.length-1)+'" cy="'+y(v[v.length-1])+'" r="4.5" fill="currentColor"/>'
+   +'<text x="'+(l-4)+'" y="'+(y(hi)+3)+'" text-anchor="end" font-size="10" fill="currentColor" opacity=".7">'+hi.toFixed(1)+'</text><text x="'+(l-4)+'" y="'+(y(lo)+3)+'" text-anchor="end" font-size="10" fill="currentColor" opacity=".7">'+lo.toFixed(1)+'</text></svg>'
+}
+function xOmr(){var a=xNum(X.amt),r=xRate();return X.dir==='OMR'?a:(r>0?a/r:0)}
+function xUpd(){
+  var a=xNum(X.amt),r=xRate(),res=r>0?(X.dir==='OMR'?a*r:a/r):0,b=xList()[0],omr=xOmr(),e;
+  if(e=$('#xcres'))e.textContent=res>0?(X.dir==='OMR'?'₹ '+xI(res):FMT.OMR.format(res)+' OMR'):'Enter a rate';
+  if(e=$('#xcnote'))e.textContent=r>0?'At 1 OMR = ₹ '+xI4(r)+(X.src==='best'&&b?' ('+b.n+')':''):'';
+  XPROV.forEach(function(p){
+    var v=xNum(X.rates[p[1]]),isB=b&&b.k===p[1],tag=$('#xt-'+p[1]),rs=$('#xr-'+p[1]);
+    if(tag)tag.innerHTML=isB?'<span class="xtag best">Best</span>':'';
+    if(rs)rs.innerHTML=v>0?'<span>₹ '+xI(v*omr)+' for '+FMT.OMR.format(omr)+' OMR</span><span class="'+(!isB&&b?'neg':'')+'">'+(!isB&&b?'−₹ '+xI(Math.abs((v-b.r)*omr))+' vs best':'')+'</span>':'<span>No rate</span><span></span>';
+  });
+  var pb=$('#xpos');
+  if(pb){
+    var P=xPos();
+    if(!P)pb.innerHTML='<div class="sub">Type at least one provider rate to see where today stands.</div>';
+    else if(P.need)pb.innerHTML='<div class="sub">Tap Save today once a day. After 4 earlier days are saved, this shows how today compares. Earlier days saved: '+P.have+'.</div>';
+    else pb.innerHTML='<div class="xvd">'+esc(P.vd)+'</div><div class="xsp">'+xSpark(P.v,P.avg)+'</div><div class="xst"><div><i>LOW</i><b>₹ '+xI(P.lo)+'</b></div><div><i>AVERAGE</i><b>₹ '+xI(P.avg)+'</b></div><div><i>HIGH</i><b>₹ '+xI(P.hi)+'</b></div></div><div class="sub">For '+FMT.OMR.format(omr)+' OMR, today\'s best is '+(P.b.r<P.avg?'−':'+')+'₹ '+xI(Math.abs((P.b.r-P.avg)*omr))+' against your average. Past and present only, no forecast.</div>';
+  }
+  var m=$('#xmsg');if(m)m.textContent=X.msg;
+}
+function renderExchange(noFetch){
+  var el=$('#xch');if(!el)return;
+  ['Converter','Rate book, today','Today vs your saved days'].forEach(function(t){var k='p-exchange|'+t;if(!(k in ACC))ACC[k]=true});
+  var mr=xMid(),src=X.mid?X.mid.src+' · '+new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(X.mid.t)):'Your last saved app rate',key='';
+  try{key=localStorage.getItem(XKEY)||''}catch(e){}
+  var h='<div class="xhero"><div class="xl">Mid-market, OMR to INR</div><div class="xv num">1 OMR = ₹ '+xI4(mr)+'</div><div class="xs">'+esc(src)+'. Reference rate, not what an exchange house pays.</div><div class="xs" id="xmsg"></div></div>'
+   +'<section class="card xc"><div class="chead"><h2>Converter</h2><button type="button" class="btn2" id="xrefresh">Refresh rate</button></div>'
+   +'<div class="seg2 g2" id="xdir"><button type="button" data-xd="OMR" aria-pressed="'+(X.dir==='OMR')+'">OMR → ₹ INR</button><button type="button" data-xd="INR" aria-pressed="'+(X.dir==='INR')+'">₹ INR → OMR</button></div>'
+   +'<div class="xrow"><label class="fld"><span>Amount ('+X.dir+')</span><input id="xamt" inputmode="decimal" value="'+esc(X.amt)+'"></label>'
+   +'<label class="fld"><span>Rate used</span><select id="xsrc"><option value="best"'+(X.src==='best'?' selected':'')+'>Best provider today</option><option value="mid"'+(X.src==='mid'?' selected':'')+'>Mid-market</option><option value="custom"'+(X.src==='custom'?' selected':'')+'>My own rate</option></select></label></div>'
+   +(X.src==='custom'?'<label class="fld"><span>1 OMR = ₹</span><input id="xcustom" inputmode="decimal" value="'+esc(X.custom)+'" placeholder="0.00"></label>':'')
+   +'<div class="xout"><span class="sub">You get</span><b class="num" id="xcres"></b></div><div class="sub" id="xcnote"></div>'
+   +'<button type="button" class="btn" id="xrec" style="width:100%">Record this exchange</button><div class="sub">Opens a Transfer from Bank Muscat to Federal Bank with this amount and rate. Change accounts or add the service charge there.</div></section>'
+   +'<section class="card xc"><div class="chead"><h2>Rate book, today</h2><button type="button" class="btn2" id="xsave">Save today</button></div><div class="sub">Type the OMR to INR rate each service shows. Fees are not included. Rates stay on this device.</div>'
+   +XPROV.map(function(p){return '<div class="xprov"><div class="xnm">'+esc(p[0])+' <span id="xt-'+p[1]+'"></span></div><input data-xk="'+p[1]+'" inputmode="decimal" aria-label="'+esc(p[0])+' rate" placeholder="0.00" value="'+esc(X.rates[p[1]]==null?'':X.rates[p[1]])+'"><div class="xres" id="xr-'+p[1]+'"></div></div>'}).join('')+'</section>'
+   +'<section class="card xc"><div class="chead"><h2>Today vs your saved days</h2></div><div id="xpos"></div></section>'
+   +'<section class="card xc"><div class="chead"><h2>Rate API key (optional)</h2></div><div class="sub">Without a key the free open rate is used. A key stays on this device only and is never stored in the app code.</div><div class="xrow"><input id="xkey" autocomplete="off" spellcheck="false" placeholder="Paste key" value="'+esc(key)+'"><button type="button" class="btn2" id="xkeysave">Save key</button></div></section>'
+   +'<p class="sub" style="text-align:center">Rates By <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Exchange Rate API</a>. Past and present rates only, not a forecast.</p>';
+  el.innerHTML=h;xUpd();
+  if(!noFetch)xFetchMid(false);
+}
+(function(){
+  var el=document.getElementById('xch');if(!el)return;
+  el.addEventListener('click',function(ev){
+    var t=ev.target,d=t.closest('[data-xd]');
+    if(d){X.dir=d.dataset.xd;renderExchange(true);return}
+    if(t.closest('#xrefresh')){xFetchMid(true);return}
+    if(t.closest('#xsave')){var b=xList()[0];if(!b){toast('Type a provider rate first');return}
+      X.hist=X.hist.filter(function(p){return p.d!==todayStr()});X.hist.push({d:todayStr(),r:b.r});X.hist=X.hist.slice(-30);xSave();xUpd();toast('Saved today: best ₹ '+xI(b.r));return}
+    if(t.closest('#xkeysave')){var k=($('#xkey').value||'').trim();try{if(k)localStorage.setItem(XKEY,k);else localStorage.removeItem(XKEY)}catch(e){}
+      if(k&&!/^[A-Za-z0-9]{16,40}$/.test(k)){toast('That does not look like a key');return}
+      if(X.mid)X.mid.t=0;toast(k?'Key saved on this device':'Key removed');xFetchMid(true);return}
+    if(t.closest('#xrec')){
+      var r=xRate(),omr=xOmr();
+      if(!(r>50&&r<1000)){toast('Enter a rate between 50 and 1000 first');return}
+      if(!(omr>0)){toast('Enter an amount first');return}
+      resetForm(false);setTab('entry',true);setType('transfer');applyPreset('Bank Muscat','Federal Bank');setFcur('OMR');
+      $('#amt').value=String(Math.round(omr*1000)/1000);$('#amt').dispatchEvent(new Event('input',{bubbles:true}));
+      $('#trate').value=String(Math.round(r*10000)/10000);S.trateTouched=true;render();window.scrollTo(0,0);
+    }
+  });
+  el.addEventListener('input',function(ev){
+    var t=ev.target,c=t.value.replace(/[^0-9.,]/g,'');
+    if(t.id==='xamt'){X.amt=c;if(t.value!==c)t.value=c;xUpd()}
+    else if(t.id==='xcustom'){X.custom=c;if(t.value!==c)t.value=c;xUpd()}
+    else if(t.dataset&&t.dataset.xk){X.rates[t.dataset.xk]=c;if(t.value!==c)t.value=c;xSave();xUpd()}
+  });
+  el.addEventListener('change',function(ev){if(ev.target.id==='xsrc'){X.src=ev.target.value;renderExchange(true)}});
+  document.getElementById('xchBtn').addEventListener('click',function(){S.confirmDel=null;if(S.tab!=='exchange')setTab('exchange')});
+})();
 
 /* ---------- ledger events ---------- */
 $('#lviewseg').addEventListener('click',function(ev){
