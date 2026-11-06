@@ -2,6 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // True only for a logged-in user looking at their own space, after they were invited.
+    function isMine(uid) {
+      return request.auth != null && request.auth.uid == uid
+        && exists(/databases/$(database)/documents/invited/$(uid));
+    }
+
     // Secret sign-up code lives here. Nobody can read or write it from the app.
     // Only the database owner edits it in the Firebase console.
     match /config/{any} {
@@ -19,9 +25,14 @@ service cloud.firestore {
     }
 
     // Each user can only touch their own space, and only after being invited.
-    match /users/{uid}/{path=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid
-        && exists(/databases/$(database)/documents/invited/$(uid));
+    // Only the collections the app really uses are allowed, one level deep.
+    // A document may not have more than 100 top-level fields (Firestore itself caps a document at 1 MB).
+    match /users/{uid}/{col}/{id} {
+      allow read, delete: if isMine(uid)
+        && col in ['entries', 'goals', 'plan_income', 'plan_items', 'plans', 'rates', 'recurring', 'settings', 'private'];
+      allow create, update: if isMine(uid)
+        && col in ['entries', 'goals', 'plan_income', 'plan_items', 'plans', 'rates', 'recurring', 'settings', 'private']
+        && request.resource.data.keys().size() <= 100;
     }
   }
 }
