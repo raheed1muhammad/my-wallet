@@ -2719,7 +2719,7 @@ var CTK='mywallet.customthemes',CCK='mywallet.customcss',CT=[],CTD=null;
 try{CT=JSON.parse(localStorage.getItem(CTK)||'[]')||[]}catch(e){CT=[]}
 var igMenu=document.createElement('div');igMenu.id='igMenu';igMenu.hidden=true;document.body.appendChild(igMenu);
 function igMenuPaint(){
-  igMenu.innerHTML=allThemes().map(function(t){return '<button type="button" data-th="'+t.id+'"><i style="background:'+t.sw+'"></i><span><b>'+t.name+'</b><small>'+t.sub+'</small></span>'+(igCur()===t.id?'<em>\u2713</em>':'')+'</button>'}).join('');
+  igMenu.innerHTML=allThemes().map(function(t){return '<button type="button" data-th="'+t.id+'"><i style="background:'+t.sw+'"></i><span><b>'+esc(t.name)+'</b><small>'+esc(t.sub)+'</small></span>'+(igCur()===t.id?'<em>\u2713</em>':'')+'</button>'}).join('');
 }
 igMenuPaint();
 document.getElementById('igThemeBtn').addEventListener('click',function(e){e.stopPropagation();igMenu.hidden=!igMenu.hidden});
