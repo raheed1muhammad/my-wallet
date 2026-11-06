@@ -3341,7 +3341,7 @@ $('#lfilter').addEventListener('change',function(){
 });
 $('#lacc').addEventListener('change',function(){S.lacc=this.value;if(S.lacc!=='all'&&!allowsCur(S.lacc,S.lcur))S.lcur=curs(S.lacc)[0];savePrefs();renderLedger()});
 $('#lcurseg').addEventListener('click',function(ev){var b=ev.target.closest('button');if(!b||b.disabled)return;S.lcur=b.dataset.lc;savePrefs();renderLedger()});
-function csvCell(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function csvCell(v){var raw=v;v=String(v==null?'':v);if(typeof raw==='string'&&/^[=+\-@\t\r]/.test(v)&&!/^[-+]?\d+(\.\d+)?$/.test(v))v="'"+v;return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function saveCsv(rows,name){
   if(rows.length<2){toast('Nothing to download yet');return}
   var data='﻿'+rows.map(function(r){return r.map(csvCell).join(',')}).join('\r\n');
