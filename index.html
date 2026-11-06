@@ -3732,18 +3732,20 @@ $('#restore-file').addEventListener('change',function(){
     try{
       var data=JSON.parse(String(reader.result||''));
       if(!data||data.app!=='My Wallet'||data.formatVersion!==1||!Array.isArray(data.entries))throw new Error('This is not a supported My Wallet backup.');
-      var valid=data.entries.filter(validEntry);
+      var okId=function(s){return typeof s==='string'&&/^[A-Za-z0-9_\-.]{1,80}$/.test(s)&&s!=='.'&&s!=='..'};
+      var valid=data.entries.filter(validEntry).filter(function(e){return okId(e.id)});
+      var skipped=data.entries.length-valid.length;
       if(!valid.length&&data.entries.length)throw new Error('No valid transactions were found in this backup.');
       if(!(await askOkP('Restore '+valid.length+' transactions? Matching IDs will be replaced.'))){input.value='';return}
       var map={};S.entries.forEach(function(e){map[e.id]=e});valid.forEach(function(e){map[e.id]=e});
       var merged=Object.keys(map).map(function(k){return map[k]});
       if(S.db){
         for(var i=0;i<valid.length;i++)await S.db.collection('entries').doc(valid[i].id).set(valid[i]);
-        if(data.rates&&Array.isArray(data.rates))for(var j=0;j<data.rates.length;j++){var q=data.rates[j];if(q&&q.d&&q.r>0)await S.db.doc('rates/'+q.d).set({rate:q.r,src:'backup'})}
+        if(data.rates&&Array.isArray(data.rates))for(var j=0;j<data.rates.length;j++){var q=data.rates[j];if(q&&typeof q.d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(q.d)&&q.r>0)await S.db.doc('rates/'+q.d).set({rate:q.r,src:'backup'})}
         if(data.opening&&typeof data.opening==='object')await S.db.doc('settings/opening').set({b:data.opening});
         if(data.plans&&typeof data.plans==='object'){
           var planKeys=Object.keys(data.plans);
-          for(var k=0;k<planKeys.length;k++)await S.db.collection('plans').doc(planKeys[k]).set(data.plans[planKeys[k]]);
+          for(var k=0;k<planKeys.length;k++){if(!okId(planKeys[k]))continue;await S.db.collection('plans').doc(planKeys[k]).set(data.plans[planKeys[k]])}
         }
       }else{
         S.entries=merged;
@@ -3752,8 +3754,8 @@ $('#restore-file').addEventListener('change',function(){
         if(data.plans&&typeof data.plans==='object')S.plans=data.plans;
         persistLocal();
       }
-      if(Array.isArray(data.recurring)){data.recurring.forEach(function(x){if(x&&x.id&&x.name&&x.amount>0&&!REC.some(function(y){return y.id===x.id})){var r=Object.assign({start:curMk(),endMode:'none',kind:x.kind||(x.type==='income'?'income':'expense')},x);REC.push(r);recSaveOne(r).catch(function(){})}})}
-      render();toast('Backup restored: '+valid.length+' transactions');
+      if(Array.isArray(data.recurring)){data.recurring.forEach(function(x){if(x&&okId(x.id)&&x.name&&x.amount>0&&!REC.some(function(y){return y.id===x.id})){var r=Object.assign({start:curMk(),endMode:'none',kind:x.kind||(x.type==='income'?'income':'expense')},x);REC.push(r);recSaveOne(r).catch(function(){})}})}
+      render();toast('Backup restored: '+valid.length+' transactions'+(skipped>0?' ('+skipped+' skipped, not valid)':''));
     }catch(e){toast('Restore failed: '+(e.message||'Invalid backup'))}
     input.value='';
   };
