@@ -2763,6 +2763,17 @@ igFind();
 var SETK='mywallet.settings.v1',SET={profile:{},accounts:[],closed:[],showClosed:false};
 try{var _st=JSON.parse(localStorage.getItem(SETK)||'null');if(_st)SET=Object.assign(SET,_st)}catch(e){}
 function setSave(){try{localStorage.setItem(SETK,JSON.stringify(SET))}catch(e){}if(window.__cloudSet)try{window.__cloudSet(JSON.stringify(SET))}catch(e){}}
+/* Safe settings change. When signed in, the cloud applies ONLY this one change to its newest copy (see cloud.js __cloudPatch),
+   so another device can no longer erase it. Without the cloud, the old local save is used. after(true) = the cloud already saved it. */
+function adoptSet(n){
+  SET.profile=n.profile||{};SET.accounts=Array.isArray(n.accounts)?n.accounts:[];SET.closed=Array.isArray(n.closed)?n.closed:[];SET.showClosed=!!n.showClosed;
+  SET.accounts.forEach(function(a){if(a&&typeof a.name==='string'&&ACCS.indexOf(a.name)<0){ACCS.push(a.name);BANKS.push(a.name);ACC_CUR[a.name]=a.cur==='both'?['OMR','INR']:[a.cur]}});
+}
+function setChange(op,localApply,after,onFail){
+  if(!window.__cloudPatch){localApply();after(false);return}
+  window.__cloudPatch(op,JSON.stringify(SET)).then(function(n){adoptSet(n);after(true)},function(e){
+    onFail((e&&e.message)==='offline'?'You need internet to change this. Try again when online.':'Could not save this change. Check your connection and try again.')});
+}
 SET.accounts.forEach(function(a){if(ACCS.indexOf(a.name)<0){ACCS.push(a.name);BANKS.push(a.name);ACC_CUR[a.name]=a.cur==='both'?['OMR','INR']:[a.cur]}});
 /* ACCS keeps every account (so old entries still validate); these helpers give the lists the pickers show */
 function actAccs(){return ACCS.filter(function(a){return SET.closed.indexOf(a)<0})}
@@ -2789,8 +2800,8 @@ function renderSet(){
     var isTh=c.id==='sThemes';if(setMode==='theme'?!isTh:isTh)c.remove();
   });
 }
-function afterAcc(){
-  setSave();fillAccountSelects();buildObRows();
+function afterAcc(cloudSaved){
+  if(!cloudSaved)setSave();fillAccountSelects();buildObRows();
   if(SET.closed.indexOf(S.lacc)>-1&&!SET.showClosed)S.lacc='all';
   if($('#rec-account'))$('#rec-account').innerHTML=actAccs().map(function(a){return '<option>'+esc(a)+'</option>'}).join('');
   render();renderSet();
@@ -2798,26 +2809,30 @@ function afterAcc(){
 setEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-s]');if(!b)return;var k=b.dataset.s,a=b.dataset.a;
   if(k==='close'){setEl.hidden=true}
-  else if(k==='saveprof'){SET.profile={name:$('#spName').value.trim(),country:$('#spCountry').value.trim()};setSave();paintProfile();$('#spMsg').textContent='Saved'}
+  else if(k==='saveprof'){
+    var pnm=$('#spName').value.trim(),pco=$('#spCountry').value.trim();
+    setChange({type:'profile',name:pnm,country:pco},function(){SET.profile={name:pnm,country:pco}},function(cs){if(!cs)setSave();paintProfile();$('#spMsg').textContent='Saved'},function(msg){$('#spMsg').textContent=msg});
+  }
   else if(k==='addacc'){
     var n=$('#saName').value.trim().replace(/\s+/g,' '),m=$('#saMsg');
     if(n.length<2){m.textContent='Enter an account name.';return}
     if(ACCS.some(function(x){return x.toLowerCase()===n.toLowerCase()})){m.textContent='An account with that name already exists.';return}
-    var cur=$('#saCur').value;SET.accounts.push({name:n,cur:cur});ACCS.push(n);BANKS.push(n);ACC_CUR[n]=cur==='both'?['OMR','INR']:[cur];afterAcc();
+    var cur=$('#saCur').value;
+    setChange({type:'addAccount',name:n,cur:cur},function(){SET.accounts.push({name:n,cur:cur});ACCS.push(n);BANKS.push(n);ACC_CUR[n]=cur==='both'?['OMR','INR']:[cur]},afterAcc,function(msg){m.textContent=msg});
   }
   else if(k==='closeacc'){
     var bal=curs(a).map(function(c){return balanceOf(a,c,todayStr())}).some(function(v){return Math.abs(v)>0.0005});
     askOk('Close '+a+'? It will be hidden from entry forms and lists. Past entries are kept.'+(bal?'\n\nIt still has a balance ('+setBal(a)+'). Consider moving it with a transfer first.':''),function(){
-      if(SET.closed.indexOf(a)<0)SET.closed.push(a);afterAcc();
+      setChange({type:'closeAccount',name:a},function(){if(SET.closed.indexOf(a)<0)SET.closed.push(a)},afterAcc,function(msg){toast(msg)});
     });
   }
   else if(k==='theme'){igSetTheme(b.dataset.t);renderSet()}
   else if(k==='tedit'){var t0=CT.filter(function(x){return x.id===b.dataset.t})[0];if(t0){CTD=Object.assign({},t0);renderSet();document.getElementById('sThemes').scrollIntoView()}}
   else if(k==='tdel'){var tid=b.dataset.t;askOk('Delete this theme?',function(){CT=CT.filter(function(x){return x.id!==tid});if(igCur()===tid)igSetTheme('ig');ctSave();renderSet()})}
   else if(k==='tsave'){ctSaveForm()}
-  else if(k==='reopen'){SET.closed=SET.closed.filter(function(x){return x!==a});afterAcc()}
+  else if(k==='reopen'){setChange({type:'reopenAccount',name:a},function(){SET.closed=SET.closed.filter(function(x){return x!==a})},afterAcc,function(msg){toast(msg)})}
 });
-setEl.addEventListener('change',function(e){if(e.target.dataset.s==='showclosed'){SET.showClosed=e.target.checked;afterAcc()}});
+setEl.addEventListener('change',function(e){if(e.target.dataset.s==='showclosed'){var sc=e.target.checked;setChange({type:'showClosed',value:sc},function(){SET.showClosed=sc},afterAcc,function(msg){toast(msg);renderSet()})}});
 document.getElementById('igMoreBtn').addEventListener('click',function(e){e.stopPropagation();igMenu.hidden=true;moreEl.hidden=!moreEl.hidden});
 moreEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-m]');if(!b)return;moreEl.hidden=true;
