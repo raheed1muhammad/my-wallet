@@ -1441,8 +1441,8 @@ function renderAnalysis(){
 
 /* ---------- Ledger ---------- */
 function actionsHtml(e){
-  return S.confirmDel===e.id?'Delete? <button class="mini danger" data-act="delyes" data-id="'+e.id+'">Yes</button><button class="mini" data-act="delno">No</button>':
-    '<button class="ra" data-act="edit" data-id="'+e.id+'" aria-label="Edit entry"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M4 14.5V16h1.5l7.8-7.8-1.5-1.5L4 14.5zM14.2 5.8l-1-1a1 1 0 0 0-1.4 0l-.8.8 2.4 2.4.8-.8a1 1 0 0 0 0-1.4z"/></svg></button><button class="ra" data-act="del" data-id="'+e.id+'" aria-label="Delete entry"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6h11M8 6V4.5h4V6M6 6l.6 9.5h6.8L14 6"/></svg></button>';
+  return S.confirmDel===e.id?'Delete? <button class="mini danger" data-act="delyes" data-id="'+esc(e.id)+'">Yes</button><button class="mini" data-act="delno">No</button>':
+    '<button class="ra" data-act="edit" data-id="'+esc(e.id)+'" aria-label="Edit entry"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M4 14.5V16h1.5l7.8-7.8-1.5-1.5L4 14.5zM14.2 5.8l-1-1a1 1 0 0 0-1.4 0l-.8.8 2.4 2.4.8-.8a1 1 0 0 0 0-1.4z"/></svg></button><button class="ra" data-act="del" data-id="'+esc(e.id)+'" aria-label="Delete entry"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6h11M8 6V4.5h4V6M6 6l.6 9.5h6.8L14 6"/></svg></button>';
 }
 function woText(e){if(e.type!=='loan')return '';return (e.interest>0?' · '+(e.kind==='repay'?'interest paid ':'interest received ')+money(e.interest,e.currency):'')+(e.writeOff>0?' · written off '+money(e.writeOff,e.currency):'')}
 function narration(e){if(e.type==='loan')return loanText(e)+(e.note?' · '+e.note:'');return e.note||(e.type==='transfer'?'Self transfer':e.category)}
@@ -2437,7 +2437,7 @@ function pLine(kind,x,sub){
 function pEditLine(kind,x){
   var h='<div class="plb"><div class="prow" style="margin-top:0">'+pFld('eName','Name','<input id="eName" maxlength="40" value="'+esc(x.name)+'">');
   if(kind==='item')h+=pFld('eCat','Category',pCatSel('eCat',x.cat));
-  h+=pFld('eAmt','Amount','<input id="eAmt" inputmode="decimal" value="'+x.amount+'">')+pFld('eCur','Currency',pCurSel('eCur',x.cur))+'</div>'+
+  h+=pFld('eAmt','Amount','<input id="eAmt" inputmode="decimal" value="'+esc(x.amount)+'">')+pFld('eCur','Currency',pCurSel('eCur',x.cur))+'</div>'+
     '<p class="err" id="eErr" role="alert"></p><div class="prow" style="margin-top:0"><button class="btn2" type="button" data-pa="save" data-kind="'+kind+'" data-id="'+esc(x.id)+'">Save</button><button class="btn2" type="button" data-pa="cancel">Cancel</button></div></div>';
   return h;
 }
@@ -2488,7 +2488,7 @@ function renderPlan(keepVals){
   if(!PL.g.length)h+='<div class="empty"><b>No goals yet</b>Add a goal such as an emergency fund or a ticket home. Give a month it is needed by and the plan works out what to save each month.</div>';
   PL.g.forEach(function(g){
     if(S.plEdit&&S.plEdit.id===g.id){
-      h+='<div class="plb"><div class="prow" style="margin-top:0">'+pFld('egName','Goal','<input id="egName" maxlength="40" value="'+esc(g.name)+'">')+pFld('egTgt','Target','<input id="egTgt" inputmode="decimal" value="'+g.target+'">')+pFld('egSaved','Saved so far','<input id="egSaved" inputmode="decimal" value="'+g.saved+'">')+pFld('egMon','Save each month','<input id="egMon" inputmode="decimal" value="'+(g.monthly||0)+'">')+pFld('egBy','Needed by (optional)','<input id="egBy" type="month" value="'+esc(g.by||'')+'">')+pFld('egCur','Currency',pCurSel('egCur',g.cur))+'</div><p class="err" id="eErr" role="alert"></p><div class="prow" style="margin-top:0"><button class="btn2" type="button" data-pa="save" data-kind="goal" data-id="'+esc(g.id)+'">Save</button><button class="btn2" type="button" data-pa="cancel">Cancel</button></div></div>';
+      h+='<div class="plb"><div class="prow" style="margin-top:0">'+pFld('egName','Goal','<input id="egName" maxlength="40" value="'+esc(g.name)+'">')+pFld('egTgt','Target','<input id="egTgt" inputmode="decimal" value="'+esc(g.target)+'">')+pFld('egSaved','Saved so far','<input id="egSaved" inputmode="decimal" value="'+esc(g.saved)+'">')+pFld('egMon','Save each month','<input id="egMon" inputmode="decimal" value="'+esc(g.monthly||0)+'">')+pFld('egBy','Needed by (optional)','<input id="egBy" type="month" value="'+esc(g.by||'')+'">')+pFld('egCur','Currency',pCurSel('egCur',g.cur))+'</div><p class="err" id="eErr" role="alert"></p><div class="prow" style="margin-top:0"><button class="btn2" type="button" data-pa="save" data-kind="goal" data-id="'+esc(g.id)+'">Save</button><button class="btn2" type="button" data-pa="cancel">Cancel</button></div></div>';
       return;
     }
     var rem=Math.max(0,g.target-g.saved),p=g.target>0?Math.min(100,g.saved/g.target*100):0,mon=g.monthly>0?Math.ceil(rem/g.monthly-1e-9):null,O=pOther(g.cur);
