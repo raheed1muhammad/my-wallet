@@ -2,7 +2,7 @@
    and the same db API the app already uses. No personal data lives in this file or the repo. */
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,collection,onSnapshot,setDoc,deleteDoc,getDoc,getDocs,writeBatch} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,collection,onSnapshot,setDoc,deleteDoc,getDoc,getDocs,writeBatch,runTransaction} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 var firebaseConfig={
   apiKey:"AIzaSyCpYoEfq_hz65dpzG6HOH7N72RyUMFhs_A",
@@ -94,6 +94,47 @@ function dbObj(){
       onSnapshot:function(cb,err){return onSnapshot(cref(n),function(s){cb({docs:s.docs.map(dsnap)})},err||function(){})}}},
     doc:function(p){return docRef(uref(p))}};
 }
+
+/* ---------- change one setting safely ----------
+   Old way: each device wrote its whole (maybe stale) copy of the settings, so a second device could erase
+   an account the first one had just added. New way: read the newest cloud copy, apply only THIS change, write it back
+   in one atomic step (transaction). Needs the internet; the caller shows a message when it fails. */
+function applyPatch(base,op){
+  var s;try{s=base?JSON.parse(base):null}catch(e){s=null}
+  s=s&&typeof s==='object'&&!Array.isArray(s)?s:{};
+  s.profile=s.profile&&typeof s.profile==='object'?s.profile:{};
+  s.accounts=Array.isArray(s.accounts)?s.accounts:[];
+  s.closed=Array.isArray(s.closed)?s.closed:[];
+  if(op.type==='addAccount'){
+    var nm=String(op.name||'');
+    if(nm&&!s.accounts.some(function(a){return a&&typeof a.name==='string'&&a.name.toLowerCase()===nm.toLowerCase()}))s.accounts.push({name:nm,cur:op.cur});
+  }else if(op.type==='closeAccount'){
+    if(s.closed.indexOf(op.name)<0)s.closed.push(op.name);
+  }else if(op.type==='reopenAccount'){
+    s.closed=s.closed.filter(function(x){return x!==op.name});
+  }else if(op.type==='profile'){
+    s.profile={name:String(op.name||'').slice(0,40),country:String(op.country||'').slice(0,40)};
+  }else if(op.type==='showClosed'){
+    s.showClosed=!!op.value;
+  }
+  return s;
+}
+window.__cloudPatch=function(op,localJson){
+  if(!UID)return Promise.reject(new Error('not signed in'));
+  if(navigator.onLine===false)return Promise.reject(new Error('offline'));
+  var ref=uref('settings/app');
+  return timeout(runTransaction(fs,function(tx){
+    return tx.get(ref).then(function(snap){
+      var base=snap.exists()&&snap.data()&&typeof snap.data().set==='string'?snap.data().set:localJson;
+      var json=JSON.stringify(applyPatch(base,op));
+      tx.set(ref,{set:json,t:Date.now()});
+      return json;
+    });
+  }),8000).then(function(json){
+    try{localStorage.setItem(SETK,json)}catch(e){}
+    return JSON.parse(json);
+  });
+};
 
 /* ---------- start after login ---------- */
 function begin(){
