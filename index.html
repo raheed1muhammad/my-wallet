@@ -596,6 +596,8 @@ body.ent #tabs{display:none}
 #kpwrap .row2{margin-top:8px}
 #kpwrap .btn{width:100%;height:54px;border-radius:27px}
 #notice,.sync{display:none}
+#sync[data-st]{display:block}
+#sync[data-st=fail]{font-weight:700;text-decoration:underline;cursor:pointer}
 html body .trio{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 html body .trio>.htl:last-child:nth-child(odd){grid-column:1/-1}
 .lg4{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:4px}.lg4 i{font-style:normal;font-size:10px;font-weight:600;color:var(--muted)}.lg4 b{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere}.lg4 b.pos{color:var(--pos)}.lg4 b.neg{color:var(--neg)}.htl .v.neg{color:var(--neg,#d93a3a)}
@@ -2905,7 +2907,7 @@ function render(){
   var nt=$('#notice');
   if(S.mode==='local'){nt.hidden=false;nt.textContent='Entries are kept on this device only. Open the link while signed in to claude.ai to save them to your wallet and see them on every device.'}
   else nt.hidden=true;
-  paintProfile();$('#sync').textContent=S.mode==='cloud'?(navigator.onLine===false?'Offline. Saved on this device':''):S.mode==='local'?'This device only':'';
+  paintProfile();paintSync();
   if(S.bc.mode==='show'||S.bc.mode==='cred'||S.bc.mode==='debt')paintBC();
   if(S.ftype==='transfer'&&S.tab==='entry')paintTransfer();
 }
@@ -3799,6 +3801,31 @@ $('#rec-list').addEventListener('click',function(ev){
 
 window.addEventListener('offline',function(){toast('You are offline. Entries are saved on this device and sync later.');render()});
 window.addEventListener('online',function(){toast('Back online. Syncing your entries.');render()});
+/* ---------- honest save status: waiting / not saved ---------- */
+function syncText(){
+  var v=S.save||{pending:0,failed:0},n=function(k){return k+' change'+(k>1?'s':'')};
+  if(S.mode==='local')return 'This device only';
+  if(S.mode!=='cloud')return '';
+  if(v.failed>0)return '⚠ '+n(v.failed)+' not saved and undone. Tap to dismiss';
+  if(navigator.onLine===false)return v.pending>0?'Offline. '+n(v.pending)+' saved on this device, waiting to sync':'Offline. Saved on this device';
+  if(v.pending>0&&S.slow)return 'Saving '+n(v.pending)+'…';
+  return '';
+}
+function paintSync(){
+  var el=$('#sync');if(!el)return;
+  var t=syncText(),v=S.save||{};
+  el.textContent=t;
+  if(t&&S.mode==='cloud')el.setAttribute('data-st',v.failed>0?'fail':'on');else el.removeAttribute('data-st');
+}
+window.addEventListener('walletsave',function(ev){
+  var d=ev.detail||{},was=(S.save&&S.save.failed)||0;
+  S.save={pending:d.pending||0,failed:d.failed||0};
+  if(S.save.pending===0)S.slow=false;
+  paintSync();
+  if(S.save.pending>0&&!S.slowT){S.slowT=setTimeout(function(){S.slowT=null;if(S.save&&S.save.pending>0){S.slow=true;paintSync()}},1600)}
+  if(S.save.failed>was)toast('A change was not accepted by the server and was undone. Please try again.');
+});
+$('#sync').addEventListener('click',function(){if(S.save&&S.save.failed>0&&window.__saveClear)window.__saveClear()});
 /* ---------- init ---------- */
 S.amonth=curMk();plLoadLocal();fillAccountSelects();buildObRows();
 $('#to').value='Cash';$('#from').value='Federal Bank';

@@ -74,7 +74,13 @@ function doSignOut(){signOut(auth).then(function(){wipeLocal();try{sessionStorag
 function uref(path){return doc.apply(null,[fs,'users',UID].concat(path.split('/')))}
 function cref(name){return collection(fs,'users',UID,name)}
 function clean(v){return JSON.parse(JSON.stringify(v))}
-function soft(p){if(navigator.onLine===false){p.catch(function(){});return Promise.resolve()}
+/* Counts saves that are still waiting and saves the server refused, so the app can say so honestly. */
+var SAVE={pending:0,failed:0};
+function saveNote(){try{window.dispatchEvent(new CustomEvent('walletsave',{detail:{pending:SAVE.pending,failed:SAVE.failed}}))}catch(e){}}
+function track(p){SAVE.pending++;saveNote();p.then(function(){SAVE.pending--;saveNote()},function(){SAVE.pending--;SAVE.failed++;saveNote()});return p}
+window.__saveState=function(){return{pending:SAVE.pending,failed:SAVE.failed}};
+window.__saveClear=function(){SAVE.failed=0;saveNote()};
+function soft(p){track(p);if(navigator.onLine===false){p.catch(function(){});return Promise.resolve()}
   return new Promise(function(res,rej){var t=setTimeout(res,4000);p.then(function(){clearTimeout(t);res()},function(e){clearTimeout(t);rej(e)})})}
 function dsnap(d){return{id:d.id,exists:true,data:function(){return clean(d.data())}}}
 function dbObj(){
@@ -102,13 +108,13 @@ function begin(){
     if(cloud&&cloud!==local){
       var already=false;try{already=sessionStorage.getItem(RELOADK)==='1'}catch(e){}
       if(!already){try{localStorage.setItem(SETK,cloud);sessionStorage.setItem(RELOADK,'1')}catch(e){}location.reload();return}
-    }else if(!cloud&&local){setDoc(uref('settings/app'),{set:local,t:Date.now()}).catch(function(){})}
+    }else if(!cloud&&local){track(setDoc(uref('settings/app'),{set:local,t:Date.now()})).catch(function(){})}
     ready();
   }).catch(function(){ready()});
 }
 function ready(){
   el.hidden=true;
-  window.__cloudSet=function(json){if(UID)setDoc(uref('settings/app'),{set:json,t:Date.now()}).catch(function(){})};
+  window.__cloudSet=function(json){if(UID)track(setDoc(uref('settings/app'),{set:json,t:Date.now()})).catch(function(){})};
   window.__cloud={email:EMAIL,signOut:doSignOut,exportData:exportData,importData:importData};
   window.__dbRes(dbObj());
 }
