@@ -2909,7 +2909,14 @@ function render(){
   if(S.bc.mode==='show'||S.bc.mode==='cred'||S.bc.mode==='debt')paintBC();
   if(S.ftype==='transfer'&&S.tab==='entry')paintTransfer();
 }
+/* Phone back button: each page change adds a history entry, so back returns to the previous page and only Home closes the app. */
+var HB=null;
+function hbNav(t){
+  if(HB.i>0&&HB.stack[HB.i-1]===t){HB.skip++;HB.i--;history.go(-1)} /* going to the page we came from */
+  else{HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=t;history.pushState({i:HB.i,t:t},'')}
+}
 function setTab(t,noRender){
+  if(HB&&!HB.pop&&t!==S.tab)hbNav(t);
   if(t==='entry'&&S.tab!=='entry')S.back=S.tab;
   document.body.classList.toggle('ent',t==='entry');
   S.tab=t;if(groupOf(t)==='analysis')S.lastAn=t;savePrefs();
@@ -3842,6 +3849,24 @@ function catChips(){var s=document.getElementById('cat'),h=document.getElementBy
   h.innerHTML=Array.prototype.map.call(s.options,function(o){return '<button type="button" class="chipbtn" data-v="'+esc(o.value)+'" aria-pressed="'+(o.value===s.value)+'">'+esc(o.textContent)+'</button>'}).join('')}
 
 setTab(S.tab,true);
+try{
+  HB={i:0,stack:['home'],skip:0,pop:0,ovPop:0};
+  history.replaceState({i:0,t:'home'},'');
+  if(S.tab!=='home'){HB.i=1;HB.stack[1]=S.tab;history.pushState({i:1,t:S.tab},'')}
+  window.addEventListener('popstate',function(e){
+    if(!HB)return;
+    if(HB.skip>0){HB.skip--;return}
+    var st=e.state,i=st&&typeof st.i==='number'?st.i:0,t=(st&&st.t)||'home';
+    HB.i=i;
+    if(!setEl.hidden){HB.ovPop=1;setEl.hidden=true;return} /* settings screen: back closes it first */
+    if(t!==S.tab){HB.pop=1;try{setTab(t)}finally{HB.pop=0}}
+  });
+  new MutationObserver(function(){ /* settings screen gets its own history entry so back closes it, not the app */
+    var open=!setEl.hidden;
+    if(open&&!setEl._o){setEl._o=1;HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=S.tab;history.pushState({i:HB.i,t:S.tab},'')}
+    else if(!open&&setEl._o){setEl._o=0;if(HB.ovPop)HB.ovPop=0;else{HB.skip++;HB.i--;history.go(-1)}}
+  }).observe(setEl,{attributes:true,attributeFilter:['hidden']});
+}catch(e){HB=null}
 paintBC();
 render();
 
