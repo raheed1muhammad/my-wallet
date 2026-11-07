@@ -2,7 +2,7 @@
    and the same db API the app already uses. No personal data lives in this file or the repo. */
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,collection,onSnapshot,setDoc,deleteDoc,getDoc,getDocs,writeBatch,runTransaction} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,collection,onSnapshot,setDoc,deleteDoc,getDoc,getDocs,writeBatch,runTransaction,terminate,clearIndexedDbPersistence} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 var firebaseConfig={
   apiKey:"AIzaSyCpYoEfq_hz65dpzG6HOH7N72RyUMFhs_A",
@@ -68,7 +68,18 @@ $e('fbForm').addEventListener('submit',function(ev){
 function wipeLocal(){
   try{Object.keys(localStorage).forEach(function(k){if(k.indexOf('mywallet.')===0&&k!=='mywallet.igtheme'&&k!=='mywallet.themev'&&k!=='mywallet.customthemes'&&k!=='mywallet.customcss')localStorage.removeItem(k)})}catch(e){}
 }
-function doSignOut(){signOut(auth).then(function(){wipeLocal();try{sessionStorage.removeItem(RELOADK)}catch(e){}location.reload()}).catch(function(){location.reload()})}
+/* Erase the offline copy of the database kept in this browser (it holds the user's entries).
+   Never fails: if the clean way does not work, delete the browser's Firestore databases directly. */
+function wipeDb(){
+  return timeout(terminate(fs).then(function(){return clearIndexedDbPersistence(fs)}),4000).catch(function(){
+    try{if(indexedDB.databases)return indexedDB.databases().then(function(l){l.forEach(function(d){if(d.name&&d.name.indexOf('firestore/')===0)indexedDB.deleteDatabase(d.name)})})}catch(e){}
+  }).catch(function(){});
+}
+function doSignOut(){
+  var v=window.__saveState?window.__saveState():{pending:0};
+  if((v.pending>0||navigator.onLine===false)&&!confirm('Some changes may not be synced yet. If you sign out now they will be lost. Sign out anyway?'))return;
+  signOut(auth).then(wipeDb).then(function(){wipeLocal();try{sessionStorage.removeItem(RELOADK)}catch(e){}location.reload()}).catch(function(){location.reload()});
+}
 
 /* ---------- db shim with the same API the app uses ---------- */
 function uref(path){return doc.apply(null,[fs,'users',UID].concat(path.split('/')))}

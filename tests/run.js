@@ -177,8 +177,49 @@ async function testSave() {
   navigator.onLine = true; S.mode = 'local'; fire(0, 0); eq('this-device-only mode stays hidden', !!el.a['data-st'], false);
 }
 
+/* ---------- 6. sign-out erases the offline copy ---------- */
+async function testSignOut() {
+  section('sign-out erases the offline database copy');
+  const src = between(cj, 'function wipeDb()', '/* ---------- db shim');
+  const timeoutSrc = one(cj, /function timeout\(p,ms\)\{[^\n]*\}/, 'timeout');
+  function make(o) {
+    const log = [], dbs = o.dbs || ['firestore/[DEFAULT]/proj/main', 'other-site-db'];
+    const env = {
+      log, timeoutSrc, fs: {}, auth: {}, RELOADK: 'r',
+      terminate: () => { log.push('terminate'); return o.hang ? new Promise(() => { }) : Promise.resolve(); },
+      clearIndexedDbPersistence: () => { log.push('clear'); return o.clearFails ? Promise.reject(new Error('x')) : Promise.resolve(); },
+      signOut: () => { log.push('signOut'); return Promise.resolve(); },
+      wipeLocal: () => log.push('wipeLocal'),
+      sessionStorage: { removeItem: () => { } },
+      location: { reload: () => log.push('reload') },
+      confirm: () => { log.push('asked'); return o.answer !== false; },
+      indexedDB: { databases: () => Promise.resolve(dbs.map(name => ({ name }))), deleteDatabase: n => log.push('deleted ' + n) },
+      window: { __saveState: () => ({ pending: o.pending || 0, failed: 0 }) },
+      navigator: { onLine: o.offline ? false : true }
+    };
+    const names = Object.keys(env);
+    const fn = new Function(...names, timeoutSrc + src + '\nreturn doSignOut;')(...names.map(k => env[k]));
+    return { go: fn, log };
+  }
+  let t = make({}); t.go(); await sleep(60);
+  eq('normal: erases then wipes then reloads', t.log, ['signOut', 'terminate', 'clear', 'wipeLocal', 'reload']);
+  t = make({ clearFails: true }); t.go(); await sleep(60);
+  check('clear fails: only Firestore databases deleted', t.log.includes('deleted firestore/[DEFAULT]/proj/main') && !t.log.includes('deleted other-site-db'), t.log.join(','));
+  check('clear fails: still signs out and reloads', t.log.includes('wipeLocal') && t.log[t.log.length - 1] === 'reload', t.log.join(','));
+  t = make({ pending: 2, answer: false }); t.go(); await sleep(30);
+  eq('unsynced changes + user says no: nothing happens', t.log, ['asked']);
+  t = make({ offline: true, answer: true }); t.go(); await sleep(60);
+  check('offline + user says yes: signs out', t.log[0] === 'asked' && t.log.includes('reload'), t.log.join(','));
+  t = make({ hang: true }); const t0 = Date.now(); t.go();
+  await sleep(4400); check('erase hangs: gives up after about 4 seconds and still reloads', t.log.includes('reload') && Date.now() - t0 < 6000, t.log.join(','));
+  check('robots noindex present', /<meta name="robots" content="noindex,nofollow">/.test(ix));
+  check('no page-wide no-referrer (it would break the API key lock)', !/<meta[^>]+name=["']referrer["']/i.test(ix));
+  check('rate requests send no referrer', /referrerPolicy:'no-referrer'/.test(ix));
+  check('outside link has noreferrer', /rel="noopener noreferrer">Exchange Rate API/.test(ix));
+}
+
 (async () => {
-  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave];
+  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut];
   for (const p of parts) { try { await p(); } catch (e) { fail++; console.log('FAIL: ' + p.name + ' could not run: ' + e.message); } }
   console.log('\n' + pass + ' checks passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

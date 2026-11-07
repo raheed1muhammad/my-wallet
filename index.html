@@ -15,6 +15,7 @@ window.claude={use:function(n){return n==='db'?window.__dbP:Promise.resolve(null
 <script>try{if(localStorage.getItem("mywallet.themev")!=="2"){localStorage.removeItem("mywallet.igtheme");localStorage.setItem("mywallet.themev","2")}var t=localStorage.getItem("mywallet.igtheme"),c=localStorage.getItem("mywallet.customcss");if(c){var st=document.createElement("style");st.id="igCustom";st.textContent=c;document.documentElement.appendChild(st)}if(!t)t="lg";if(t==="lg"||t==="wa"||t==="tg"||t==="fb"||t==="sc"||t==="x"||/^c_/.test(t))document.documentElement.setAttribute("data-igt",t)}catch(e){}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Nunito:wght@400;600;800&family=Montserrat:wght@400;500;700&family=Poppins:wght@400;500;700&family=Roboto:wght@400;500;700&family=Fredoka:wght@400;600&family=Inter:wght@400;500;800&display=swap">
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex,nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -3243,7 +3244,7 @@ async function xFetchMid(force){
   for(var i=0;i<urls.length&&!got;i++){
     try{
       var ctl=new AbortController(),to=setTimeout(function(){ctl.abort()},8000);
-      var res=await fetch(urls[i][0],{signal:ctl.signal,cache:'no-store'});clearTimeout(to);
+      var res=await fetch(urls[i][0],{signal:ctl.signal,cache:'no-store',referrerPolicy:'no-referrer'});clearTimeout(to);
       if(!res.ok)throw 0;
       var j=await res.json(),r=Number(urls[i][1]==='pair'?j.conversion_rate:(j.rates&&j.rates.INR));
       if(j.result&&j.result!=='success')throw 0;
@@ -3309,7 +3310,7 @@ function renderExchange(noFetch){
    +XPROV.map(function(p){return '<div class="xprov"><div class="xnm">'+esc(p[0])+' <span id="xt-'+p[1]+'"></span></div><input data-xk="'+p[1]+'" inputmode="decimal" aria-label="'+esc(p[0])+' rate" placeholder="0.00" value="'+esc(X.rates[p[1]]==null?'':X.rates[p[1]])+'"><div class="xres" id="xr-'+p[1]+'"></div></div>'}).join('')+'</section>'
    +'<section class="card xc"><div class="chead"><h2>Today vs your saved days</h2></div><div id="xpos"></div></section>'
    +xKeyCard()
-   +'<p class="sub" style="text-align:center">Rates By <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Exchange Rate API</a>. Past and present rates only, not a forecast.</p>';
+   +'<p class="sub" style="text-align:center">Rates By <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Exchange Rate API</a>. Past and present rates only, not a forecast.</p>';
   el.innerHTML=h;xUpd();
   if(!noFetch)xFetchMid(false);
 }
