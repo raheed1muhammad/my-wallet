@@ -20,8 +20,10 @@ Nothing personal and no secrets are stored in this repository. Keep it that way.
   Paste the new text in the Firebase console (Firestore, Rules) and press Publish. Keep the old text to go back.
 - **Firebase web key** (`cloud.js`) is public by design. It is restricted in Google Cloud to this site's addresses
   (`raheed1muhammad.github.io`, `my-wallet-d0163.firebaseapp.com`, `my-wallet-d0163.web.app`). If the site moves, update that list.
-- **Every change to `index.html`, `cloud.js` or `sw.js`:** raise the cache number in `sw.js` (`const C='mywallet-vNN'`),
-  otherwise phones keep the old version.
+- **Before every push:** run `node tools/release-check.js`. It checks the code for syntax mistakes, runs the tests in
+  `tests/run.js` (money balances, backup restore, CSV, saving, accounts), looks for secrets, and makes sure the cache number
+  in `sw.js` (`const C='mywallet-vNN'`) was raised, otherwise phones keep the old version.
+  `node tools/release-check.js --bump` raises the number for you. Do not push if it says NOT READY.
 - **Going live:** the site is published with GitHub Pages (check the branch in the repository Settings, Pages; it is `main`
   if pushes to `main` show up on the site). Work on another branch, test, and merge only when ready.
 - **Going back:** `git revert` the bad commit, or check out an older commit and push it. Data is not touched by code changes.
