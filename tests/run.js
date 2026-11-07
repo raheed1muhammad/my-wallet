@@ -259,8 +259,92 @@ async function testStartup() {
   eq('new phone: cloud copy used (one reload, as before)', t.log, ['reload']);
 }
 
+/* ---------- 8. SIP schedules and automatic recording ---------- */
+async function testSip() {
+  section('SIP: schedules, month ends, leap years, pause, duplicates, low balance');
+  const helpers = ['pad', 'toStr', 'parse', 'addDays'].map(n => one(ix, new RegExp('function ' + n + '\\([^\\n]*\\}(?=\\n)'), n)).join('\n');
+  const region = between(ix, 'function recDay(', 'function recDues(');
+  function make(o) {
+    o = o || {};
+    const env = { S: { recReady: true, entReady: true, mode: 'cloud', recBusy: {} }, REC: o.REC || [], log: [], saved: [], bal: o.bal === undefined ? 1e9 : o.bal, today: o.today || '2026-01-10' };
+    const src = `var S=env.S,REC=env.REC;var __t=env.today;function todayStr(){return __t}
+      function curMk(){return __t.slice(0,7)}function addMonths(s,n){var d=parse(s);d.setDate(1);d.setMonth(d.getMonth()+n);return toStr(d)}function addMk(mk,n){return addMonths(mk+'-01',n).slice(0,7)}
+      function balanceOf(){return env.bal}function money(v,c){return c+' '+v}function failMsg(e){return String(e)}
+      function saveEntry(e){env.saved.push(e);if(env.dup&&env.saved.some(function(x,i){return x.id===e.id&&i<env.saved.length-1}))env.dupFound=true;return Promise.resolve()}
+      function recSaveOne(){env.log.push('save');return Promise.resolve()}function toast(m){env.log.push('toast:'+m)}function notify(t){env.log.push('notify:'+t)}function render(){}
+      ${helpers}\n${region}\nreturn {sipDates,sipTodo,sipNext,sipSetStatus,recAuto,setToday:function(d){__t=d},S:S}`;
+    const api = new Function('env', src)(env);
+    return Object.assign(env, { api });
+  }
+  const T = make();
+  const D = (r, upTo) => T.api.sipDates(r, upTo);
+  eq('daily: 4 days', D({ freq: 'daily', startDate: '2026-01-01' }, '2026-01-04'), ['2026-01-01', '2026-01-02', '2026-01-03', '2026-01-04']);
+  eq('weekly: every 7 days', D({ freq: 'weekly', startDate: '2026-01-01' }, '2026-01-20'), ['2026-01-01', '2026-01-08', '2026-01-15']);
+  eq('monthly: 31st becomes month end (non-leap Feb)', D({ freq: 'monthly', startDate: '2026-01-31' }, '2026-04-30'), ['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30']);
+  eq('monthly: 31st in leap year Feb', D({ freq: 'monthly', startDate: '2028-01-31' }, '2028-03-01'), ['2028-01-31', '2028-02-29']);
+  eq('monthly: day setting 10, start after the 10th, first is next month', D({ freq: 'monthly', startDate: '2026-01-20', day: 10 }, '2026-03-15'), ['2026-02-10', '2026-03-10']);
+  eq('monthly: crosses the new year', D({ freq: 'monthly', startDate: '2026-11-15' }, '2027-02-20'), ['2026-11-15', '2026-12-15', '2027-01-15', '2027-02-15']);
+  eq('yearly: 29 Feb becomes 28 Feb in normal years, 29 in leap years', D({ freq: 'yearly', startDate: '2024-02-29' }, '2028-12-31'), ['2024-02-29', '2025-02-28', '2026-02-28', '2027-02-28', '2028-02-29']);
+  eq('one time: one date only', D({ freq: 'once', startDate: '2026-03-05' }, '2030-01-01'), ['2026-03-05']);
+  eq('one time: not yet due', D({ freq: 'once', startDate: '2026-03-05' }, '2026-03-04'), []);
+  eq('end date stops it', D({ freq: 'daily', startDate: '2026-01-01', endDate: '2026-01-02' }, '2026-01-31'), ['2026-01-01', '2026-01-02']);
+  eq('start in the future: nothing yet', D({ freq: 'monthly', startDate: '2026-06-01' }, '2026-01-10'), []);
+  eq('bad frequency: nothing', D({ freq: 'hourly', startDate: '2026-01-01' }, '2026-02-01'), []);
+  eq('bad start date (30 Feb): nothing', D({ freq: 'daily', startDate: '2026-02-30' }, '2026-04-01'), []);
+  eq('hostile start date: nothing', D({ freq: 'daily', startDate: '<b>x</b>' }, '2026-04-01'), []);
+  eq('daily SIP over many years is capped, no freeze', D({ freq: 'daily', startDate: '1990-01-01' }, '2026-01-01').length <= 5000, true);
+  eq('next date for monthly SIP', T.api.sipNext({ freq: 'monthly', startDate: '2026-01-10', last: '2026-01-10' }, '2026-01-10'), '2026-02-10');
+  eq('next date: none after it finished', T.api.sipNext({ freq: 'once', startDate: '2026-01-10', last: '2026-01-10' }, '2026-01-10'), null);
+  eq('next date: none when cancelled', T.api.sipNext({ freq: 'daily', startDate: '2026-01-10', status: 'cancelled' }, '2026-01-10'), null);
+
+  /* pause / resume / cancel */
+  let r = { freq: 'daily', startDate: '2026-01-01', last: '2026-01-03', status: 'active' };
+  T.api.sipSetStatus(r, 'paused', '2026-01-05'); eq('paused', r.status, 'paused');
+  T.api.sipSetStatus(r, 'active', '2026-01-09');
+  eq('resume does not catch up the paused days', [r.status, r.last], ['active', '2026-01-09']);
+  eq('after resume only new days are due', T.api.sipTodo(r, '2026-01-10'), ['2026-01-10']);
+  r = { freq: 'daily', startDate: '2026-01-01', pend: '2026-01-02' }; T.api.sipSetStatus(r, 'cancelled', '2026-01-05');
+  eq('cancel drops the waiting payment', [r.status, r.pend], ['cancelled', undefined]);
+  T.api.sipSetStatus(r, 'active', '2026-01-06'); eq('a cancelled SIP cannot be resumed', r.status, 'cancelled');
+
+  /* automatic recording */
+  function run(rec, o) { const m = make(Object.assign({ REC: [rec] }, o)); m.api.recAuto(); return m; }
+  const base = { id: 'a1', name: 'Fund', kind: 'sip', cur: 'INR', amount: 5000, account: 'Cash', freq: 'monthly', startDate: '2026-01-10', status: 'active' };
+  let m = run(Object.assign({}, base), { today: '2026-01-10' }); await sleep(20);
+  eq('due today with enough money: one SIP entry', m.saved.map(e => [e.id, e.type, e.kind, e.amount, e.account, e.date]), [['rec_a1_2026-01-10', 'sip', 'invest', 5000, 'Cash', '2026-01-10']]);
+  eq('last paid date is recorded', m.REC[0].last, '2026-01-10');
+  m.api.recAuto(); await sleep(20);
+  eq('second run does not add it again (no double payment)', m.saved.length, 1);
+  m = run(Object.assign({}, base), { today: '2026-01-10', bal: 100 }); await sleep(20);
+  eq('not enough money: nothing deducted, payment waits as due', [m.saved.length, m.REC[0].pend], [0, '2026-01-10']);
+  eq('not enough money: user is told', m.log.some(x => x.indexOf('notify:Payment due') === 0), true);
+  m = run(Object.assign({}, base, { status: 'paused' }), { today: '2026-03-10' }); await sleep(20);
+  eq('paused: nothing added', m.saved.length, 0);
+  m = run(Object.assign({}, base, { status: 'cancelled' }), { today: '2026-03-10' }); await sleep(20);
+  eq('cancelled: nothing added', m.saved.length, 0);
+  m = run(Object.assign({}, base, { freq: 'daily', startDate: '2026-01-08' }), { today: '2026-01-10' }); await sleep(20);
+  eq('3 missed days are caught up, one entry each', m.saved.map(e => e.date), ['2026-01-08', '2026-01-09', '2026-01-10']);
+  m = run(Object.assign({}, base, { freq: 'daily', startDate: '2026-01-01' }), { today: '2026-01-10' }); await sleep(20);
+  eq('10 missed days: nothing added silently', m.saved.length, 0);
+  eq('10 missed days: marked for your decision, once', [m.REC[0].review, m.log.filter(x => x.indexOf('toast:') === 0).length], [10, 1]);
+  m.api.recAuto(); await sleep(20);
+  eq('decision still pending: no second warning', m.log.filter(x => x.indexOf('toast:') === 0).length, 1);
+  m.REC[0].catchOk = true; m.api.recAuto(); await sleep(30);
+  eq('after you agree: all 10 added, flags cleared', [m.saved.length, m.REC[0].catchOk, m.REC[0].review], [10, undefined, undefined]);
+  m = run(Object.assign({}, base, { freq: 'daily', startDate: '2026-01-08' }), { today: '2026-01-10', bal: 7000 }); await sleep(20);
+  eq('money for only 1 of 3: adds 1, the next waits as due', [m.saved.map(e => e.date), m.REC[0].pend], [['2026-01-08'], '2026-01-09']);
+  m = run(Object.assign({}, base, { startDate: '2026-06-10' }), { today: '2026-01-10' }); await sleep(20);
+  eq('SIP that starts in the future: nothing', m.saved.length, 0);
+  m = run({ id: 'o1', name: 'Old', kind: 'expense', cur: 'OMR', amount: 5, account: 'Cash', day: 10, start: '2026-01', endMode: 'none', category: 'Bills' }, { today: '2026-01-12' }); await sleep(20);
+  eq('old monthly recurring still works as before', m.saved.map(e => [e.id, e.type, e.date]), [['rec_o1_2026-01', 'expense', '2026-01-10']]);
+  check('restore only accepts valid SIP schedules and drops catch-up flags', /\(!x\.freq\|\|\(x\.kind==='sip'&&sipOk\(x\)/.test(ix) && /if\(r\.freq\)\{delete r\.catchOk;delete r\.review;delete r\.pend\}/.test(ix));
+  check('SIP screen is drawn with the SIP page', /renderSipAnalysis\(\);renderSipAuto\(\);/.test(ix));
+  check('SIP names are escaped on screen', /'<div class="plb"><div class="pln"><b>'\+esc\(r\.name\)/.test(ix.slice(ix.indexOf('function renderSipAuto'))));
+  check('old recurring screen skips SIPs (they have their own card on the SIP page)', /REC\.filter\(function\(r\)\{return !r\.freq\}\)/.test(ix));
+}
+
 (async () => {
-  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testStartup];
+  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testStartup, testSip];
   for (const p of parts) { try { await p(); } catch (e) { fail++; console.log('FAIL: ' + p.name + ' could not run: ' + e.message); } }
   console.log('\n' + pass + ' checks passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
