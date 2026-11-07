@@ -8,6 +8,49 @@
 <meta name="apple-mobile-web-app-title" content="My Wallet">
 <meta name="theme-color" content="#000000">
 <script>
+/* TEMPORARY speed probe. Does nothing unless the address ends with ?perf=1. Records only step names and times (no data, no login info). */
+(function(){
+var on=false;try{on=/[?&]perf=1/.test(location.search)||sessionStorage.getItem('mywallet.perf')==='1'}catch(e){}
+if(!on){window.__pm=function(){};return}
+var log=[],run=1,seen={};
+try{sessionStorage.setItem('mywallet.perf','1');log=JSON.parse(sessionStorage.getItem('mywallet.perflog')||'[]');log.forEach(function(r){if(r.run>=run)run=r.run+1})}catch(e){}
+var box=null;
+function save(){try{log=log.slice(-80);sessionStorage.setItem('mywallet.perflog',JSON.stringify(log))}catch(e){}}
+function text(){
+  var out=[],c=navigator.connection||{};
+  out.push('Network: '+(c.effectiveType||'?')+(c.downlink?', ~'+c.downlink+' Mbps':'')+' | service worker: '+((navigator.serviceWorker&&navigator.serviceWorker.controller)?'active':'none'));
+  var runs={};log.forEach(function(r){(runs[r.run]=runs[r.run]||[]).push(r)});
+  Object.keys(runs).forEach(function(k){
+    var a=runs[k],big=0,bi=-1;
+    a.forEach(function(r,i){var d=i?r.t-a[i-1].t:r.t;r.d=d;if(d>big){big=d;bi=i}});
+    out.push('--- Load #'+k+' ---');
+    a.forEach(function(r,i){out.push((i===bi?'>> ':'   ')+r.n+'  at '+r.t+' ms  (+'+r.d+')')});
+    out.push('   total until entries shown: '+(function(){var e=a.filter(function(r){return r.n==='entries_first_snapshot'})[0];return e?e.t+' ms':'not reached'})());
+  });
+  try{var rs=performance.getEntriesByType('resource').filter(function(r){return /firebasejs|cloud\.js/.test(r.name)});
+    if(rs.length){out.push('--- Files (this load) ---');rs.forEach(function(r){out.push('   '+r.name.split('/').pop()+': '+Math.round(r.duration)+' ms, '+Math.round((r.transferSize||0)/1024)+' KB')})}}catch(e){}
+  out.push('">>" marks the biggest wait in each load.');
+  return out.join('\n');
+}
+function paint(){if(!box)return;box.querySelector('pre').textContent=text()}
+function mount(){
+  if(box||!document.body)return;
+  box=document.createElement('div');
+  box.style.cssText='position:fixed;left:0;right:0;bottom:0;max-height:55vh;overflow:auto;z-index:99999;background:#111;color:#8f8;font:11px/1.35 monospace;padding:6px;border-top:2px solid #8f8';
+  box.innerHTML='<div style="margin-bottom:4px"><button id="pmCopy" style="font:12px sans-serif">Copy</button> <button id="pmClr" style="font:12px sans-serif">Clear</button> <button id="pmOff" style="font:12px sans-serif">Close</button> <b>Speed test</b></div><pre style="margin:0;white-space:pre-wrap"></pre>';
+  document.body.appendChild(box);
+  box.querySelector('#pmCopy').onclick=function(){var t=text();try{navigator.clipboard.writeText(t)}catch(e){}};
+  box.querySelector('#pmClr').onclick=function(){log=[];run=1;seen={};save();paint()};
+  box.querySelector('#pmOff').onclick=function(){try{sessionStorage.removeItem('mywallet.perf');sessionStorage.removeItem('mywallet.perflog')}catch(e){}box.remove();box=null};
+  paint();
+}
+window.__pm=function(n,once){try{if(once){if(seen[n])return;seen[n]=1}log.push({run:run,n:n,t:Math.round(performance.now())});save();mount();paint()}catch(e){}};
+window.__pm('html_start');
+document.addEventListener('DOMContentLoaded',function(){window.__pm('page_ready')});
+window.addEventListener('load',function(){window.__pm('page_loaded')});
+})();
+</script>
+<script>
 /* db handle arrives after login (cloud.js calls __dbRes). Until then the app waits instead of falling back to device-only mode. */
 window.__dbP=new Promise(function(r){window.__dbRes=r});
 window.claude={use:function(n){return n==='db'?window.__dbP:Promise.resolve(null)}};
@@ -3918,6 +3961,7 @@ render();
 (async function(){
   var db=null;
   try{db=(window.claude&&window.claude.use)?await window.claude.use('db'):null}catch(e){db=null}
+  window.__pm('app_got_db_handle');
   if(db){
     S.db=db;S.mode='cloud';S.plansReady=false;
     db.collection('plan_income').onSnapshot(function(snap){PL.inc=plLines(snap);S.piSeen=true;plTryMigrate();render()},function(){S.piSeen=true;render()});
@@ -3933,7 +3977,7 @@ render();
     db.collection('recurring').onSnapshot(function(snap){REC=snap.docs.map(function(d){var x=Object.assign({},d.data()||{});x.id=d.id;return x}).filter(function(x){return x.name&&x.amount>0});S.recReady=true;recMigrate();render()},function(){S.recReady=true;render()});
     db.collection('entries').onSnapshot(function(snap){
       S.entries=snap.docs.map(function(d){var x=Object.assign({},d.data()||{});x.id=d.id;return x}).filter(validEntry);
-      S.mode='cloud';S.entReady=true;render();
+      S.mode='cloud';S.entReady=true;render();window.__pm('entries_first_snapshot',true);
     },function(){toast('Live sync stopped. Reload the page to reconnect.')});
     db.collection('rates').onSnapshot(function(snap){
       S.rates=snap.docs.map(function(d){var x=d.data()||{};return {d:d.id,r:Number(x.rate)}}).filter(function(x){return x.r>0&&/^\d{4}-\d{2}-\d{2}$/.test(x.d)}).sort(function(a,b){return a.d<b.d?-1:1});

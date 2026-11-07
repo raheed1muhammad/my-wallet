@@ -13,6 +13,7 @@ var firebaseConfig={
   appId:"1:183119690656:web:d496517fbecf52353482c5"
 };
 window.__cloudUp=true;
+var PM=function(n,o){try{window.__pm&&window.__pm(n,o)}catch(e){}};PM('firebase_files_loaded');
 var app=initializeApp(firebaseConfig),auth=getAuth(app),fs;
 try{fs=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}
 catch(e){fs=initializeFirestore(app,{})}
@@ -149,22 +150,26 @@ window.__cloudPatch=function(op,localJson){
 
 /* ---------- start after login ---------- */
 function begin(){
+  PM('begin');
   var prev=null;try{prev=localStorage.getItem(UIDK)}catch(e){}
   if(prev!==UID){
     wipeLocal();try{localStorage.setItem(UIDK,UID);sessionStorage.removeItem(RELOADK)}catch(e){}
-    if(prev!==null){location.reload();return}
+    if(prev!==null){PM('RELOAD_new_user');location.reload();return}
   }
+  PM('settings_read_start');
   timeout(getDoc(uref('settings/app')),3000).then(function(s){
     var cloud=s.exists()?s.data().set:null,local=null;
     try{local=localStorage.getItem(SETK)}catch(e){}
+    PM('settings_read_done:'+(!cloud?'none_in_cloud':cloud===local?'same_as_phone':'differs_from_phone'));
     if(cloud&&cloud!==local){
       var already=false;try{already=sessionStorage.getItem(RELOADK)==='1'}catch(e){}
-      if(!already){try{localStorage.setItem(SETK,cloud);sessionStorage.setItem(RELOADK,'1')}catch(e){}location.reload();return}
+      if(!already){try{localStorage.setItem(SETK,cloud);sessionStorage.setItem(RELOADK,'1')}catch(e){}PM('RELOAD_settings_differ');location.reload();return}
     }else if(!cloud&&local){track(setDoc(uref('settings/app'),{set:local,t:Date.now()})).catch(function(){})}
     ready();
-  }).catch(function(){ready()});
+  }).catch(function(){PM('settings_read_failed_or_timeout');ready()});
 }
 function ready(){
+  PM('ready_open_app');
   el.hidden=true;
   window.__cloudSet=function(json){if(UID)track(setDoc(uref('settings/app'),{set:json,t:Date.now()})).catch(function(){})};
   window.__cloud={email:EMAIL,signOut:doSignOut,exportData:exportData,importData:importData};
@@ -173,12 +178,15 @@ function ready(){
 var started=false,INVK='mywallet.invok';
 function timeout(p,ms){return Promise.race([p,new Promise(function(_,j){setTimeout(function(){j(new Error('timeout'))},ms)})])}
 onAuthStateChanged(auth,function(user){
+  PM('login_state_known:'+(user?'signed_in':'signed_out'),true);
   if(!user){UID=null;EMAIL='';started=false;showAuth('login');return}
   UID=user.uid;EMAIL=user.email||'';
   if(started)return;
   var known=false;try{known=localStorage.getItem(INVK)===UID}catch(e){}
   if(known){started=true;begin();return}
+  PM('invite_check_start');
   timeout(getDoc(doc(fs,'invited',UID)),8000).then(function(s){
+    PM('invite_check_done');
     if(s.exists()){try{localStorage.setItem(INVK,UID)}catch(e){}started=true;begin()}else showAuth('code')
   }).catch(function(e){showAuth('login','Cannot reach the server. Connect to the internet once to sign in.')});
 });
