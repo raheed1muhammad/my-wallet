@@ -3961,7 +3961,7 @@ render();
 (async function(){
   var db=null;
   try{db=(window.claude&&window.claude.use)?await window.claude.use('db'):null}catch(e){db=null}
-  window.__pm('app_got_db_handle');
+  try{window.__pm('app_got_db_handle')}catch(e){}
   if(db){
     S.db=db;S.mode='cloud';S.plansReady=false;
     db.collection('plan_income').onSnapshot(function(snap){PL.inc=plLines(snap);S.piSeen=true;plTryMigrate();render()},function(){S.piSeen=true;render()});
@@ -3977,7 +3977,7 @@ render();
     db.collection('recurring').onSnapshot(function(snap){REC=snap.docs.map(function(d){var x=Object.assign({},d.data()||{});x.id=d.id;return x}).filter(function(x){return x.name&&x.amount>0});S.recReady=true;recMigrate();render()},function(){S.recReady=true;render()});
     db.collection('entries').onSnapshot(function(snap){
       S.entries=snap.docs.map(function(d){var x=Object.assign({},d.data()||{});x.id=d.id;return x}).filter(validEntry);
-      S.mode='cloud';S.entReady=true;render();window.__pm('entries_first_snapshot',true);
+      S.mode='cloud';S.entReady=true;render();try{window.__pm('entries_first_snapshot',true)}catch(e){}
     },function(){toast('Live sync stopped. Reload the page to reconnect.')});
     db.collection('rates').onSnapshot(function(snap){
       S.rates=snap.docs.map(function(d){var x=d.data()||{};return {d:d.id,r:Number(x.rate)}}).filter(function(x){return x.r>0&&/^\d{4}-\d{2}-\d{2}$/.test(x.d)}).sort(function(a,b){return a.d<b.d?-1:1});
