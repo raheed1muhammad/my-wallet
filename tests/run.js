@@ -218,8 +218,49 @@ async function testSignOut() {
   check('outside link has noreferrer', /rel="noopener noreferrer">Exchange Rate API/.test(ix));
 }
 
+/* ---------- 7. fast start: open now when this phone already has its settings ---------- */
+async function testStartup() {
+  section('startup: app opens without waiting for the cloud settings');
+  const src = between(cj, 'function begin(){', 'function ready(){');
+  const timeoutSrc = one(cj, /function timeout\(p,ms\)\{[^\n]*\}/, 'timeout');
+  function make(o) {
+    const log = [], store = Object.assign({ 'mywallet.uid': 'U1' }, o.local === undefined ? {} : { 'mywallet.settings.v1': o.local });
+    let release;
+    const cloudGet = new Promise(r => { release = r; });
+    const env = {
+      log, timeoutSrc, UID: 'U1', UIDK: 'mywallet.uid', SETK: 'mywallet.settings.v1', RELOADK: 'r',
+      PM: () => { }, wipeLocal: () => log.push('wipeLocal'), ready: () => log.push('ready'),
+      uref: () => 'ref', track: p => p, doc: () => 'd', fs: {},
+      getDoc: () => o.cloudNever ? new Promise(() => { }) : cloudGet,
+      setDoc: () => { log.push('upload'); return Promise.resolve(); },
+      localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } },
+      sessionStorage: { getItem: () => null, setItem: () => { }, removeItem: () => { } },
+      location: { reload: () => log.push('reload') }
+    };
+    const names = Object.keys(env);
+    const fn = new Function(...names, timeoutSrc + src + '\nreturn begin;')(...names.map(k => env[k]));
+    const snap = cloud => ({ exists: () => cloud !== null, data: () => ({ set: cloud }) });
+    return { go: fn, log, store, answer: c => release(snap(c)) };
+  }
+  let t = make({ local: '{"a":1}' }); t.go();
+  eq('has local settings: app opens at once, before the cloud answers', t.log, ['ready']);
+  t.answer('{"a":2}'); await sleep(20);
+  eq('cloud differs: no reload', t.log, ['ready']);
+  eq('cloud differs: newer copy kept for the next open', t.store['mywallet.settings.v1'], '{"a":2}');
+  t = make({ local: '{"a":1}' }); t.go(); t.answer('{"a":1}'); await sleep(20);
+  eq('cloud same: nothing else happens', t.log, ['ready']);
+  t = make({ local: '{"a":1}' }); t.go(); t.answer(null); await sleep(20);
+  eq('cloud empty: local copy is uploaded', t.log, ['ready', 'upload']);
+  t = make({ local: '{"a":1}', cloudNever: true }); t.go(); await sleep(30);
+  eq('cloud never answers: app is already open, nothing breaks', t.log, ['ready']);
+  t = make({}); t.go();
+  eq('no local settings (new phone): still waits for the cloud', t.log, []);
+  t.answer('{"a":9}'); await sleep(20);
+  eq('new phone: cloud copy used (one reload, as before)', t.log, ['reload']);
+}
+
 (async () => {
-  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut];
+  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testStartup];
   for (const p of parts) { try { await p(); } catch (e) { fail++; console.log('FAIL: ' + p.name + ' could not run: ' + e.message); } }
   console.log('\n' + pass + ' checks passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

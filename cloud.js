@@ -157,6 +157,20 @@ function begin(){
     if(prev!==null){PM('RELOAD_new_user');location.reload();return}
   }
   PM('settings_read_start');
+  var haveLocal=false;try{haveLocal=localStorage.getItem(SETK)!==null}catch(e){}
+  if(haveLocal){
+    /* This phone already has its settings: open the app now and check the cloud copy in the background.
+       If the cloud copy is different it is kept for the next open (no reload while you are using the app). */
+    ready();
+    timeout(getDoc(uref('settings/app')),15000).then(function(s){
+      var cloud=s.exists()?s.data().set:null,local=null;
+      try{local=localStorage.getItem(SETK)}catch(e){}
+      PM('settings_checked_later:'+(!cloud?'none_in_cloud':cloud===local?'same_as_phone':'differs_from_phone'));
+      if(cloud&&cloud!==local){try{localStorage.setItem(SETK,cloud)}catch(e){}}
+      else if(!cloud&&local){track(setDoc(uref('settings/app'),{set:local,t:Date.now()})).catch(function(){})}
+    }).catch(function(){});
+    return;
+  }
   timeout(getDoc(uref('settings/app')),3000).then(function(s){
     var cloud=s.exists()?s.data().set:null,local=null;
     try{local=localStorage.getItem(SETK)}catch(e){}
