@@ -29,9 +29,9 @@ service cloud.firestore {
     // A document may not have more than 100 top-level fields (Firestore itself caps a document at 1 MB).
     match /users/{uid}/{col}/{id} {
       allow read, delete: if isMine(uid)
-        && col in ['entries', 'goals', 'plan_income', 'plan_items', 'plans', 'rates', 'recurring', 'settings', 'private'];
+        && col in ['entries', 'goals', 'plan_income', 'plan_items', 'plans', 'rates', 'recurring', 'settings', 'trading', 'private'];
       allow create, update: if isMine(uid)
-        && col in ['entries', 'goals', 'plan_income', 'plan_items', 'plans', 'rates', 'recurring', 'settings', 'private']
+        && col in ['entries', 'goals', 'plan_income', 'plan_items', 'plans', 'rates', 'recurring', 'settings', 'trading', 'private']
         && request.resource.data.keys().size() <= 100;
     }
   }

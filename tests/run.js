@@ -343,8 +343,74 @@ async function testSip() {
   check('old recurring screen skips SIPs (they have their own card on the SIP page)', /REC\.filter\(function\(r\)\{return !r\.freq\}\)/.test(ix));
 }
 
+/* ---------- 9. Trading practice (paper trading only) ---------- */
+async function testTrading() {
+  section('trading practice: virtual money, risk limits, costs');
+  const TR = require('../trading.js');
+  const C = TR.cfgOf({ capital: 100000, riskPct: 1, maxDaily: 2000, maxWeekly: 5000, maxTradesDay: 3, brokPct: 0.1, fixedFee: 20 });
+  eq('default settings are safe', [TR.cfgOf(null).riskPct, TR.cfgOf(null).capital, TR.cfgOf(null).ack], [1, 100000, false]);
+  eq('risk per trade is capped at 5%', TR.cfgOf({ riskPct: 50 }).riskPct, 5);
+  eq('charges: 0.1% + fixed fee', TR.fee(50000, C), 70);
+  const mk = (o) => Object.assign({ id: 't_1', sym: 'ABC', qty: 100, entry: 500, stop: 480, date: '2026-01-05', status: 'open', strat: 'Breakout', ts: 1 }, o);
+  let a = TR.account([mk()], C);
+  eq('buy uses practice cash only (cost + charges)', [a.cash, a.openValue], [49930, 50000]);
+  a = TR.account([mk({ status: 'closed', exit: 520, exitDate: '2026-01-06', feesIn: 70, feesOut: 72 })], C);
+  eq('closed win: profit after charges added to cash', [a.cash, a.realized], [101858, 1858]);
+  a = TR.account([mk({ status: 'closed', exit: 470, exitDate: '2026-01-06' })], C);
+  eq('closed loss reduces cash', a.cash, 100000 + (-30 * 100 - 70 - TR.fee(47000, C)));
+  eq('open trade with a typed price shows open result', TR.pnl(mk({ last: 510 }), C), 930);
+  eq('open trade without a price shows 0, no invented number', TR.pnl(mk(), C), 0);
+  const win = mk({ id: 't_a', status: 'closed', exit: 520, exitDate: '2026-01-06', ts: 1 }), loss = mk({ id: 't_b', status: 'closed', exit: 480, exitDate: '2026-01-07', strat: 'Other', ts: 2 }), loss2 = mk({ id: 't_c', status: 'closed', exit: 480, exitDate: '2026-01-08', strat: 'Other', ts: 3 });
+  const s = TR.stats([win, loss, loss2, mk({ id: 't_d' })], C);
+  eq('stats counts', [s.total, s.closed, s.open, s.wins, s.losses], [4, 3, 1, 1, 2]);
+  check('win rate is 33.3', s.winRate === 33.3, s.winRate);
+  check('max drawdown is the two losses in a row', s.maxDrawdown === 4276, s.maxDrawdown);
+  eq('strategy table', Object.keys(s.byStrategy).sort(), ['Breakout', 'Other']);
+  eq('reward to risk', [TR.rr(500, 480, 540), TR.rr(500, 480, 480), TR.rr(500, 520, 540)], [2, null, null]);
+  eq('position size: 1% of 1,00,000 with 20 risk per share = 50', TR.sizePosition({ capital: 100000, riskPct: 1, entry: 500, stop: 480, cash: 100000, brokPct: 0.1 }).qty, 50);
+  const lim = TR.sizePosition({ capital: 100000, riskPct: 1, entry: 500, stop: 480, cash: 10000, brokPct: 0.1 });
+  check('position size never exceeds available cash', lim.qty === 19 && lim.limitedByCash, JSON.stringify(lim));
+  eq('position size: bad input gives 0', TR.sizePosition({ capital: 1, riskPct: 1, entry: 500, stop: 600, cash: 1, brokPct: 0 }).qty, 0);
+  const buy = (o, T, c) => TR.checkBuy(Object.assign({ sym: 'ABC', qty: 50, entry: 500, stop: 480, target: 540, date: '2026-01-10' }, o), T || [], c || C, '2026-01-10');
+  eq('a normal trade has no errors or warnings', buy({}), { errors: [], warnings: [] });
+  check('stop-loss is required', buy({ stop: NaN }).errors.length === 1);
+  check('stop above entry is refused', buy({ stop: 520 }).errors.length === 1);
+  check('fractional quantity is refused', buy({ qty: 1.5 }).errors.length === 1);
+  check('lowercase or hostile share code is refused', buy({ sym: '<b>x</b>' }).errors.length === 1 && buy({ sym: 'abc' }).errors.length === 1);
+  check('not enough cash: refused, no borrowing', buy({ qty: 500 }).errors.some(x => /Borrowing/.test(x)));
+  check('too much risk: warning', buy({ qty: 80 }).warnings.some(x => /above your limit/.test(x)));
+  check('low reward to risk: warning', buy({ target: 510 }).warnings.some(x => /Reward to risk/.test(x)));
+  check('no target: warning', buy({ target: null }).warnings.some(x => /No target/.test(x)));
+  check('three trades today: warning', buy({}, [mk({ id: 't_1', date: '2026-01-10' }), mk({ id: 't_2', date: '2026-01-10' }), mk({ id: 't_3', date: '2026-01-10' })], TR.cfgOf({ capital: 1000000, maxTradesDay: 3 })).warnings.some(x => /daily|limit is 3/.test(x)));
+  const l1 = mk({ id: 't_l1', status: 'closed', exit: 400, exitDate: '2026-01-09', ts: 5 }), l2 = mk({ id: 't_l2', status: 'closed', exit: 400, exitDate: '2026-01-10', ts: 6 });
+  const w2 = buy({}, [l1, l2], TR.cfgOf({ capital: 1000000, maxDaily: 1000 }));
+  check('losses in a row and daily loss limit: warnings', w2.warnings.some(x => /last 2/.test(x)) && w2.warnings.some(x => /daily loss limit/.test(x)), JSON.stringify(w2));
+  eq('price at stop is detected', TR.priceHit(mk({ last: 479 })), 'stop');
+  eq('price at target is detected', TR.priceHit(mk({ last: 540, target: 540 })), 'target');
+  eq('no price typed: no signal', TR.priceHit(mk()), null);
+  eq('closed trade: no signal', TR.priceHit(mk({ status: 'closed', exit: 1, exitDate: '2026-01-02', last: 1 })), null);
+  check('weekly summary mentions trades', TR.weekly([win, loss], C, '2026-01-10').count === 2);
+  check('weekly summary with nothing', TR.weekly([], C, '2026-01-10').count === 0);
+  check('a hostile stored trade is rejected', !TR.okTrade(mk({ sym: '<img>' })) && !TR.okTrade(mk({ qty: 1.5 })) && !TR.okTrade(mk({ stop: 600 })) && !TR.okTrade(mk({ date: '2026-02-30' })) && !TR.okTrade(mk({ status: 'closed' })) && TR.okTrade(mk()));
+  const ex = TR.explain({ entry: 500, stop: 480, target: 530, qty: 50 }, C);
+  const all = JSON.stringify(ex).toLowerCase();
+  check('assistant never says buy now, sell now or guaranteed', !/buy now|sell now|guarantee|will rise|will fall|sure profit/.test(all));
+  check('assistant says it is education', /education/i.test(ex.title));
+  check('assistant asks for missing information', TR.explain({ entry: 0, stop: 0 }, C).lines.length === 1);
+  eq('there are 18 lessons, each with one quiz and a valid answer', TR.LESSONS.filter(l => l.q[1].length === 3 && l.q[2] >= 0 && l.q[2] < 3 && l.b.length >= 1).length, 18);
+  check('lesson search: rsi finds the RSI lesson first', TR.answerQ('what is rsi')[0].id === 'l12');
+  check('lesson search finds stop loss', TR.answerQ('what is a stop loss').some(l => l.id === 'l13'));
+  check('disclaimer text', TR.DISCLAIMER === 'PAPER TRADING – NO REAL MONEY INVOLVED.');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'trading.js'), 'utf8');
+  check('trading code does not touch wallet entries, SIP or recurring', !/collection\('(entries|recurring|settings|plans|goals|rates)'\)|saveEntry|balanceOf|REC\b/.test(src));
+  check('trading data goes only to its own collection', (src.match(/collection\('([a-z_]+)'\)/g) || []).every(x => x === "collection('trading')"));
+  check('trading code has no network calls', !/fetch\(|XMLHttpRequest|sendBeacon|WebSocket/.test(src));
+  check('page loads trading.js only when opened (not in the startup scripts)', !/<script[^>]+src=["']trading\.js/.test(ix));
+  check('rules allow the trading collection', /'trading'/.test(fs.readFileSync(path.join(__dirname, '..', 'firestore.rules'), 'utf8')));
+}
+
 (async () => {
-  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testStartup, testSip];
+  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testStartup, testSip, testTrading];
   for (const p of parts) { try { await p(); } catch (e) { fail++; console.log('FAIL: ' + p.name + ' could not run: ' + e.message); } }
   console.log('\n' + pass + ' checks passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

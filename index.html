@@ -1,4 +1,21 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}/* Trading practice page (see trading.js) */
+.tbanner{background:var(--surface-2);border:1px solid var(--line);border-left:4px solid var(--exp);border-radius:10px;padding:10px 12px;margin-bottom:10px;display:grid;gap:2px;font-size:12.5px;color:var(--ink-2)}
+.tbanner b{color:var(--ink);letter-spacing:.03em}
+.tnav{margin-bottom:12px}
+.tcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;min-width:0}
+.tcard h3{margin:0 0 10px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2)}
+.tcard h4{margin:14px 0 6px;font-size:13px}
+.tcard p{margin:0 0 8px;line-height:1.5}
+.tcard textarea,.tcard input,.tcard select{width:100%}
+.tgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.tlist{margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.5}
+.twarn{border-color:var(--exp);font-size:13px}
+.tchk{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;margin:4px 0 12px;line-height:1.45}
+.tchk input{width:auto;margin-top:3px}
+.tlesson{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:12px 4px;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font-size:14px;min-height:44px}
+.tq{display:block;width:100%;text-align:left;margin:6px 0}
+.tfoot{margin-top:10px;font-size:12px;color:var(--ink-2)}
+</style>
 <title>My Wallet</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/favicon-64.png">
@@ -1021,6 +1038,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
   </section>
 
   <!-- PAGE: RECURRING -->
+  <section class="page" id="p-trading" aria-label="Trading practice" hidden><div id="tradeApp"></div></section>
   <section class="page" id="p-recurring" aria-label="Recurring" hidden>
     <section class="card" id="recAddCard">
       <div class="chead"><h2>Add recurring</h2><div class="sub">Added to your ledger by itself on the date</div></div>
@@ -1154,7 +1172,7 @@ var charts=[];
 var PK='mywallet.prefs.v2';
 try{
   var pr=JSON.parse(localStorage.getItem(PK)||'{}');
-  if(['home','entry','analysis','ledger','loans','graph','sip','plan','balance','recurring','tools'].indexOf(pr.tab)>-1){S.tab=pr.tab==='entry'?'home':pr.tab;if(pr.tab!=='home'&&pr.tab!=='entry'&&pr.tab!=='ledger'&&pr.tab!=='balance')S.lastAn=pr.tab}
+  if(['home','entry','analysis','ledger','loans','graph','sip','plan','balance','recurring','trading','tools'].indexOf(pr.tab)>-1){S.tab=pr.tab==='entry'?'home':pr.tab;if(pr.tab!=='home'&&pr.tab!=='entry'&&pr.tab!=='ledger'&&pr.tab!=='balance')S.lastAn=pr.tab}
   if(['acc','cred','debt'].indexOf(pr.bsub)>-1)S.bsub=pr.bsub;
   if(pr.plcur==='INR'||pr.plcur==='OMR')S.plcur=pr.plcur;
   if(['day','week','month'].indexOf(pr.av)>-1)S.p.analysis.v=pr.av;
@@ -2684,8 +2702,8 @@ function renderBalance(){
 $('#bal').addEventListener('click',function(ev){var b=ev.target.closest('[data-balgo]');if(b)setTab(b.dataset.balgo)});
 
 /* ---------- Navigation: four main pages, sub headings inside ---------- */
-var SUBS={analysis:[['analysis','Income & expense'],['graph','Graph'],['sip','SIP'],['plan','Plan'],['loans','Loans'],['recurring','Recurring'],['tools','Tools']],balance:[['acc','Balances'],['cred','Creditor'],['debt','Debtor']]};
-var PAGES=['home','exchange','entry','analysis','ledger','loans','graph','sip','plan','balance','recurring','tools'];
+var SUBS={analysis:[['analysis','Income & expense'],['graph','Graph'],['sip','SIP'],['plan','Plan'],['loans','Loans'],['recurring','Recurring'],['trading','Trading'],['tools','Tools']],balance:[['acc','Balances'],['cred','Creditor'],['debt','Debtor']]};
+var PAGES=['home','exchange','entry','analysis','ledger','loans','graph','sip','plan','balance','recurring','trading','tools'];
 function groupOf(t){return t==='exchange'?'exchange':t==='home'?'home':t==='entry'?'entry':t==='ledger'?'ledger':t==='balance'?'balance':'analysis'}
 function paintSubnav(){
   var g=groupOf(S.tab),list=SUBS[g],el=$('#subnav');
@@ -2980,6 +2998,7 @@ function render(){
   if(S.tab==='balance')renderBalance();
   if(S.tab==='tools')renderTools();
   if(S.tab==='recurring')renderRecurring();
+  if(S.tab==='trading')renderTrading();
   recWarn();recAuto();paintDue();
   var nt=$('#notice');
   if(S.mode==='local'){nt.hidden=false;nt.textContent='Entries are kept on this device only. Open the link while signed in to claude.ai to save them to your wallet and see them on every device.'}
@@ -3824,6 +3843,23 @@ function paintSipPrev(){
   if(!first){el.textContent='No payment falls in this period.';return}
   var bal=balanceOf(v.account,v.cur,todayStr()),after=bal-rnd(v.amount,v.cur);
   el.innerHTML=esc(sipDescribe(tmp))+'. First payment '+esc(sipFmt(first))+(first===todayStr()?' (today: it is recorded as soon as you save)':'')+'<br><span class="nsub">Balance in '+esc(v.account)+' now '+esc(money(bal,v.cur))+'. After the first payment '+(after<-0.0004?'it is '+esc(money(-after,v.cur))+' short, so it will wait as "due".':esc(money(after,v.cur))+'.')+'</span>';
+}
+/* ---------- Trading practice: loaded only when the page is opened ---------- */
+function renderTrading(){
+  var host=$('#tradeApp');if(!host||S.mode==='loading')return;
+  var key=S.db?'cloud':'local';
+  function go(){
+    if(!window.MWTrading)return;
+    if(S.trKey!==key){S.trKey=key;window.MWTrading.start({db:S.db,toast:toast,failMsg:failMsg,esc:esc,today:todayStr()},host)}
+    else window.MWTrading.refresh(todayStr());
+  }
+  if(window.MWTrading){go();return}
+  if(S.trLoading)return;S.trLoading=true;
+  host.innerHTML='<div class="empty">Loading…</div>';
+  var s=document.createElement('script');s.src='trading.js';
+  s.onload=function(){S.trLoading=false;go()};
+  s.onerror=function(){S.trLoading=false;host.innerHTML='<div class="empty">Could not load the trading page. Check your connection and reopen it.</div>'};
+  document.head.appendChild(s);
 }
 function renderRecurring(){
   var host=$('#rec-list');if(!host)return;

@@ -19,7 +19,7 @@ try{fs=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:pers
 catch(e){fs=initializeFirestore(app,{})}
 
 var SETK='mywallet.settings.v1',UIDK='mywallet.uid',RELOADK='mywallet.reloaded';
-var COLS=['entries','rates','plans','plan_income','plan_items','goals','recurring','settings'];
+var COLS=['entries','rates','plans','plan_income','plan_items','goals','recurring','settings','trading'];
 var UID=null,EMAIL='';
 
 /* ---------- login screen ---------- */

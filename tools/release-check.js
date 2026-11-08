@@ -20,6 +20,7 @@ scripts.forEach((code, i) => { try { new vm.Script(code); ok('index.html script 
 const tmp = path.join(os.tmpdir(), 'mywallet-cloud-check.mjs'); fs.writeFileSync(tmp, read('cloud.js'));
 const r = spawnSync(process.execPath, ['--check', tmp], { encoding: 'utf8' });
 r.status === 0 ? ok('cloud.js') : no('cloud.js: ' + r.stderr.split('\n')[0]);
+try { new vm.Script(read('trading.js')); ok('trading.js'); } catch (e) { no('trading.js: ' + e.message); }
 try { new vm.Script(read('sw.js')); ok('sw.js'); } catch (e) { no('sw.js: ' + e.message); }
 
 console.log('2. tests');
@@ -28,7 +29,7 @@ const last = t.stdout.trim().split('\n').pop();
 t.status === 0 ? ok(last) : (no(last), console.log(t.stdout.split('\n').filter(l => l.startsWith('FAIL')).join('\n')));
 
 console.log('3. secrets');
-const files = ['index.html', 'cloud.js', 'sw.js', 'manifest.json', 'firestore.rules', 'README.md'].filter(f => fs.existsSync(path.join(root, f)));
+const files = ['index.html', 'cloud.js', 'trading.js', 'sw.js', 'manifest.json', 'firestore.rules', 'README.md'].filter(f => fs.existsSync(path.join(root, f)));
 const patterns = [[/-----BEGIN [A-Z ]*PRIVATE KEY-----/, 'private key'], [/\bghp_[A-Za-z0-9]{20,}/, 'GitHub token'], [/\bsk-[A-Za-z0-9_-]{20,}/, 'API secret key'], [/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}\b/, 'email address']];
 let found = false;
 files.forEach(f => {
@@ -47,7 +48,7 @@ else {
   let base = ['origin/main', 'main'].find(b => git(['rev-parse', '--verify', '-q', b]).status === 0);
   if (!base) { ok('cache number is v' + now + ' (no base branch to compare with)'); }
   else {
-    const changed = git(['diff', '--name-only', base, '--', 'index.html', 'cloud.js', 'manifest.json']).stdout.trim();
+    const changed = git(['diff', '--name-only', base, '--', 'index.html', 'cloud.js', 'trading.js', 'manifest.json']).stdout.trim();
     const baseNum = num(git(['show', base + ':sw.js']).stdout || '');
     if (!changed) ok('app files unchanged compared with ' + base + ' (cache v' + now + ')');
     else if (baseNum !== null && now > baseNum) ok('app files changed and cache raised: v' + baseNum + ' to v' + now);
