@@ -337,7 +337,10 @@ async function testSip() {
   eq('SIP that starts in the future: nothing', m.saved.length, 0);
   m = run({ id: 'o1', name: 'Old', kind: 'expense', cur: 'OMR', amount: 5, account: 'Cash', day: 10, start: '2026-01', endMode: 'none', category: 'Bills' }, { today: '2026-01-12' }); await sleep(20);
   eq('old monthly recurring still works as before', m.saved.map(e => [e.id, e.type, e.date]), [['rec_o1_2026-01', 'expense', '2026-01-10']]);
-  check('restore only accepts valid SIP schedules and drops catch-up flags', /\(!x\.freq\|\|\(x\.kind==='sip'&&sipOk\(x\)/.test(ix) && /if\(r\.freq\)\{delete r\.catchOk;delete r\.review;delete r\.pend\}/.test(ix));
+  check('restore only accepts valid SIP schedules and drops catch-up flags', /\(!x\.freq\|\|\(x\.kind==='sip'&&sipOk\(x\)/.test(ix) && /if\(r\.freq\)\{delete r\.catchOk;delete r\.review;delete r\.pend;r\.ext=r\.ext===true/.test(ix));
+  check('SIPs paid outside the app wait for confirmation and are never deducted automatically', /if\(r\.freq&&r\.ext\)\{pend=todo\[i\];break\}\n\s+if\(recNeedsBal/.test(ix));
+  check('skipped SIP payments are remembered in the history', /act==='skip1'\)\{if\(!r\.pend\)return;r\.skipped=/.test(ix) && /function sipHistory/.test(ix));
+  check('SIP edit cannot change the schedule', !/r\.freq=|r\.startDate=/.test(ix.slice(ix.indexOf("act==='editsave'"), ix.indexOf("act==='editsave'") + 900)));
   check('SIP screen is drawn with the SIP page', /renderSipAnalysis\(\);renderSipAuto\(\);/.test(ix));
   check('SIP names are escaped on screen', /'<div class="plb"><div class="pln"><b>'\+esc\(r\.name\)/.test(ix.slice(ix.indexOf('function renderSipAuto'))));
   check('old recurring screen skips SIPs (they have their own card on the SIP page)', /REC\.filter\(function\(r\)\{return !r\.freq\}\)/.test(ix));

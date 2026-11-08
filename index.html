@@ -977,6 +977,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
         <div class="fld"><label for="sf-freq">How often</label><select id="sf-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="daily">Daily</option><option value="yearly">Yearly</option><option value="once">One time</option></select></div>
         <div class="fld"><label for="sf-start">First payment date</label><input id="sf-start" type="date"></div>
         <div class="fld"><label for="sf-end">Last date (optional)</label><input id="sf-end" type="date"></div>
+        <label class="tchk"><input type="checkbox" id="sf-ext"> I pay this myself in my bank or broker app. Ask me to confirm instead of deducting automatically.</label>
         <div class="tsum" id="sf-prev" aria-live="polite"></div>
         <p class="err" id="sf-err" role="alert"></p>
         <button class="btn" type="submit">Save SIP schedule</button>
@@ -3617,6 +3618,7 @@ function recAuto(){
     }
     var go=[],hold=0,pend=null;
     for(var i=0;i<todo.length;i++){
+      if(r.freq&&r.ext){pend=todo[i];break}
       if(recNeedsBal(r)&&recAvail(r)-hold<r.amount-0.0004){pend=todo[i];break}
       go.push(todo[i]);hold+=recNeedsBal(r)?r.amount:0;
     }
@@ -3630,7 +3632,8 @@ function recAuto(){
       if(go.length||pend)return recSaveOne(r);
     }).then(function(){
       if(go.length)toast(go.length+' recurring entr'+(go.length===1?'y':'ies')+' added: '+r.name);
-      if(pend){notify('Payment due: '+r.name,money(r.amount,r.cur)+' from '+r.account+' is due but the balance is not enough. Open My Wallet and tap Repay.','due|'+r.id+'|'+pend);setTimeout(function(){toast('Payment due: '+r.name+'. Tap the wallet icon to repay.')},go.length?3000:0)}
+      if(pend&&r.freq&&r.ext){notify('SIP waiting for you: '+r.name,'Confirm in My Wallet when you have paid '+money(r.amount,r.cur)+' yourself.','due|'+r.id+'|'+pend);setTimeout(function(){toast('Did you pay '+r.name+'? Confirm it in the SIP page.')},go.length?3000:0)}
+      else if(pend){notify('Payment due: '+r.name,money(r.amount,r.cur)+' from '+r.account+' is due but the balance is not enough. Open My Wallet and tap Repay.','due|'+r.id+'|'+pend);setTimeout(function(){toast('Payment due: '+r.name+'. Tap the wallet icon to repay.')},go.length?3000:0)}
     }).catch(function(e){toast(failMsg(e))}).then(function(){recRelease(r,hold);delete S.recBusy[r.id];render()});
   });
 }
@@ -3657,7 +3660,7 @@ function dueFill(){
     var r=d.r,av=recAvail(r),ok=av>=r.amount-0.0004;
     return '<div style="padding:12px 0;border-top:1px solid var(--line)"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+esc(r.name)+'</b><b class="num">'+money(r.amount,r.cur)+'</b></div>'+
       '<div class="sub">Due '+esc(F_LEDG.format(parse(d.date)))+' · from '+esc(r.account)+'</div>'+
-      '<div class="sub '+(ok?'':'neg')+'">'+(ok?'Balance '+money(av,r.cur)+'. Ready to pay.':'Balance '+money(Math.max(av,0),r.cur)+'. Not enough. Add money to '+esc(r.account)+' first.')+'</div>'+
+      '<div class="sub '+(ok?'':'neg')+'">'+(r.freq&&r.ext&&ok?'You pay this one yourself (bank or broker app). Balance '+money(av,r.cur)+'. Confirm it on the SIP page once paid.':ok?'Balance '+money(av,r.cur)+'. Ready to pay.':'Balance '+money(Math.max(av,0),r.cur)+'. Not enough. Add money to '+esc(r.account)+' first.')+'</div>'+
       '<div style="margin-top:8px"><button type="button" class="btn" data-repay="'+esc(r.id)+'" style="width:auto;min-height:44px;padding:10px 22px"'+(ok?'':' disabled')+'>Repay</button></div></div>';
   }).join('');
 }
@@ -3772,7 +3775,7 @@ function recDescribe(r){
   return dayTxt+', '+end;
 }
 /* ---------- Automatic SIP screen ---------- */
-S.sipForm=false;S.sipCancel=null;
+S.sipForm=false;S.sipCancel=null;S.sipHist=null;S.sipEdit=null;
 var SIP_WD=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],SIP_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function sipOrd(n){var t=n%100;return n+((t>=11&&t<=13)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'))}
 function sipList(){return REC.filter(function(r){return r.kind==='sip'&&r.freq}).sort(function(a,b){return (a.ts||0)-(b.ts||0)})}
@@ -3787,6 +3790,24 @@ function sipDescribe(r){
 }
 function sipFmt(k){return F_LEDG.format(parse(k))}
 function sipSave(r,msg){recSaveOne(r).then(function(){if(msg)toast(msg);render()}).catch(function(e){toast(failMsg(e));render()})}
+function sipHistory(r){
+  var rows=S.entries.filter(function(e){return e.recurringId===r.id}).map(function(e){return {d:e.date,t:'Recorded',a:e.amount,c:e.currency}});
+  (r.skipped||[]).forEach(function(d){rows.push({d:d,t:'Skipped',a:null})});
+  if(r.pend)rows.push({d:r.pend,t:r.ext?'Awaiting your confirmation':'Failed: not enough money',a:r.amount,c:r.cur,bad:true});
+  rows.sort(function(a,b){return a.d<b.d?1:a.d>b.d?-1:0});
+  var tot=S.entries.filter(function(e){return e.recurringId===r.id}).reduce(function(s,e){return s+e.amount},0);
+  return '<div class="sub" style="margin-top:8px"><b>Payment history</b> · total recorded '+money(tot,r.cur)+'</div>'+(rows.length?rows.slice(0,40).map(function(x){return '<div class="pln"><span>'+esc(sipFmt(x.d))+'</span><span class="'+(x.bad?'neg':'')+'">'+esc(x.t)+(x.a!=null?' · '+money(x.a,x.c):'')+'</span></div>'}).join(''):'<div class="sub">Nothing yet.</div>')+'<div class="fine">"Recorded" means written in My Wallet. It does not prove a bank transfer or fund purchase happened.</div>';
+}
+function sipEditForm(r){
+  var opts=actAccs().map(function(a){return '<option'+(a===r.account?' selected':'')+'>'+esc(a)+'</option>'}).join('');
+  return '<div class="plb" style="border:0"><div class="sub"><b>Edit</b>. The schedule (how often and the start date) cannot change. Cancel it and make a new one for that. A new amount applies to future payments only.</div>'+
+    '<div class="fld"><label for="se-name">Name</label><input id="se-name" maxlength="60" value="'+esc(r.name)+'"></div>'+
+    '<div class="fld"><label for="se-amount">Amount ('+esc(r.cur)+')</label><input id="se-amount" inputmode="decimal" value="'+esc(String(r.amount))+'"></div>'+
+    '<div class="fld"><label for="se-account">Pay from account</label><select id="se-account">'+opts+'</select></div>'+
+    '<div class="fld"><label for="se-end">Last date (optional)</label><input id="se-end" type="date" value="'+esc(r.endDate||'')+'"></div>'+
+    '<label class="tchk"><input type="checkbox" id="se-ext"'+(r.ext?' checked':'')+'> I pay this myself in my bank or broker app. Ask me to confirm instead of deducting automatically.</label>'+
+    '<p class="err" id="se-err" role="alert"></p><div class="prow"><button class="btn2" type="button" data-sip="editsave" data-id="'+esc(r.id)+'">Save changes</button><button class="btn2" type="button" data-sip="editno" data-id="'+esc(r.id)+'">Close</button></div></div>';
+}
 function renderSipAuto(){
   var host=$('#sipauto-list');if(!host)return;
   var today=todayStr(),L=sipList();
@@ -3804,7 +3825,7 @@ function renderSipAuto(){
   host.innerHTML=L.map(function(r){
     var live=r.status!=='paused'&&r.status!=='cancelled',nxt=r.pend||(live?sipNext(r,today):null),fin=live&&!r.pend&&!r.review&&!nxt&&sipOk(r);
     var bal=balanceOf(r.account,r.cur,today),after=bal-r.amount,id=esc(r.id);
-    var pill=r.status==='cancelled'?'<span class="pill">Cancelled</span>':r.status==='paused'?'<span class="pill">Paused</span>':r.pend?'<span class="pill bad">Due: not enough money</span>':r.review?'<span class="pill bad">'+esc(String(r.review))+' missed: your decision</span>':fin?'<span class="pill good">Finished</span>':'<span class="pill good">Active</span>';
+    var pill=r.status==='cancelled'?'<span class="pill">Cancelled</span>':r.status==='paused'?'<span class="pill">Paused</span>':r.pend&&r.ext?'<span class="pill bad">Awaiting your confirmation</span>':r.pend?'<span class="pill bad">Failed: not enough money</span>':r.review?'<span class="pill bad">'+esc(String(r.review))+' missed: your decision</span>':fin?'<span class="pill good">Finished</span>':'<span class="pill good">Active</span>';
     var lines='<div class="sub">'+esc(sipDescribe(r))+' · from '+esc(sipFmt(r.startDate))+(r.endDate?' to '+esc(sipFmt(r.endDate)):'')+'</div>'+
       '<div class="sub">Pay from '+esc(r.account)+' · balance now '+money(bal,r.cur)+'</div>';
     if(nxt&&(live||r.pend)){
@@ -3813,14 +3834,16 @@ function renderSipAuto(){
     }
     if(r.last)lines+='<div class="sub">Last due date handled: '+esc(sipFmt(r.last))+'</div>';
     var b='';
-    if(r.pend)b+='<button class="btn2" type="button" data-sip="pay" data-id="'+id+'">Pay now</button> ';
+    if(r.pend)b+='<button class="btn2" type="button" data-sip="pay" data-id="'+id+'">'+(r.ext?'I paid it: record':'Retry payment')+'</button> <button class="btn2" type="button" data-sip="skip1" data-id="'+id+'">Skip this one</button> ';
     if(r.review)b+='<button class="btn2" type="button" data-sip="catch" data-id="'+id+'">Add the '+esc(String(r.review))+' missed</button> <button class="btn2" type="button" data-sip="skip" data-id="'+id+'">Skip them</button> ';
+    b+='<button class="btn2" type="button" data-sip="hist" data-id="'+id+'">'+(S.sipHist===r.id?'Hide history':'History')+'</button> ';
     if(r.status==='cancelled'){}
     else{
+      b+='<button class="btn2" type="button" data-sip="edit" data-id="'+id+'">Edit</button> ';
       b+=(r.status==='paused'?'<button class="btn2" type="button" data-sip="resume" data-id="'+id+'">Resume</button>':'<button class="btn2" type="button" data-sip="pause" data-id="'+id+'">Pause</button>')+' ';
       b+=S.sipCancel===r.id?'<span class="sub">Cancel this SIP? </span><button class="mini danger" type="button" data-sip="cancelyes" data-id="'+id+'">Yes</button><button class="mini" type="button" data-sip="cancelno" data-id="'+id+'">No</button>':'<button class="btn2 danger" type="button" data-sip="cancelask" data-id="'+id+'">Cancel SIP</button>';
     }
-    return '<div class="plb"><div class="pln"><b>'+esc(r.name)+'</b><span class="num">'+money(r.amount,r.cur)+'</span></div>'+lines+'<div class="prow">'+pill+b+'</div></div>';
+    return '<div class="plb"><div class="pln"><b>'+esc(r.name)+'</b><span class="num">'+money(r.amount,r.cur)+'</span></div>'+lines+(r.ext?'<div class="sub">You pay this yourself outside the app. The app asks you to confirm.</div>':'')+'<div class="prow">'+pill+b+'</div>'+(S.sipEdit===r.id?sipEditForm(r):'')+(S.sipHist===r.id?sipHistory(r):'')+'</div>';
   }).join('');
 }
 function sfVals(){return {name:$('#sf-name').value.trim(),amount:plNum($('#sf-amount').value),cur:$('#sf-cur').value==='OMR'?'OMR':'INR',account:$('#sf-account').value,freq:$('#sf-freq').value,start:$('#sf-start').value,end:$('#sf-end').value}}
@@ -4005,7 +4028,7 @@ $('#restore-file').addEventListener('change',function(){
         if(data.plans&&typeof data.plans==='object')S.plans=data.plans;
         persistLocal();
       }
-      if(Array.isArray(data.recurring)){data.recurring.forEach(function(x){if(x&&okId(x.id)&&x.name&&x.amount>0&&(!x.freq||(x.kind==='sip'&&sipOk(x)&&typeof x.amount==='number'&&(x.cur==='OMR'||x.cur==='INR')&&typeof x.account==='string'))&&!REC.some(function(y){return y.id===x.id})){var r=Object.assign({start:curMk(),endMode:'none',kind:x.kind||(x.type==='income'?'income':'expense')},x);if(r.freq){delete r.catchOk;delete r.review;delete r.pend}REC.push(r);recSaveOne(r).catch(function(){})}})}
+      if(Array.isArray(data.recurring)){data.recurring.forEach(function(x){if(x&&okId(x.id)&&x.name&&x.amount>0&&(!x.freq||(x.kind==='sip'&&sipOk(x)&&typeof x.amount==='number'&&(x.cur==='OMR'||x.cur==='INR')&&typeof x.account==='string'))&&!REC.some(function(y){return y.id===x.id})){var r=Object.assign({start:curMk(),endMode:'none',kind:x.kind||(x.type==='income'?'income':'expense')},x);if(r.freq){delete r.catchOk;delete r.review;delete r.pend;r.ext=r.ext===true;r.skipped=Array.isArray(r.skipped)?r.skipped.filter(sipIsDate).slice(-60):[]}REC.push(r);recSaveOne(r).catch(function(){})}})}
       render();toast('Backup restored: '+valid.length+' transactions'+(skipped>0?' ('+skipped+' skipped, not valid)':''));
     }catch(e){toast('Restore failed: '+(e.message||'Invalid backup'))}
     input.value='';
@@ -4056,10 +4079,11 @@ $('#sipauto-form').addEventListener('submit',function(ev){
   if(bad){err.textContent=bad;return}
   var r={id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),kind:'sip',name:v.name.slice(0,60),amount:rnd(v.amount,v.cur),cur:v.cur,account:v.account,freq:v.freq,startDate:v.start,status:'active',ts:Date.now()};
   if(v.end)r.endDate=v.end;
+  if($('#sf-ext').checked)r.ext=true;
   var btn=ev.target.querySelector('button[type=submit]');btn.disabled=true;
   if(!S.db)REC.push(r);
   recSaveOne(r).then(function(){
-    $('#sf-name').value='';$('#sf-amount').value='';$('#sf-end').value='';S.sipForm=false;toast('SIP schedule saved');render();
+    $('#sf-name').value='';$('#sf-amount').value='';$('#sf-end').value='';$('#sf-ext').checked=false;S.sipForm=false;toast('SIP schedule saved');render();
   }).catch(function(e){REC=REC.filter(function(x){return x!==r});err.textContent=failMsg(e)}).then(function(){btn.disabled=false});
 });
 $('#sipauto-list').addEventListener('click',function(ev){
@@ -4073,7 +4097,20 @@ $('#sipauto-list').addEventListener('click',function(ev){
   else if(act==='cancelno'){S.sipCancel=null;renderSipAuto()}
   else if(act==='cancelyes'){S.sipCancel=null;sipSetStatus(r,'cancelled',today);sipSave(r,'SIP cancelled. Entries already recorded stay.')}
   else if(act==='catch'){r.catchOk=true;recSaveOne(r).then(function(){recAuto()}).catch(function(e){toast(failMsg(e))})}
-  else if(act==='skip'){var d=sipDates(r,today);if(d.length)r.last=d[d.length-1];delete r.review;sipSave(r,'Missed payments skipped. Nothing was recorded.')}
+  else if(act==='skip'){var d=sipDates(r,today);if(d.length){r.skipped=(r.skipped||[]).concat(d.filter(function(x){return x>(r.last||'')})).slice(-60);r.last=d[d.length-1]}delete r.review;sipSave(r,'Missed payments skipped. Nothing was recorded.')}
+  else if(act==='skip1'){if(!r.pend)return;r.skipped=(r.skipped||[]).concat([r.pend]).slice(-60);r.last=r.pend;delete r.pend;sipSave(r,'This payment was skipped. Nothing was recorded.')}
+  else if(act==='hist'){S.sipHist=S.sipHist===id?null:id;renderSipAuto()}
+  else if(act==='edit'){S.sipEdit=id;renderSipAuto()}
+  else if(act==='editno'){S.sipEdit=null;renderSipAuto()}
+  else if(act==='editsave'){
+    var nm=$('#se-name').value.trim(),am=plNum($('#se-amount').value),ac=$('#se-account').value,en=$('#se-end').value,er=$('#se-err'),msg='';
+    if(!nm)msg='Enter a name.';else if(!(am>0))msg='Enter an amount above zero.';else if(actAccs().indexOf(ac)<0)msg='Pick an account.';
+    else if(!allowsCur(ac,r.cur))msg=ac+' holds '+curs(ac)[0]+' only. This SIP is in '+r.cur+'.';
+    else if(en&&(!sipIsDate(en)||en<r.startDate))msg='The last date must be the start date or later.';
+    if(msg){er.textContent=msg;return}
+    r.name=nm.slice(0,60);r.amount=rnd(am,r.cur);r.account=ac;if(en)r.endDate=en;else delete r.endDate;r.ext=$('#se-ext').checked;
+    S.sipEdit=null;sipSave(r,'SIP updated');
+  }
 });
 
 window.addEventListener('offline',function(){toast('You are offline. Entries are saved on this device and sync later.');render()});
