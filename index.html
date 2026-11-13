@@ -1149,10 +1149,15 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
 'use strict';
 var $=function(s){return document.querySelector(s)};
 var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
-var ACCS=['Cash','Airtel Payments Bank','Federal Bank','Bank Muscat'];
+/* App version. Chosen at sign-up and changeable in Settings. It is kept in this phone's storage so the app knows it before anything loads.
+   Indian = OMR + INR with the usual banks. Nepali = OMR + NPR, Cash only (banks are added by hand), no Trading.
+   Inside the app and the data the second currency always keeps the code INR; the Nepali version only shows it as NPR / \u0930\u0942 (see the end of this file). */
+var VER='indian';try{VER=localStorage.getItem('mywallet.ver')==='nepali'?'nepali':'indian'}catch(e){}
+var NEP=VER==='nepali',CUR2=NEP?'NPR':'INR';
+var ACCS=NEP?['Cash']:['Cash','Airtel Payments Bank','Federal Bank','Bank Muscat'];
 var BANKS=ACCS.slice(1);
 /* Each bank account holds one currency for good; Cash holds both. */
-var ACC_CUR={'Cash':['OMR','INR'],'Airtel Payments Bank':['INR'],'Federal Bank':['INR'],'Bank Muscat':['OMR']};
+var ACC_CUR=NEP?{'Cash':['OMR','INR']}:{'Cash':['OMR','INR'],'Airtel Payments Bank':['INR'],'Federal Bank':['INR'],'Bank Muscat':['OMR']};
 function curs(a){return ACC_CUR[a]||['OMR','INR']}
 function allowsCur(a,c){return curs(a).indexOf(c)>-1}
 var CATS={
@@ -1160,7 +1165,7 @@ var CATS={
   income:['Salary','Business','Freelance','Bonus','Gift','Refund','Other']
 };
 var LOAN_INT_PAID='Loan interest & charges',LOAN_INT_GOT='Loan interest received';
-var DEFAULT_RATE=247.22;
+var DEFAULT_RATE=NEP?395.5:247.22;
 var MCP_SERVER='Twelve Data';
 var S={plcur:'OMR',plDel:null,bsub:'acc',lastAn:'analysis',skind:'invest',plans:{},plansReady:true,calcTouched:false,sip:{cur:'INR',ret:12,years:10,step:0},amonth:'',acur:'OMR',glens:'OMR',gmon:6,ailang:'ml',theme:null,lview:'acc',lperson:null,lcat:null,entries:[],rates:[],opening:{},db:null,mode:'loading',tab:'home',
   lkind:'borrow',ftype:'expense',fcur:'OMR',fgroup:'Cash',fbank:'Federal Bank',editId:null,confirmDel:null,
@@ -1173,7 +1178,7 @@ var charts=[];
 var PK='mywallet.prefs.v2';
 try{
   var pr=JSON.parse(localStorage.getItem(PK)||'{}');
-  if(['home','entry','analysis','ledger','loans','graph','sip','plan','balance','recurring','trading','tools'].indexOf(pr.tab)>-1){S.tab=pr.tab==='entry'?'home':pr.tab;if(pr.tab!=='home'&&pr.tab!=='entry'&&pr.tab!=='ledger'&&pr.tab!=='balance')S.lastAn=pr.tab}
+  if(['home','entry','analysis','ledger','loans','graph','sip','plan','balance','recurring','trading','tools'].indexOf(pr.tab)>-1&&!(NEP&&pr.tab==='trading')){S.tab=pr.tab==='entry'?'home':pr.tab;if(pr.tab!=='home'&&pr.tab!=='entry'&&pr.tab!=='ledger'&&pr.tab!=='balance')S.lastAn=pr.tab}
   if(['acc','cred','debt'].indexOf(pr.bsub)>-1)S.bsub=pr.bsub;
   if(pr.plcur==='INR'||pr.plcur==='OMR')S.plcur=pr.plcur;
   if(['day','week','month'].indexOf(pr.av)>-1)S.p.analysis.v=pr.av;
@@ -1676,11 +1681,14 @@ function fillAccountSelects(){
   $('#lacc').value=S.lacc;
   $('#bankchips').innerHTML=BANKS.filter(function(b){return SET.closed.indexOf(b)<0}).map(function(b){return '<button type="button" class="chipbtn" data-bank="'+esc(b)+'" aria-pressed="false">'+esc(b)+'</button>'}).join('');
 }
+function hasBank(){return BANKS.some(function(b){return SET.closed.indexOf(b)<0})}
 function bankOrDefault(){var A=BANKS.filter(function(b){return SET.closed.indexOf(b)<0});return A.indexOf(S.fbank)>-1?S.fbank:(A.indexOf('Federal Bank')>-1?'Federal Bank':(A[0]||'Cash'))}
 function entryAccount(){return S.fgroup==='Cash'?'Cash':bankOrDefault()}
 function sendAccount(){return S.ftype==='transfer'?$('#from').value:entryAccount()}
 function num(id){return parseFloat(($(id).value||'').replace(/,/g,''))||0}
 function paintAccount(){
+  if(S.fgroup==='Bank'&&!hasBank())S.fgroup='Cash';
+  $$('#gseg button').forEach(function(b){if(b.dataset.g==='Bank')b.hidden=!hasBank()});
   $$('#gseg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.g===S.fgroup))});
   $('#bankchips').hidden=S.fgroup!=='Bank';
   $$('#bankchips [data-bank]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.bank===S.fbank))});
@@ -2410,7 +2418,7 @@ function prefillSip(){
   setTab('entry');
   S.skind='invest';setType('sip');
   var c=p?p.cur:S.sip.cur;
-  S.fgroup='Bank';S.fbank=c==='OMR'?'Bank Muscat':(allowsCur(S.fbank,'INR')?S.fbank:'Federal Bank');
+  S.fgroup='Bank';S.fbank=c==='OMR'?(ACCS.indexOf('Bank Muscat')>-1?'Bank Muscat':bankOrDefault()):(allowsCur(S.fbank,'INR')?S.fbank:(ACCS.indexOf('Federal Bank')>-1?'Federal Bank':bankOrDefault()));
   S.fcur=c;paintAccount();
   if(p){var rem=p.target-planStatus(p).s.inv;if(rem>0)$('#amt').value=String(rnd(rem,c))}
   $('#date').value=todayStr();
@@ -2703,7 +2711,7 @@ function renderBalance(){
 $('#bal').addEventListener('click',function(ev){var b=ev.target.closest('[data-balgo]');if(b)setTab(b.dataset.balgo)});
 
 /* ---------- Navigation: four main pages, sub headings inside ---------- */
-var SUBS={analysis:[['analysis','Income & expense'],['graph','Graph'],['sip','SIP'],['plan','Plan'],['loans','Loans'],['recurring','Recurring'],['trading','Trading'],['tools','Tools']],balance:[['acc','Balances'],['cred','Creditor'],['debt','Debtor']]};
+var SUBS={analysis:[['analysis','Income & expense'],['graph','Graph'],['sip','SIP'],['plan','Plan'],['loans','Loans'],['recurring','Recurring']].concat(NEP?[]:[['trading','Trading']]).concat([['tools','Tools']]),balance:[['acc','Balances'],['cred','Creditor'],['debt','Debtor']]};
 var PAGES=['home','exchange','entry','analysis','ledger','loans','graph','sip','plan','balance','recurring','trading','tools'];
 function groupOf(t){return t==='exchange'?'exchange':t==='home'?'home':t==='entry'?'entry':t==='ledger'?'ledger':t==='balance'?'balance':'analysis'}
 function paintSubnav(){
@@ -2875,6 +2883,7 @@ function renderSet(){
    '<label class="srow" style="cursor:pointer"><span>Show closed accounts in Ledger</span><input type="checkbox" data-s="showclosed"'+(SET.showClosed?' checked':'')+'></label>':'')+
   '<div class="fine" style="margin-top:14px"><b>Add a new account</b> \u2014 its currency is fixed once created.</div>'+
   '<div class="sform"><input id="saName" placeholder="Account name" maxlength="30"><select id="saCur" aria-label="Currency"><option value="OMR">OMR</option><option value="INR">INR (\u20b9)</option><option value="both">OMR + INR</option></select><button class="btn2" type="button" data-s="addacc">Add account</button></div><p class="fine" id="saMsg"></p></div>'+
+  '<div class="card" id="sVersion"><div class="chead"><h2>Version</h2></div><div class="srow"><span>Indian<span class="tag" data-nofx="1">OMR + INR</span></span><input type="radio" name="sVer" data-s="version" value="indian"'+(!NEP?' checked':'')+'></div><div class="srow"><span>Nepali<span class="tag">OMR + NPR</span></span><input type="radio" name="sVer" data-s="version" value="nepali"'+(NEP?' checked':'')+'></div><p class="fine">Each version keeps its own separate entries, accounts and plans. Nothing is deleted when you switch.</p></div>'+
   '<div class="card"><div class="chead"><h2>Currencies</h2></div><div class="srow"><span>OMR<span class="tag">in use</span></span></div><div class="srow"><span>\u20b9 INR<span class="tag">in use</span></span></div><p class="fine">Adding a third currency is not available yet. It affects every screen, rate and chart, so it needs a separate update.</p></div></div>';
   var tb=setEl.querySelector('.sbar b');if(tb)tb.textContent=setMode==='theme'?'Themes':'Settings';
   Array.prototype.slice.call(setEl.querySelectorAll('.sw > .card')).forEach(function(c){
@@ -2913,7 +2922,14 @@ setEl.addEventListener('click',function(e){
   else if(k==='tsave'){ctSaveForm()}
   else if(k==='reopen'){setChange({type:'reopenAccount',name:a},function(){SET.closed=SET.closed.filter(function(x){return x!==a})},afterAcc,function(msg){toast(msg)})}
 });
-setEl.addEventListener('change',function(e){if(e.target.dataset.s==='showclosed'){var sc=e.target.checked;setChange({type:'showClosed',value:sc},function(){SET.showClosed=sc},afterAcc,function(msg){toast(msg);renderSet()})}});
+setEl.addEventListener('change',function(e){
+  if(e.target.dataset.s==='version'){var vv=e.target.value==='nepali'?'nepali':'indian';
+    if(vv===VER)return;
+    askOk('Switch to the '+(vv==='nepali'?'Nepali':'Indian')+' version? The app reloads and shows that version\'s own data. Nothing is deleted.',function(){
+      if(!window.__cloud||!window.__cloud.switchVersion){toast('Sign in first.');renderSet();return}
+      window.__cloud.switchVersion(vv).catch(function(er){toast((er&&er.message)==='offline'?'You need internet to switch version.':'Could not switch version. Try again.');renderSet()})});
+    renderSet();return}
+  if(e.target.dataset.s==='showclosed'){var sc=e.target.checked;setChange({type:'showClosed',value:sc},function(){SET.showClosed=sc},afterAcc,function(msg){toast(msg);renderSet()})}});
 document.getElementById('igMoreBtn').addEventListener('click',function(e){e.stopPropagation();igMenu.hidden=true;moreEl.hidden=!moreEl.hidden});
 moreEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-m]');if(!b)return;moreEl.hidden=true;
@@ -3247,7 +3263,7 @@ async function fetchRate(date){
   var mcp=null;
   try{mcp=(window.claude&&window.claude.use)?await window.claude.use('mcp'):null}catch(e){mcp=null}
   if(!mcp)throw {code:'capability_disabled'};
-  var input={symbol:'OMR/INR',amount:1};if(date!==todayStr())input.date=date;
+  var input={symbol:'OMR/'+CUR2,amount:1};if(date!==todayStr())input.date=date;
   var res=await mcp.callTool(MCP_SERVER,'currency_conversion',input,{cache:false});
   var r=parseRate(res);
   if(!(r>50&&r<1000))throw {code:'tool_error',message:'Unexpected rate'};
@@ -3268,7 +3284,7 @@ async function refreshRates(){
   for(var i=0;i<dates.length;i++){
     S.rmsg='Fetching '+(i+1)+' of '+dates.length+'…';renderRatePanel(P);
     try{
-      var input={symbol:'OMR/INR',amount:1};if(dates[i]!==today)input.date=dates[i];
+      var input={symbol:'OMR/'+CUR2,amount:1};if(dates[i]!==today)input.date=dates[i];
       var res=await mcp.callTool(MCP_SERVER,'currency_conversion',input,{cache:false});
       var r=parseRate(res);
       if(!(r>50&&r<1000))throw {code:'tool_error',message:'Unexpected rate'};
@@ -3283,7 +3299,7 @@ async function refreshRates(){
 $('#refresh').addEventListener('click',refreshRates);
 
 /* ---------- Exchange page (header 💱). Mid-market rate from a free API, provider rates typed by hand, saved on this device only. ---------- */
-var XK='mywallet.xch.v1',XKEY='mywallet.xchkey',XPROV=[['LuLu Exchange','lulu'],['UAE Exchange','uae'],['Xpress Money','xpress'],['Western Union','wu'],['Bank Muscat','bm']];
+var XK='mywallet.xch.v1',XKEY='mywallet.xchkey',XPROV=NEP?[['IME','ime'],['Prabhu Money Transfer','prabhu'],['City Express','city'],['Western Union','wu'],['Bank Muscat','bm']]:[['LuLu Exchange','lulu'],['UAE Exchange','uae'],['Xpress Money','xpress'],['Western Union','wu'],['Bank Muscat','bm']];
 var X={dir:'OMR',amt:'100',src:'best',custom:'',rates:{},hist:[],mid:null,busy:false,msg:'',key:'',editKey:false};
 try{var xs=JSON.parse(localStorage.getItem(XK)||'null');if(xs){X.rates=xs.rates||{};X.hist=Array.isArray(xs.hist)?xs.hist.filter(function(p){return p&&p.r>0&&typeof p.d==='string'}):[];X.mid=xs.mid&&xs.mid.r>0?xs.mid:null}}catch(e){}
 function xSave(){try{localStorage.setItem(XK,JSON.stringify({rates:X.rates,hist:X.hist,mid:X.mid}))}catch(e){}}
@@ -3319,7 +3335,7 @@ async function xFetchMid(force){
   if(age<36e5){if(force){X.msg='Updated '+Math.max(1,Math.round(age/6e4))+' min ago. This rate changes once a day.';xUpd()}return}
   X.busy=true;X.msg='Fetching rate…';xUpd();
   var urls=[];
-  if(xKeyOk(X.key))urls.push(['https://v6.exchangerate-api.com/v6/'+X.key+'/pair/OMR/INR','pair','ExchangeRate-API, your key']);
+  if(xKeyOk(X.key))urls.push(['https://v6.exchangerate-api.com/v6/'+X.key+'/pair/OMR/'+CUR2,'pair','ExchangeRate-API, your key']);
   urls.push(['https://open.er-api.com/v6/latest/OMR','latest','ExchangeRate-API open']);
   var got=null;
   for(var i=0;i<urls.length&&!got;i++){
@@ -3327,7 +3343,7 @@ async function xFetchMid(force){
       var ctl=new AbortController(),to=setTimeout(function(){ctl.abort()},8000);
       var res=await fetch(urls[i][0],{signal:ctl.signal,cache:'no-store',referrerPolicy:'no-referrer'});clearTimeout(to);
       if(!res.ok)throw 0;
-      var j=await res.json(),r=Number(urls[i][1]==='pair'?j.conversion_rate:(j.rates&&j.rates.INR));
+      var j=await res.json(),r=Number(urls[i][1]==='pair'?j.conversion_rate:(j.rates&&j.rates[CUR2]));
       if(j.result&&j.result!=='success')throw 0;
       if(r>50&&r<1000)got={r:r,t:Date.now(),src:urls[i][2]};
     }catch(e){}
@@ -3386,7 +3402,7 @@ function renderExchange(noFetch){
    +'<label class="fld"><span>Rate used</span><select id="xsrc"><option value="best"'+(X.src==='best'?' selected':'')+'>Best provider today</option><option value="mid"'+(X.src==='mid'?' selected':'')+'>Mid-market</option><option value="custom"'+(X.src==='custom'?' selected':'')+'>My own rate</option></select></label></div>'
    +(X.src==='custom'?'<label class="fld"><span>1 OMR = ₹</span><input id="xcustom" inputmode="decimal" value="'+esc(X.custom)+'" placeholder="0.00"></label>':'')
    +'<div class="xout"><span class="sub">You get</span><b class="num" id="xcres"></b></div><div class="sub" id="xcnote"></div>'
-   +'<button type="button" class="btn" id="xrec" style="width:100%">Record this exchange</button><div class="sub">Opens a Transfer from Bank Muscat to Federal Bank with this amount and rate. Change accounts or add the service charge there.</div></section>'
+   +'<button type="button" class="btn" id="xrec" style="width:100%">Record this exchange</button><div class="sub">Opens a Transfer from '+(NEP?'your bank account to the account that receives the money':'Bank Muscat to Federal Bank')+' with this amount and rate. Change accounts or add the service charge there.</div></section>'
    +'<section class="card xc"><div class="chead"><h2>Rate book, today</h2><button type="button" class="btn2" id="xsave">Save today</button></div><div class="sub">Type the OMR to INR rate each service shows. Fees are not included. Rates stay on this device.</div>'
    +XPROV.map(function(p){return '<div class="xprov"><div class="xnm">'+esc(p[0])+' <span id="xt-'+p[1]+'"></span></div><input data-xk="'+p[1]+'" inputmode="decimal" aria-label="'+esc(p[0])+' rate" placeholder="0.00" value="'+esc(X.rates[p[1]]==null?'':X.rates[p[1]])+'"><div class="xres" id="xr-'+p[1]+'"></div></div>'}).join('')+'</section>'
    +'<section class="card xc"><div class="chead"><h2>Today vs your saved days</h2></div><div id="xpos"></div></section>'
@@ -3413,7 +3429,9 @@ function renderExchange(noFetch){
       var r=xRate(),omr=xOmr();
       if(!(r>50&&r<1000)){toast('Enter a rate between 50 and 1000 first');return}
       if(!(omr>0)){toast('Enter an amount first');return}
-      resetForm(false);setTab('entry',true);setType('transfer');applyPreset('Bank Muscat','Federal Bank');setFcur('OMR');
+      var xf='Bank Muscat',xt='Federal Bank';
+      if(NEP){var xa=actAccs();xf=xa.filter(function(a){return a!=='Cash'&&allowsCur(a,'OMR')})[0]||'Cash';xt=xa.filter(function(a){return a!==xf&&allowsCur(a,'INR')})[0]||'Cash';if(xf===xt){toast('Add a bank account in Settings first, then record the exchange.');return}}
+      resetForm(false);setTab('entry',true);setType('transfer');applyPreset(xf,xt);setFcur('OMR');
       $('#amt').value=String(Math.round(omr*1000)/1000);$('#amt').dispatchEvent(new Event('input',{bubbles:true}));
       $('#trate').value=String(Math.round(r*10000)/10000);S.trateTouched=true;render();window.scrollTo(0,0);
     }
@@ -3451,7 +3469,7 @@ function saveCsv(rows,name){
 }
 $('#lcsv').addEventListener('click',function(){var P=period(S.p.ledger.v,S.p.ledger.a);saveCsv(ledgerRowsForCsv(),'my-wallet-ledger-'+(P.all?'all':P.start)+'.csv')});
 $('#csvall').addEventListener('click',function(){
-  var rows=[['Date','Voucher','Account / From','To','Category','Narration','Currency','Amount','Received currency','Received amount','Rate (INR per OMR)','Service charge','Service charge currency','Charged on','OMR equivalent','INR equivalent']];
+  var rows=[['Date','Voucher','Account / From','To','Category','Narration','Currency','Amount','Received currency','Received amount','Rate ('+CUR2+' per OMR)','Service charge','Service charge currency','Charged on','OMR equivalent',CUR2+' equivalent']];
   S.entries.slice().sort(byDate).forEach(function(e){
     var omr=e.currency==='OMR'?e.amount:e.amount/rateFor(e.date),inr=e.currency==='INR'?e.amount:e.amount*rateFor(e.date),t=e.type==='transfer';
     rows.push([e.date,voucher(e),t?e.from:e.noBal?'(balance not changed)':accOf(e),t?e.to:'',e.category,(e.type==='loan'?loanText(e)+(e.writeOff>0?' (written off '+e.writeOff+')':'')+' ':'')+(e.note||''),e.currency,e.amount,t?recvCurOf(e):'',t?recvAmtOf(e):'',t&&e.rate>0?e.rate:'',t&&e.fee>0?e.fee:'',t&&e.fee>0?feeCurOf(e):'',t&&e.fee>0?(e.feeOn==='to'?e.to:e.from):'',rnd(omr,'OMR').toFixed(3),rnd(inr,'INR').toFixed(2)]);
@@ -4140,9 +4158,26 @@ window.addEventListener('walletsave',function(ev){
   if(S.save.failed>was)toast('A change was not accepted by the server and was undone. Please try again.');
 });
 $('#sync').addEventListener('click',function(){if(S.save&&S.save.failed>0&&window.__saveClear)window.__saveClear()});
+/* ---------- Nepali version: show the second currency as NPR / \u0930\u0942 on every screen ----------
+   Only the words on screen change. Inside the app and in the saved data the currency keeps the code INR, so no calculation changes. */
+if(NEP)(function(){
+  function fx(t){return t.replace(/\u20b9\s?INR/g,'\u0930\u0942 NPR').replace(/\u20b9/g,'\u0930\u0942').replace(/\bINR\b/g,'NPR').replace(/Indian rupee/g,'Nepali rupee')}
+  function walk(n){
+    if(n.nodeType===3){
+      var p=n.parentNode,t=n.nodeValue;if(!p||p.nodeName==='SCRIPT'||p.nodeName==='STYLE'||(p.closest&&p.closest('[data-nofx]')))return;
+      if(t.indexOf('INR')<0&&t.indexOf('\u20b9')<0&&t.indexOf('Indian rupee')<0)return;
+      if(p.nodeName==='OPTION'&&!p.hasAttribute('value'))p.setAttribute('value',t.trim());
+      var u=fx(t);if(u!==t)n.nodeValue=u;return}
+    if(n.nodeType!==1||n.nodeName==='SCRIPT'||n.nodeName==='STYLE')return;
+    if(n.placeholder&&/INR|\u20b9/.test(n.placeholder))n.placeholder=fx(n.placeholder);
+    for(var c=n.firstChild;c;c=c.nextSibling)walk(c)}
+  walk(document.body);
+  new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==='characterData')walk(m.target);else for(var i=0;i<m.addedNodes.length;i++)walk(m.addedNodes[i])})}).observe(document.body,{childList:true,subtree:true,characterData:true});
+})();
 /* ---------- init ---------- */
 S.amonth=curMk();plLoadLocal();fillAccountSelects();buildObRows();
-$('#to').value='Cash';$('#from').value='Federal Bank';
+$('#to').value='Cash';$('#from').value=ACCS.indexOf('Federal Bank')>-1?'Federal Bank':bankOrDefault();
+if(NEP)$('#pre-mfx').hidden=true;
 setType('expense');paintAccount();paintRecForm();
 $('#date').value=todayStr();
 

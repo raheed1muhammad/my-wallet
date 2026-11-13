@@ -231,6 +231,7 @@ async function testStartup() {
       log, timeoutSrc, UID: 'U1', UIDK: 'mywallet.uid', SETK: 'mywallet.settings.v1', RELOADK: 'r',
       PM: () => { }, wipeLocal: () => log.push('wipeLocal'), ready: () => log.push('ready'),
       uref: () => 'ref', track: p => p, doc: () => 'd', fs: {},
+      VER: 'indian', setVerLocal: () => { }, cloudVer: () => Promise.resolve(o.cloudVer || 'indian'),
       getDoc: () => o.cloudNever ? new Promise(() => { }) : cloudGet,
       setDoc: () => { log.push('upload'); return Promise.resolve(); },
       localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } },
@@ -257,6 +258,26 @@ async function testStartup() {
   eq('no local settings (new phone): still waits for the cloud', t.log, []);
   t.answer('{"a":9}'); await sleep(20);
   eq('new phone: cloud copy used (one reload, as before)', t.log, ['reload']);
+  t = make({ local: '{"a":1}', cloudVer: 'nepali' }); t.go(); await sleep(20);
+  eq('version changed on another device: app opens, then reloads once to follow it', t.log, ['ready', 'reload']);
+}
+
+/* ---------- 7b. Indian and Nepali data stay apart ---------- */
+function testVersionData() {
+  section('versions: Indian and Nepali data never mix');
+  const src = between(cj, "var VERK='mywallet.ver'", 'function verRef');
+  const mk = ver => new Function('localStorage', src + ';return {mine,plain,VER}')({ getItem: () => ver });
+  const ind = mk('indian'), nep = mk('nepali');
+  eq('indian sees its own documents', ['e1', 'np_e1', 'ver'].filter(ind.mine), ['e1']);
+  eq('nepali sees only np_ documents', ['e1', 'np_e1', 'ver'].filter(nep.mine), ['np_e1']);
+  eq('nepali ids lose the np_ prefix for the app', nep.plain('np_e1'), 'e1');
+  eq('indian ids unchanged', ind.plain('e1'), 'e1');
+  eq('unknown version value falls back to indian', mk('weird').VER, 'indian');
+  const urefSrc = one(cj, /function uref\(path\)\{[^\n]*\}/, 'uref');
+  const u = ver => new Function('doc', 'fs', 'UID', 'VER', 'NP', urefSrc + ';return uref')((...a) => a.join('/'), 'fs', 'U', ver, 'np_');
+  eq('indian path unchanged', u('indian')('entries/e1'), 'fs/users/U/entries/e1');
+  eq('nepali path gets the prefix', u('nepali')('entries/e1'), 'fs/users/U/entries/np_e1');
+  eq('nepali settings are separate', u('nepali')('settings/app'), 'fs/users/U/settings/np_app');
 }
 
 /* ---------- 8. SIP schedules and automatic recording ---------- */
@@ -413,7 +434,7 @@ async function testTrading() {
 }
 
 (async () => {
-  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testStartup, testSip, testTrading];
+  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testStartup, testVersionData, testSip, testTrading];
   for (const p of parts) { try { await p(); } catch (e) { fail++; console.log('FAIL: ' + p.name + ' could not run: ' + e.message); } }
   console.log('\n' + pass + ' checks passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

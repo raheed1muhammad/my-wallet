@@ -21,6 +21,13 @@ catch(e){fs=initializeFirestore(app,{})}
 var SETK='mywallet.settings.v1',UIDK='mywallet.uid',RELOADK='mywallet.reloaded';
 var COLS=['entries','rates','plans','plan_income','plan_items','goals','recurring','settings','trading'];
 var UID=null,EMAIL='';
+/* Two versions, two separate sets of data in the same private space. The Indian version uses the names as they always were.
+   The Nepali version stores every document with the name starting np_ and only ever sees those, so nothing mixes and no rules change. */
+var VERK='mywallet.ver',NP='np_',VER='indian';
+try{VER=localStorage.getItem(VERK)==='nepali'?'nepali':'indian'}catch(e){}
+function mine(id){return VER==='nepali'?id.indexOf(NP)===0:(id.indexOf(NP)!==0&&id!=='ver')}
+function plain(id){return VER==='nepali'?id.slice(NP.length):id}
+function verRef(){return doc(fs,'users',UID,'settings','ver')}
 
 /* ---------- login screen ---------- */
 var el=document.createElement('div');el.id='fbAuth';el.hidden=true;
@@ -31,14 +38,14 @@ var view='login';
 function setMsg(t,ok){var m=$e('fbMsg');m.textContent=t||'';m.className='msg'+(ok?' ok':'')}
 function showAuth(v,msg){
   view=v;el.hidden=false;setMsg(msg||'');
-  var s={login:['Log in to your wallet','Log in'],signup:['Create your account with your own email and password.','Create account'],reset:['We will email you a link to set a new password.','Send reset link'],code:['One more step: enter the sign-up code the owner gave you.','Continue']}[v];
-  $e('fbSub').textContent=s[0];$e('fbGo').textContent=s[1];$e('fbGo').disabled=false;
-  $e('fbRowE').hidden=(v==='code');$e('fbRowP').hidden=(v==='reset'||v==='code');$e('fbRowP2').hidden=(v!=='signup');$e('fbRowC').hidden=(v!=='code');
+  var s={login:['Log in to your wallet','Log in'],signup:['Create your account with your own email and password.','Create account'],reset:['We will email you a link to set a new password.','Send reset link'],code:['One more step: enter the sign-up code the owner gave you.','Continue'],version:['Choose your version. You can change it later in Settings.','']}[v];
+  $e('fbSub').textContent=s[0];$e('fbGo').textContent=s[1];$e('fbGo').disabled=false;$e('fbGo').hidden=(v==='version');
+  $e('fbRowE').hidden=(v==='code'||v==='version');$e('fbRowP').hidden=(v==='reset'||v==='code'||v==='version');$e('fbRowP2').hidden=(v!=='signup');$e('fbRowC').hidden=(v!=='code');
   $e('fbPass').autocomplete=v==='signup'?'new-password':'current-password';
-  var L={login:'<button class="lnk" data-v="signup" type="button">New here? Create account</button><br><button class="lnk" data-v="reset" type="button">Forgot password?</button>',signup:'<button class="lnk" data-v="login" type="button">I already have an account</button>',reset:'<button class="lnk" data-v="login" type="button">Back to log in</button>',code:'<button class="lnk" data-v="out" type="button">Log out</button>'};
+  var L={login:'<button class="lnk" data-v="signup" type="button">New here? Create account</button><br><button class="lnk" data-v="reset" type="button">Forgot password?</button>',signup:'<button class="lnk" data-v="login" type="button">I already have an account</button>',reset:'<button class="lnk" data-v="login" type="button">Back to log in</button>',code:'<button class="lnk" data-v="out" type="button">Log out</button>',version:'<button class="go" data-ver="indian" type="button">Indian<br><small>OMR + INR</small></button><button class="go" data-ver="nepali" type="button" style="margin-top:10px">Nepali<br><small>OMR + NPR</small></button>'};
   $e('fbLinks').innerHTML=L[v];
 }
-el.addEventListener('click',function(e){var b=e.target.closest('[data-v]');if(!b)return;if(b.dataset.v==='out')doSignOut();else showAuth(b.dataset.v)});
+el.addEventListener('click',function(e){var vb=e.target.closest('[data-ver]');if(vb){chooseVersion(vb.dataset.ver);return}var b=e.target.closest('[data-v]');if(!b)return;if(b.dataset.v==='out')doSignOut();else showAuth(b.dataset.v)});
 function friendly(e){
   var c=(e&&e.code)||'';
   var m={'auth/invalid-email':'That email address is not valid.','auth/email-already-in-use':'This email already has an account. Use Log in.','auth/weak-password':'Password is too weak. Use at least 8 characters.','auth/invalid-credential':'Wrong email or password.','auth/wrong-password':'Wrong email or password.','auth/user-not-found':'Wrong email or password.','auth/too-many-requests':'Too many tries. Wait a few minutes and try again.','auth/network-request-failed':'No internet connection. Try again.','permission-denied':'Wrong sign-up code.'};
@@ -51,7 +58,7 @@ $e('fbForm').addEventListener('submit',function(ev){
   if(view==='code'){
     var code=$e('fbCode').value.trim();if(!code){setMsg('Enter the sign-up code.');return}
     go.disabled=true;
-    setDoc(doc(fs,'invited',UID),{code:code}).then(function(){try{localStorage.setItem(INVK,UID)}catch(e){}begin()}).catch(function(e){done();setMsg(friendly(e))});return;
+    setDoc(doc(fs,'invited',UID),{code:code}).then(function(){done();showAuth('version')}).catch(function(e){done();setMsg(friendly(e))});return;
   }
   if(!em){setMsg('Enter your email.');return}
   if(view==='reset'){go.disabled=true;sendPasswordResetEmail(auth,em).then(function(){done();setMsg('Reset link sent. Check your email (also spam).',true)}).catch(function(e){done();setMsg(friendly(e))});return}
@@ -64,6 +71,37 @@ $e('fbForm').addEventListener('submit',function(ev){
     signInWithEmailAndPassword(auth,em,pw).catch(function(e){done();setMsg(friendly(e))});
   }
 });
+
+/* New account only: after the sign-up code is accepted, the person picks Indian or Nepali.
+   The choice is saved as the first settings, then the app starts. Existing users never see this screen. */
+function chooseVersion(ver){
+  if(ver!=='indian'&&ver!=='nepali')return;
+  var btns=el.querySelectorAll('[data-ver]');
+  Array.prototype.forEach.call(btns,function(b){b.disabled=true});setMsg('');
+  timeout(setDoc(verRef(),{v:ver}),8000).then(function(){
+    var prev=null;try{prev=localStorage.getItem(UIDK)}catch(e){}
+    if(prev!==UID)wipeLocal();
+    try{localStorage.setItem(UIDK,UID);localStorage.setItem(INVK,UID);localStorage.setItem(VERK,ver);sessionStorage.removeItem(RELOADK)}catch(e){}
+    location.reload();
+  }).catch(function(){
+    Array.prototype.forEach.call(btns,function(b){b.disabled=false});setMsg('Could not save your choice. Check your internet and try again.');
+  });
+}
+/* Switch version from Settings: remember it in the cloud and on this phone, clear this phone's copy of the other version, reload. */
+function switchVersion(ver){
+  if(!UID)return Promise.reject(new Error('not signed in'));
+  if(ver!=='indian'&&ver!=='nepali')return Promise.reject(new Error('bad version'));
+  if(navigator.onLine===false)return Promise.reject(new Error('offline'));
+  var v=window.__saveState?window.__saveState():{pending:0};
+  if(v.pending>0&&!confirm('Some changes may not be synced yet. Switch anyway?'))return Promise.resolve();
+  return timeout(setDoc(verRef(),{v:ver}),8000).then(function(){
+    try{Object.keys(localStorage).forEach(function(k){if(k.indexOf('mywallet.')===0&&[VERK,UIDK,INVK,'mywallet.igtheme','mywallet.themev','mywallet.customthemes','mywallet.customcss'].indexOf(k)<0)localStorage.removeItem(k)});
+      localStorage.setItem(VERK,ver);sessionStorage.removeItem(RELOADK)}catch(e){}
+    location.reload();
+  });
+}
+function setVerLocal(ver){try{localStorage.setItem(VERK,ver)}catch(e){}}
+function cloudVer(){return timeout(getDoc(verRef()),3000).then(function(s){return s.exists()&&s.data().v==='nepali'?'nepali':'indian'})}
 
 /* ---------- per-user local cleanup ---------- */
 function wipeLocal(){
@@ -83,7 +121,7 @@ function doSignOut(){
 }
 
 /* ---------- db shim with the same API the app uses ---------- */
-function uref(path){return doc.apply(null,[fs,'users',UID].concat(path.split('/')))}
+function uref(path){var p=path.split('/');if(VER==='nepali')p[p.length-1]=NP+p[p.length-1];return doc.apply(null,[fs,'users',UID].concat(p))}
 function cref(name){return collection(fs,'users',UID,name)}
 function clean(v){return JSON.parse(JSON.stringify(v))}
 /* Counts saves that are still waiting and saves the server refused, so the app can say so honestly. */
@@ -94,16 +132,16 @@ window.__saveState=function(){return{pending:SAVE.pending,failed:SAVE.failed}};
 window.__saveClear=function(){SAVE.failed=0;saveNote()};
 function soft(p){track(p);if(navigator.onLine===false){p.catch(function(){});return Promise.resolve()}
   return new Promise(function(res,rej){var t=setTimeout(res,4000);p.then(function(){clearTimeout(t);res()},function(e){clearTimeout(t);rej(e)})})}
-function dsnap(d){return{id:d.id,exists:true,data:function(){return clean(d.data())}}}
+function dsnap(d){return{id:plain(d.id),exists:true,data:function(){return clean(d.data())}}}
 function dbObj(){
   function docRef(r){return{
     set:function(v){return soft(setDoc(r,clean(v)))},
     delete:function(){return soft(deleteDoc(r))},
-    onSnapshot:function(cb,err){return onSnapshot(r,function(s){cb({id:s.id,exists:s.exists(),data:function(){return s.exists()?clean(s.data()):undefined}})},err||function(){})}}}
+    onSnapshot:function(cb,err){return onSnapshot(r,function(s){cb({id:plain(s.id),exists:s.exists(),data:function(){return s.exists()?clean(s.data()):undefined}})},err||function(){})}}}
   return{
     collection:function(n){return{
       doc:function(id){return docRef(uref(n+'/'+id))},
-      onSnapshot:function(cb,err){return onSnapshot(cref(n),function(s){cb({docs:s.docs.map(dsnap)})},err||function(){})}}},
+      onSnapshot:function(cb,err){return onSnapshot(cref(n),function(s){cb({docs:s.docs.filter(function(d){return mine(d.id)}).map(dsnap)})},err||function(){})}}},
     doc:function(p){return docRef(uref(p))}};
 }
 
@@ -159,6 +197,8 @@ function begin(){
   PM('settings_read_start');
   var haveLocal=false;try{haveLocal=localStorage.getItem(SETK)!==null}catch(e){}
   if(haveLocal){
+    /* If this account's version was changed on another device, follow it (one reload). */
+    cloudVer().then(function(cv){if(cv!==VER){setVerLocal(cv);try{sessionStorage.removeItem(RELOADK)}catch(e){}location.reload()}}).catch(function(){});
     /* This phone already has its settings: open the app now and check the cloud copy in the background.
        If the cloud copy is different it is kept for the next open (no reload while you are using the app). */
     ready();
@@ -171,7 +211,9 @@ function begin(){
     }).catch(function(){});
     return;
   }
-  timeout(getDoc(uref('settings/app')),3000).then(function(s){
+  cloudVer().catch(function(){return VER}).then(function(cv){
+    if(cv!==VER){setVerLocal(cv);try{sessionStorage.removeItem(RELOADK)}catch(e){}location.reload();return new Promise(function(){})}
+    return timeout(getDoc(uref('settings/app')),3000)}).then(function(s){
     var cloud=s.exists()?s.data().set:null,local=null;
     try{local=localStorage.getItem(SETK)}catch(e){}
     PM('settings_read_done:'+(!cloud?'none_in_cloud':cloud===local?'same_as_phone':'differs_from_phone'));
@@ -186,7 +228,7 @@ function ready(){
   PM('ready_open_app');
   el.hidden=true;
   window.__cloudSet=function(json){if(UID)track(setDoc(uref('settings/app'),{set:json,t:Date.now()})).catch(function(){})};
-  window.__cloud={email:EMAIL,signOut:doSignOut,exportData:exportData,importData:importData};
+  window.__cloud={email:EMAIL,signOut:doSignOut,exportData:exportData,importData:importData,switchVersion:switchVersion};
   window.__dbRes(dbObj());
 }
 var started=false,INVK='mywallet.invok';
@@ -208,7 +250,7 @@ onAuthStateChanged(auth,function(user){
 /* ---------- backup: export / import ---------- */
 function exportData(){
   var out={app:'my-wallet',version:1,exported:new Date().toISOString(),collections:{}};
-  return Promise.all(COLS.map(function(c){return getDocs(cref(c)).then(function(s){var o={};s.docs.forEach(function(d){o[d.id]=clean(d.data())});out.collections[c]=o})})).then(function(){
+  return Promise.all(COLS.map(function(c){return getDocs(cref(c)).then(function(s){var o={};s.docs.forEach(function(d){if(mine(d.id))o[plain(d.id)]=clean(d.data())});out.collections[c]=o})})).then(function(){
     var blob=new Blob([JSON.stringify(out)],{type:'application/json'});
     var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-wallet-backup-'+new Date().toISOString().slice(0,10)+'.json';
     document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);
