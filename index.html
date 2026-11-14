@@ -2891,7 +2891,7 @@ function renderSet(){
   });
 }
 function afterAcc(cloudSaved){
-  if(!cloudSaved)setSave();fillAccountSelects();buildObRows();
+  if(!cloudSaved)setSave();fillAccountSelects();buildObRows();paintAccount();
   if(SET.closed.indexOf(S.lacc)>-1&&!SET.showClosed)S.lacc='all';
   if($('#rec-account'))$('#rec-account').innerHTML=actAccs().map(function(a){return '<option>'+esc(a)+'</option>'}).join('');
   render();renderSet();
