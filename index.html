@@ -535,6 +535,8 @@ body.ent .lfab{display:none}
 [data-chat]{cursor:pointer}
 #home .htl[data-qa]{cursor:pointer}
 html body .tabs .tab[data-tab=entry]{transition:transform .45s ease,opacity .45s ease}
+html body .tabs.noadd{grid-template-columns:repeat(4,1fr)}
+html body .tabs.noadd .tab[data-tab=entry]{display:none}
 html body .tabs .tab[data-tab=entry].away{transform:translateY(160px);opacity:0;visibility:hidden;pointer-events:none;transition:transform .45s ease,opacity .45s ease,visibility 0s linear .45s}
 #igChat .cempty{text-align:center;color:var(--muted);padding:30px 0}
 #igSet .sbar b{font-size:18px}#igSet .sbar button{background:none;border:0;color:inherit;font-size:22px;cursor:pointer}
@@ -1217,7 +1219,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
 <div id="bc" aria-live="polite"></div>
 <div id="tip" role="tooltip"></div>
 <button type="button" class="lfab" id="lfab" aria-label="Open chat list: people, categories and accounts"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M2.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16 7h6M16 12h6M16 17h6"/></svg></button>
-<div id="igChats" hidden><div class="sbar"><button type="button" id="chatsBack" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>Chats</b><small id="lallsub"></small></div></div><div class="cw"><input id="lallq" type="search" placeholder="Search a name, category or account" autocomplete="off"><div id="lallList"></div></div></div>
+<div id="igChats" hidden><div class="sbar"><button type="button" id="chatsBack" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>Transaction chats</b><small id="lallsub"></small></div></div><div class="cw"><input id="lallq" type="search" placeholder="Search a name, category or account" autocomplete="off"><div id="lallList"></div></div></div>
 <div id="toast" role="status"></div>
 
 <script>
@@ -3559,11 +3561,11 @@ function chatFabShow(){
 }
 setTimeout(chatFabShow,1200);
 /* Add entry (+) button timer (Settings): same idea as the chat button. 0 = always */
-var ADDK='mywallet.addtimer',ADT=0,adtT=null;
+var ADDK='mywallet.addtimer',ADT=0,adtT=null,adtT2=null;
 try{var _ad=localStorage.getItem(ADDK);if(_ad==='5'||_ad==='10'||_ad==='25')ADT=+_ad}catch(e){}
 function addBtnShow(noTimer){
-  var f=document.querySelector('#tabs .tab[data-tab="entry"]');if(!f)return;clearTimeout(adtT);f.classList.remove('away');
-  if(ADT>0&&!noTimer)adtT=setTimeout(function(){if(S.tab!=='entry')f.classList.add('away')},ADT*1000);
+  var f=document.querySelector('#tabs .tab[data-tab="entry"]'),tb=document.getElementById('tabs');if(!f)return;clearTimeout(adtT);clearTimeout(adtT2);if(tb)tb.classList.remove('noadd');f.classList.remove('away');
+  if(ADT>0&&!noTimer)adtT=setTimeout(function(){if(S.tab!=='entry'){f.classList.add('away');adtT2=setTimeout(function(){if(tb&&f.classList.contains('away'))tb.classList.add('noadd')},460)}},ADT*1000);
 }
 setTimeout(addBtnShow,1200);
 $('#lviewseg').addEventListener('click',function(ev){
