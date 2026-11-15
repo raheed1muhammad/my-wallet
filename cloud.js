@@ -95,7 +95,7 @@ function switchVersion(ver){
   var v=window.__saveState?window.__saveState():{pending:0};
   if(v.pending>0&&!confirm('Some changes may not be synced yet. Switch anyway?'))return Promise.resolve();
   return timeout(setDoc(verRef(),{v:ver}),8000).then(function(){
-    try{Object.keys(localStorage).forEach(function(k){if(k.indexOf('mywallet.')===0&&[VERK,UIDK,INVK,'mywallet.igtheme','mywallet.themev','mywallet.customthemes','mywallet.customcss'].indexOf(k)<0)localStorage.removeItem(k)});
+    try{Object.keys(localStorage).forEach(function(k){if(k.indexOf('mywallet.')===0&&[VERK,UIDK,INVK,'mywallet.igtheme','mywallet.themev','mywallet.customthemes','mywallet.customcss','mywallet.chattimer','mywallet.addtimer'].indexOf(k)<0)localStorage.removeItem(k)});
       localStorage.setItem(VERK,ver);sessionStorage.removeItem(RELOADK)}catch(e){}
     location.reload();
   });
