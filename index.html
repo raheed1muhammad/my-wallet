@@ -1843,9 +1843,10 @@ function paintAccount(){
 /* ---------- Transfer: to myself / to someone (family & friends) ---------- */
 var FPK='mywallet.fpeople.'+VER,FP=[];
 try{var _fp=JSON.parse(localStorage.getItem(FPK)||'[]');if(Array.isArray(_fp))FP=_fp.filter(function(x){return typeof x==='string'&&x.trim()})}catch(e){}
-function fpSave(){try{localStorage.setItem(FPK,JSON.stringify(FP))}catch(e){}}
+function fpSave(){try{localStorage.setItem(FPK,JSON.stringify(FP))}catch(e){}pfSave()}
 function paintFchips(){
   var list=FP.slice(),cur=pkey(S.fperson);
+  (S.entries||[]).forEach(function(e){if(e&&e.type==='fam'&&typeof e.person==='string'&&e.person.trim()&&!list.some(function(n){return pkey(n)===pkey(e.person)}))list.push(e.person.trim())});
   if(cur&&!FP.some(function(n){return pkey(n)===cur}))list.push(S.fperson);
   $('#fchips').innerHTML=list.map(function(n){
     var saved=FP.some(function(x){return pkey(x)===pkey(n)});
@@ -3005,7 +3006,7 @@ function igSetTheme(id){
   if(id==='ig')document.documentElement.removeAttribute('data-igt');else document.documentElement.setAttribute('data-igt',id);
   try{localStorage.setItem('mywallet.igtheme',id)}catch(e){}
   var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=(allThemes().filter(function(t){return t.id===id})[0]||{meta:'#8134af'}).meta;
-  igMenuPaint();
+  igMenuPaint();pfSave();
 }
 var CTK='mywallet.customthemes',CCK='mywallet.customcss',CT=[],CTD=null;
 try{CT=JSON.parse(localStorage.getItem(CTK)||'[]')||[]}catch(e){CT=[]}
@@ -3119,8 +3120,8 @@ setEl.addEventListener('click',function(e){
     if(!setEl._sub){setEl._sub=1;try{if(HB){HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=S.tab;history.pushState({i:HB.i,t:S.tab},'')}}catch(er){}}}
   else if(k==='close'){if(setView!=='main'){setView='main';renderSet();setEl.scrollTop=0;
     if(setEl._sub){setEl._sub=0;try{if(HB){HB.skip++;HB.i--;history.go(-1)}}catch(er){}}}else setEl.hidden=true}
-  else if(k==='addtimer'){var av=b.dataset.v;ADT=av==='always'?0:+av;try{localStorage.setItem(ADDK,ADT?String(ADT):'always')}catch(er){}addBtnShow();renderSet()}
-  else if(k==='chattimer'){var tv=b.dataset.v;CHT=tv==='always'?0:+tv;try{localStorage.setItem(CHTK,CHT?String(CHT):'always')}catch(er){}chatFabShow();renderSet()}
+  else if(k==='addtimer'){var av=b.dataset.v;ADT=av==='always'?0:+av;try{localStorage.setItem(ADDK,ADT?String(ADT):'always')}catch(er){}addBtnShow();pfSave();renderSet()}
+  else if(k==='chattimer'){var tv=b.dataset.v;CHT=tv==='always'?0:+tv;try{localStorage.setItem(CHTK,CHT?String(CHT):'always')}catch(er){}chatFabShow();pfSave();renderSet()}
   else if(k==='version'){var vv=b.dataset.v==='nepali'?'nepali':'indian';
     if(vv===VER)return;
     askOk('Switch to the '+(vv==='nepali'?'Nepali':'Indian')+' version? The app reloads and shows that version\'s own data. Nothing is deleted.',function(){
@@ -3187,7 +3188,7 @@ function ctCss(){
 function ctApply(){
   var css=ctCss(),el=document.getElementById('igCustom');
   if(!el){el=document.createElement('style');el.id='igCustom';document.documentElement.appendChild(el)}
-  el.textContent=css;try{localStorage.setItem(CTK,JSON.stringify(CT));localStorage.setItem(CCK,css)}catch(e){}
+  el.textContent=css;try{localStorage.setItem(CTK,JSON.stringify(CT));localStorage.setItem(CCK,css)}catch(e){}pfSave()
 }
 function ctSave(){ctApply();igMenuPaint()}
 function allThemes(){return IGTHEMES.concat(CT.map(function(t){return{id:t.id,name:t.name,sub:'Custom theme',sw:'linear-gradient(135deg,'+t.accent+','+t.head+')',meta:t.head,custom:1}}))}
@@ -3562,6 +3563,52 @@ function xKeyStore(k){ /* signed in: private doc in your own account, outside ba
   if(S.db){try{localStorage.removeItem(XKEY)}catch(e){}return k?S.db.doc('private/xchkey').set({k:k}):S.db.doc('private/xchkey').delete()}
   try{if(k)localStorage.setItem(XKEY,k);else localStorage.removeItem(XKEY)}catch(e){}
   return Promise.resolve();
+}
+/* ---------- synced preferences: theme, timers, family & friends names (one private cloud doc per version) ---------- */
+var PFD='settings/prefs',pfOn=false,pfT=null,pfSig='',pfFirst=true;
+function pfGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100)}}
+function pfSave(){
+  if(!S.db||!pfOn)return;
+  clearTimeout(pfT);pfT=setTimeout(function(){
+    var d=pfCollect(),sig=JSON.stringify(d);if(sig===pfSig)return;pfSig=sig;
+    S.db.doc(PFD).set(d).catch(function(){pfSig=''});
+  },600);
+}
+function pfApply(d){
+  if(!d||typeof d!=='object')return;
+  if(typeof d.ct==='string'&&typeof d.cc==='string'&&d.ct.length<60000&&d.cc.length<60000&&(d.ct!==(pfGet(CTK)||'')||d.cc!==(pfGet(CCK)||''))){
+    try{
+      var arr=d.ct?JSON.parse(d.ct):[];
+      if(Array.isArray(arr)){
+        CT=arr;localStorage.setItem(CTK,d.ct||'[]');
+        if(d.cc)localStorage.setItem(CCK,d.cc);else localStorage.removeItem(CCK);
+        var st=document.getElementById('igCustom');
+        if(!st&&d.cc){st=document.createElement('style');st.id='igCustom';document.documentElement.appendChild(st)}
+        if(st)st.textContent=d.cc||'';
+        igMenuPaint();
+      }
+    }catch(e){}
+  }
+  if(typeof d.th==='string'&&d.th&&d.th!==pfGet('mywallet.igtheme')&&allThemes().some(function(t){return t.id===d.th}))igSetTheme(d.th);
+  if([0,3,5,10].indexOf(d.chat)>-1&&d.chat!==CHT){CHT=d.chat;try{localStorage.setItem(CHTK,CHT?String(CHT):'always')}catch(e){}chatFabShow()}
+  if([0,5,10,25].indexOf(d.add)>-1&&d.add!==ADT){ADT=d.add;try{localStorage.setItem(ADDK,ADT?String(ADT):'always')}catch(e){}addBtnShow()}
+  if(Array.isArray(d.fp)){
+    var cl=d.fp.filter(function(x){return typeof x==='string'&&x.trim()&&x.length<=30}).map(function(x){return x.trim().replace(/\s+/g,' ')}).slice(0,100);
+    if(pfFirst)FP.forEach(function(n){if(!cl.some(function(c){return pkey(c)===pkey(n)}))cl.push(n)});
+    FP=cl.slice(0,100);try{localStorage.setItem(FPK,JSON.stringify(FP))}catch(e){}
+    if(!$('#fblock').hidden)paintFchips();
+  }
+  var _is=document.getElementById('igSet');if(_is&&!_is.hidden)try{renderSet()}catch(e){}
+}
+function pfSub(db){
+  db.doc(PFD).onSnapshot(function(sn){
+    var first=pfFirst;
+    if(sn.exists)pfApply(sn.data()||{});
+    pfFirst=false;pfOn=true;
+    pfSig=(sn.exists&&!first)?JSON.stringify(pfCollect()):'';
+    pfSave();
+  },function(){});
 }
 function xKeySub(db){db.doc('private/xchkey').onSnapshot(function(sn){
   var d=sn.exists?(sn.data()||{}):{},k=typeof d.k==='string'?d.k:'';
@@ -4728,7 +4775,7 @@ render();
     db.doc('settings/opening').onSnapshot(function(s){
       var d=s.exists?(s.data()||{}):{};S.opening=(d&&d.b&&typeof d.b==='object')?d.b:{};render();
     },function(){});
-    xKeySub(db);
+    xKeySub(db);pfSub(db);
   }else{
     S.mode='local';loadLocal();S.entReady=true;recLoadLocal();S.recReady=true;render();
   }
