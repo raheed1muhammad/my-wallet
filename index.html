@@ -4503,7 +4503,7 @@ function renderChat(toBottom){
   if(!CH)return;
   var has=hasCurs(CH),cur=CH.cur;
   if(!has[cur]&&(has.OMR||has.INR))cur=CH.cur=has.OMR?'OMR':'INR';
-  var items=chatItems({kind:CH.kind,key:CH.key,ct:CH.ct,cur:cur}),paid=0,recv=0,n=0;
+  var items=chatItems({kind:CH.kind,key:CH.key,ct:CH.ct,cur:cur}).slice().reverse(),paid=0,recv=0,n=0;
   items.forEach(function(x){if(x.dir==='paid'){paid+=x.amt;n++}else if(x.dir==='recv'){recv+=x.amt;n++}});
   paid=rnd(paid,cur);recv=rnd(recv,cur);
   var bal,lbl;
@@ -4528,7 +4528,7 @@ function renderChat(toBottom){
        (x.note?'<div class="nt">'+esc(x.note)+'</div>':'')+'<div class="tm">'+F_LEDG.format(parse(e.date))+(tm?' · '+tm:'')+'</div></div></div>';
   });
   chatEl.innerHTML=h+'</div>';
-  if(toBottom)chatEl.scrollTop=chatEl.scrollHeight;
+  if(toBottom)chatEl.scrollTop=0;
 }
 chatEl.addEventListener('click',function(ev){
   var b=ev.target.closest('[data-ch]');if(!b)return;
