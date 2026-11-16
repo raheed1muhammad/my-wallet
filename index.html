@@ -583,42 +583,14 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 #igChats .lt{font-size:11px;font-weight:600;color:var(--ink-2);border:1px solid var(--line);border-radius:99px;padding:1px 8px}
 #igChats[hidden]{display:none}
 #igChats #lallq{width:100%}
-#igChats .lswi{display:flex;align-items:center;gap:6px;margin:0 0 10px;font-size:12px;color:var(--muted)}
-#igChats .lswi button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer}
-#igChats .lswi button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
 #igChats #lflt{display:flex;gap:6px;overflow-x:auto;margin:10px 0 6px;padding-bottom:2px;scrollbar-width:none}
 #igChats #lflt button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}
 #igChats #lflt button em{font-style:normal;opacity:.6;margin-left:2px}
 #igChats #lflt button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 #igChats .ar{font-weight:800}#igChats .in{color:var(--pos)}
-#igChats .lbadge{display:inline-block;min-width:20px;text-align:center;font-size:11px;font-weight:700;border-radius:99px;padding:1px 6px;background:var(--ink);color:var(--bg)}
 #igChats .lr{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-/* design 2: cards */
-#igChats .ld2 .lcard{display:flex;align-items:center;gap:12px;padding:12px;margin:0 0 10px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(90deg,hsl(var(--h) 45% 45%/.16),var(--surface) 55%);cursor:pointer}
-#igChats .ld2 .av.ring{box-shadow:0 0 0 3px var(--surface),0 0 0 5px hsl(var(--h) 45% 45%)}
-#igChats .ld2 .lm{flex:1;min-width:0}#igChats .ld2 .lm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#igChats .ld2 .lm small{color:var(--muted);font-size:12px}
-#igChats .ld2 .lr b{font-size:17px}#igChats .ld2 .lr small{color:var(--muted);font-size:11px}
-/* design 3: tiles */
-#igChats .ld3{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#igChats .ltile{display:flex;flex-direction:column;gap:3px;padding:14px 12px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,hsl(var(--h) 45% 45%/.28),var(--surface) 62%);cursor:pointer;min-width:0}
-#igChats .ltile b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#igChats .ltile small{color:var(--muted);font-size:11px}
-#igChats .ltile .av{width:40px;height:40px;font-size:17px;margin-bottom:6px}
-#igChats .ltile .tam{font-size:18px;font-weight:800;margin-top:6px;overflow-wrap:anywhere}
-#igChats .mbar{height:4px;border-radius:99px;background:var(--pos);margin:6px 0 2px;overflow:hidden}#igChats .mbar.off{background:var(--line)}#igChats .mbar i{display:block;height:100%;background:var(--ink);opacity:.55}
-/* design 4: story rail + sections */
-#igChats .lrail{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 12px;scrollbar-width:none}
-#igChats .story{flex:none;text-align:center;cursor:pointer;width:62px}#igChats .story small{display:block;margin-top:4px;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#igChats .sring{display:inline-flex;padding:3px;border-radius:50%;background:conic-gradient(hsl(var(--h) 70% 55%),hsl(calc(var(--h) + 60) 70% 60%),hsl(var(--h) 70% 55%))}
-#igChats .sring .av{width:52px;height:52px;box-shadow:0 0 0 3px var(--bg)}
-#igChats .lsec{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 4px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}#igChats .lsec span{border:1px solid var(--line);border-radius:99px;padding:0 8px}
-/* design 5: gradient cards */
-#igChats .ld5{display:grid;grid-template-columns:1fr;gap:12px}
-#igChats .lgrad{position:relative;overflow:hidden;padding:14px 16px 16px;border-radius:22px;color:#fff;cursor:pointer;background:linear-gradient(135deg,hsl(var(--h) 55% 38%),hsl(calc(var(--h) + 35) 60% 28%));box-shadow:0 8px 20px rgba(0,0,0,.25)}
-#igChats .lgrad .gt{display:flex;justify-content:space-between;font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:.6px}
-#igChats .lgrad .gn{display:block;font-size:18px;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62%}
-#igChats .lgrad .ga{font-size:26px;font-weight:800;margin-top:2px;letter-spacing:-.4px}
-#igChats .lgrad .gs{position:absolute;right:14px;bottom:14px;display:flex;align-items:flex-end;gap:4px;height:48px;width:36%}
-#igChats .lgrad .gs i{flex:1;border-radius:3px;background:rgba(255,255,255,.45)}#igChats .lgrad .gs i.r{background:rgba(255,255,255,.95)}
+#igChats .av.pf{background:linear-gradient(135deg,hsl(var(--h) 55% 55%),hsl(calc(var(--h) + 30) 55% 36%));box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px hsl(var(--h) 50% 52%/.75);font-size:19px}
+#igChats .av.ic{background:linear-gradient(135deg,hsl(var(--h) 60% 50%),hsl(calc(var(--h) + 25) 60% 34%));box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px hsl(var(--h) 50% 52%/.4)}
 #igChats{position:fixed;inset:0;z-index:90;background:var(--bg);color:var(--ink);overflow:auto;padding-bottom:40px}
 #igChats .sbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--band);color:var(--band-ink)}
 #igChats .sbar button{background:none;border:0;color:inherit;font-size:22px;cursor:pointer}
@@ -1349,7 +1321,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
 <div id="bc" aria-live="polite"></div>
 <div id="tip" role="tooltip"></div>
 <button type="button" class="lfab" id="lfab" aria-label="Open chat list: people, categories and accounts"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M2.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16 7h6M16 12h6M16 17h6"/></svg></button>
-<div id="igChats" hidden><div class="sbar"><button type="button" id="chatsBack" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>Transaction chats</b><small id="lallsub"></small></div></div><div class="cw"><div id="lsw"></div><input id="lallq" type="search" placeholder="Search a name, category or account" autocomplete="off"><div id="lflt"></div><div id="lallList"></div></div></div>
+<div id="igChats" hidden><div class="sbar"><button type="button" id="chatsBack" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>Transaction chats</b><small id="lallsub"></small></div></div><div class="cw"><input id="lallq" type="search" placeholder="Search a name, category or account" autocomplete="off"><div id="lflt"></div><div id="lallList"></div></div></div>
 <div id="toast" role="status"></div>
 
 <script>
@@ -3815,9 +3787,8 @@ $('#lallq').addEventListener('input',renderChatList);
 $('#lfab').addEventListener('click',function(){var l=$('#igChats');l.hidden=false;renderChatList();l.scrollTop=0});
 $('#chatsBack').addEventListener('click',function(){$('#igChats').hidden=true});
 $('#igChats').addEventListener('click',function(ev){
-  var d=ev.target.closest('[data-ld]'),f=ev.target.closest('[data-lf]');
-  if(d){LD=+d.dataset.ld;try{localStorage.setItem('mywallet.listdesign',String(LD))}catch(e){}renderChatList()}
-  else if(f){LF=f.dataset.lf;renderChatList()}
+  var f=ev.target.closest('[data-lf]');
+  if(f){LF=f.dataset.lf;renderChatList()}
 });
 /* Chat tab timer (Settings): after a main page change the button stays this long, then floats down and hides. 0 = always */
 var CHTK='mywallet.chattimer',CHT=0,chtT=null;
@@ -4715,45 +4686,49 @@ function renderChatList(){
   if(!list.length){$('#lallList').innerHTML='<div class="empty"><b>'+(q?'Nothing found':'No names or categories yet')+'</b>'+(q?'Try another word.':'They appear here as soon as you record entries.')+'</div>';return}
   paintChatList(list,all);
 }
-/* ---------- chat list: several looks (the demo shows a 1-5 switcher; the app keeps one) ---------- */
-var LD=1,LF='all';try{LD=+localStorage.getItem('mywallet.listdesign')||1}catch(e){}
+/* ---------- chat list: profile picture for people, icon for categories and accounts ---------- */
+var LF='all';
+var LICON={
+  home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  food:'<path d="M5 9l3-6M19 9l-3-6"/><path d="M2 9h20l-2 11H4z"/><path d="M9 13v4M15 13v4"/>',
+  car:'<path d="M3 13l2-6h14l2 6"/><rect x="3" y="13" width="18" height="5" rx="1.5"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/>',
+  bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  bag:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 016 0"/>',
+  heart:'<path d="M12 21s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 10c0 6-8 11-8 11z"/>',
+  users:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M17 14c2.5 0 4 2 4 5"/>',
+  send:'<path d="M21 3L3 10l7 3 3 7z"/>',
+  cap:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>',
+  play:'<circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/>',
+  pct:'<path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.2"/><circle cx="17" cy="17" r="2.2"/>',
+  note:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
+  brief:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M3 13h18"/>',
+  laptop:'<rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 20h20"/>',
+  star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  gift:'<rect x="3" y="9" width="18" height="12" rx="1"/><path d="M12 9v12M3 13h18"/><path d="M12 9c-3 0-4-4-1.5-4S12 9 12 9zm0 0c3 0 4-4 1.5-4S12 9 12 9z"/>',
+  undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/>',
+  bank:'<path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18"/>',
+  tag:'<path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.3"/>'
+};
+var LCATICON={'Food & Groceries':['food',140],'Rent':['home',215],'Transport & Fuel':['car',265],'Bills & Utilities':['bolt',45],'Shopping':['bag',340],'Health':['heart',355],'Family & Remittance':['users',20],'Travel':['send',195],'Education':['cap',235],'Entertainment':['play',290],'Bank charges':['pct',205],'Salary':['note',150],'Business':['brief',30],'Freelance':['laptop',185],'Bonus':['star',50],'Gift':['gift',320],'Refund':['undo',165]};
+function lIcon(k){return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(LICON[k]||LICON.tag)+'</svg>'}
+function lAv(o){
+  if(o.kind==='person'||o.kind==='fp'){var h=hueOf(o.title);return '<span class="av pf" style="--h:'+h+'">'+esc(o.title.trim().charAt(0).toUpperCase()||'?')+'</span>'}
+  if(o.kind==='acct'){var ca=o.key==='Cash';return '<span class="av ic" style="--h:'+(ca?150:215)+'">'+lIcon(ca?'note':'bank')+'</span>'}
+  var m=LCATICON[o.key]||(o.key===LOAN_INT_PAID||o.key===LOAN_INT_GOT?['pct',205]:['tag',hueOf(o.title)]);
+  return '<span class="av ic" style="--h:'+m[1]+'">'+lIcon(m[0])+'</span>';
+}
 function lAttrs(o){return 'data-chat="'+o.kind+'" data-key="'+esc(o.key)+'" data-cur="'+o.cur+'" data-ct="'+o.ct+'" role="button" tabindex="0"'}
 function lTag(o){return o.kind==='person'?'Person':o.kind==='fp'?'Family':o.kind==='acct'?'Account':o.ct==='income'?'Income':'Expense'}
-function lStat(o){
-  var it=chatItems({kind:o.kind,key:o.key,ct:o.ct,cur:o.cur}),p=0,r=0,n=0,sp=[];
-  it.forEach(function(x){if(x.dir==='paid'){p+=x.amt;n++;sp.push({a:x.amt,d:'p'})}else if(x.dir==='recv'){r+=x.amt;n++;sp.push({a:x.amt,d:'r'})}});
-  return {p:rnd(p,o.cur),r:rnd(r,o.cur),n:n,sp:sp.slice(-8)};
-}
-function lAv(o,c){return '<span class="av'+(c?' '+c:'')+'" style="background:hsl('+hueOf(o.title)+',45%,45%)">'+esc(o.title.trim().charAt(0).toUpperCase()||'?')+'</span>'}
 function lSub(o){return o.last?money(o.last.amt,o.cur)+' '+(o.last.dir==='recv'?'received':o.last.dir==='paid'?'sent':'noted'):(o.cur==='INR'?'₹ INR':'OMR')+' · no entries yet'}
-function lDate(o){return o.last?F_LEDG.format(parse(o.last.date)):''}
-function lSign(o){return !o.last?'':o.last.dir==='recv'?'+':o.last.dir==='paid'?'−':''}
-function lCls(o){return !o.last?'':o.last.dir==='recv'?'in':'out'}
-function lRowHtml(o,d){
-  var st=lStat(o);
-  if(d===2)return '<div class="lcard" style="--h:'+hueOf(o.title)+'" '+lAttrs(o)+'>'+lAv(o,'ring')+'<div class="lm"><b>'+esc(o.title)+'</b><small><span class="lt">'+lTag(o)+'</span> '+st.n+' payment'+(st.n===1?'':'s')+'</small></div><div class="lr"><b class="'+lCls(o)+'">'+(o.last?lSign(o)+money(o.last.amt,o.cur):'—')+'</b><small>'+lDate(o)+'</small></div></div>';
-  if(d===3){var tt=st.p+st.r,pp=tt?Math.round(st.p*100/tt):0;return '<div class="ltile" style="--h:'+hueOf(o.title)+'" '+lAttrs(o)+'>'+lAv(o)+'<b>'+esc(o.title)+'</b><small>'+lTag(o)+' · '+(o.cur==='INR'?'₹':'OMR')+'</small><div class="tam '+lCls(o)+'">'+(o.last?lSign(o)+money(o.last.amt,o.cur):'—')+'</div>'+(tt?'<div class="mbar"><i style="width:'+pp+'%"></i></div>':'<div class="mbar off"></div>')+'<small>'+(lDate(o)||'no entries')+'</small></div>'}
-  if(d===5){var mx=1;st.sp.forEach(function(x){if(x.a>mx)mx=x.a});return '<div class="lgrad" style="--h:'+hueOf(o.title)+'" '+lAttrs(o)+'><div class="gt"><span>'+lTag(o)+'</span><span>'+lDate(o)+'</span></div><b class="gn">'+esc(o.title)+'</b><div class="ga">'+(o.last?lSign(o)+money(o.last.amt,o.cur):'—')+'</div><div class="gs">'+st.sp.map(function(x){return '<i class="'+x.d+'" style="height:'+Math.max(14,Math.round(x.a*100/mx))+'%"></i>'}).join('')+'</div></div>'}
-  /* 1 and 4: compact WhatsApp-style row */
-  return '<div class="lrow" '+lAttrs(o)+'>'+lAv(o)+'<div class="lm"><b>'+esc(o.title)+'</b><small>'+(o.last?'<span class="ar '+lCls(o)+'">'+(o.last.dir==='recv'?'↙':'↗')+'</span> ':'')+lSub(o)+'</small></div><div class="lr"><small>'+lDate(o)+'</small>'+(st.n?'<span class="lbadge">'+st.n+'</span>':'<span class="lt">'+lTag(o)+'</span>')+'</div></div>';
+function lRowHtml(o){
+  var c=!o.last?'':o.last.dir==='recv'?'in':'out';
+  return '<div class="lrow" '+lAttrs(o)+'>'+lAv(o)+'<div class="lm"><b>'+esc(o.title)+'</b><small>'+(o.last?'<span class="ar '+c+'">'+(o.last.dir==='recv'?'↙':'↗')+'</span> ':'')+lSub(o)+'</small></div><div class="lr"><small>'+(o.last?F_LEDG.format(parse(o.last.date)):'')+'</small><span class="lt">'+lTag(o)+' \u00b7 '+(o.cur==='INR'?'\u20b9':'OMR')+'</span></div></div>';
 }
 function paintChatList(list,all){
-  var sw=$('#lsw');
-  if(window.__LISTDEMO){sw.innerHTML='<div class="lswi">Design '+[1,2,3,4,5].map(function(i){return '<button type="button" data-ld="'+i+'" aria-pressed="'+(LD===i)+'">'+i+'</button>'}).join('')+'</div>'}else sw.innerHTML='';
   var cnt={all:all.length,person:0,cat:0,acct:0};all.forEach(function(o){if(o.kind==='person'||o.kind==='fp')cnt.person++;else if(o.kind==='cat')cnt.cat++;else cnt.acct++});
   $('#lflt').innerHTML=[['all','All'],['person','People'],['cat','Categories'],['acct','Accounts']].map(function(x){return '<button type="button" data-lf="'+x[0]+'" aria-pressed="'+(LF===x[0])+'">'+x[1]+' <em>'+cnt[x[0]]+'</em></button>'}).join('');
   var L=list.filter(function(o){return LF==='all'||(LF==='person'?(o.kind==='person'||o.kind==='fp'):o.kind===LF)});
-  var box=$('#lallList'),h='';
-  box.className='ld'+LD;
-  if(!L.length){box.innerHTML='<div class="empty"><b>Nothing here</b>Try another filter.</div>';return}
-  if(LD===4){
-    var rail=L.filter(function(o){return o.last}).slice(0,10);
-    if(rail.length)h+='<div class="lrail">'+rail.map(function(o){return '<div class="story" '+lAttrs(o)+'><span class="sring" style="--h:'+hueOf(o.title)+'">'+lAv(o)+'</span><small>'+esc(o.title.split(/\s+/)[0].slice(0,9))+'</small></div>'}).join('')+'</div>';
-    [['person','People',function(o){return o.kind==='person'||o.kind==='fp'}],['cat','Categories',function(o){return o.kind==='cat'}],['acct','Accounts',function(o){return o.kind==='acct'}]].forEach(function(g){
-      var G=L.filter(g[2]);if(!G.length)return;
-      h+='<div class="lsec"><b>'+g[1]+'</b><span>'+G.length+'</span></div>'+G.map(function(o){return lRowHtml(o,4)}).join('')});
-  }else h=L.map(function(o){return lRowHtml(o,LD)}).join('');
-  box.innerHTML=h;
+  $('#lallList').innerHTML=L.length?L.map(lRowHtml).join(''):'<div class="empty"><b>Nothing here</b>Try another filter.</div>';
 }
 
 /* ---------- Nepali version: show the second currency as NPR / \u0930\u0942 on every screen ----------
