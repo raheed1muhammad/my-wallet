@@ -590,7 +590,7 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 #igChats .ar{font-weight:800}#igChats .in{color:var(--pos)}
 #igChats .lr{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 #igChats .av.pf{background:linear-gradient(135deg,hsl(var(--h) 55% 55%),hsl(calc(var(--h) + 30) 55% 36%));box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px hsl(var(--h) 50% 52%/.75);font-size:19px}
-#igChats .av.ic{background:linear-gradient(135deg,hsl(var(--h) 60% 50%),hsl(calc(var(--h) + 25) 60% 34%));box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px hsl(var(--h) 50% 52%/.4)}
+#igChats .av.ic{color:var(--band-ink);background:linear-gradient(135deg,var(--band),color-mix(in srgb,var(--band) 72%,#fff));box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px color-mix(in srgb,var(--band) 55%,transparent)}
 #igChats{position:fixed;inset:0;z-index:90;background:var(--bg);color:var(--ink);overflow:auto;padding-bottom:40px}
 #igChats .sbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--band);color:var(--band-ink)}
 #igChats .sbar button{background:none;border:0;color:inherit;font-size:22px;cursor:pointer}
@@ -4710,7 +4710,7 @@ var LICON={
   tag:'<path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.3"/>'
 };
 var LCATICON={'Food & Groceries':['food',140],'Rent':['home',215],'Transport & Fuel':['car',265],'Bills & Utilities':['bolt',45],'Shopping':['bag',340],'Health':['heart',355],'Family & Remittance':['users',20],'Travel':['send',195],'Education':['cap',235],'Entertainment':['play',290],'Bank charges':['pct',205],'Salary':['note',150],'Business':['brief',30],'Freelance':['laptop',185],'Bonus':['star',50],'Gift':['gift',320],'Refund':['undo',165]};
-function lIcon(k){return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(LICON[k]||LICON.tag)+'</svg>'}
+function lIcon(k){return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(LICON[k]||LICON.tag)+'</svg>'}
 function lAv(o){
   if(o.kind==='person'||o.kind==='fp'){var h=hueOf(o.title);return '<span class="av pf" style="--h:'+h+'">'+esc(o.title.trim().charAt(0).toUpperCase()||'?')+'</span>'}
   if(o.kind==='acct'){var ca=o.key==='Cash';return '<span class="av ic" style="--h:'+(ca?150:215)+'">'+lIcon(ca?'note':'bank')+'</span>'}
