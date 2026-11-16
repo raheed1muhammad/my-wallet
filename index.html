@@ -960,6 +960,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
               <div class="chips" id="bankchips" hidden></div>
             </div>
             <div class="fld" id="catfld"><label for="cat" id="catlabel">Spent on</label><select id="cat"></select><div class="chips hs" id="catchips"></div></div>
+            <div class="fld" id="incfld" hidden><label id="inclabel">Received from (optional)</label><div class="pp" id="incpp"></div></div>
           </div>
 
           <div id="tblock" hidden>
@@ -1008,12 +1009,8 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
                 </div>
               </div>
               <div class="fld">
-                <span id="fwholabel">Family &amp; friends</span>
-                <div class="chips" id="fchips"></div>
-                <div id="faddbox" hidden style="margin-top:8px">
-                  <div style="display:flex;gap:8px;align-items:center"><input id="fpname" style="flex:1;min-width:0" maxlength="30" placeholder="Name (e.g. Mom)" autocomplete="off" aria-label="Person name"><button type="button" class="btn2" id="fpsave">Add</button><button type="button" class="btn2" id="fpcancel">Cancel</button></div>
-                  <p class="fine" id="fpmsg" style="margin:6px 0 0"></p>
-                </div>
+                <span id="fwholabel">Person or company</span>
+                <div class="pp" id="famp"></div>
               </div>
               <p class="lhint" id="fhint"></p>
             </div>
@@ -1919,14 +1916,8 @@ function ptAll(){
 }
 
 function paintFchips(){
-  var list=FP.slice(),cur=pkey(S.fperson);
-  (S.entries||[]).forEach(function(e){if(e&&e.type==='fam'&&typeof e.person==='string'&&e.person.trim()&&!list.some(function(n){return pkey(n)===pkey(e.person)}))list.push(e.person.trim())});
-  if(cur&&!FP.some(function(n){return pkey(n)===cur}))list.push(S.fperson);
-  $('#fchips').innerHTML=list.map(function(n){
-    var saved=FP.some(function(x){return pkey(x)===pkey(n)});
-    return '<span class="fpc"><button type="button" class="chipbtn" data-fp="'+esc(n)+'" aria-pressed="'+String(pkey(n)===cur)+'">'+esc(n)+'</button>'+(saved?'<button type="button" class="fpx" data-fpdel="'+esc(n)+'" aria-label="Delete '+esc(n)+'">×</button>':'')+'</span>';
-  }).join('')+'<button type="button" class="chipbtn" id="fpaddbtn">+ Add person</button>';
-  $('#fhint').textContent=!list.length?'Add the people you send money to or get money from (family, friends). It is not an expense and not a loan.':!S.fperson?'Pick a person above.':S.fkind==='got'?'Money you got from '+S.fperson+'. Your balance goes up. It is not counted as income or a loan.':'Money you gave '+S.fperson+'. Your balance goes down. It is not counted as an expense or a loan.';
+  ppRender('famp',FAMPP);
+  $('#fhint').textContent=!S.fperson?'Pick a person or company above, or choose + Add new.':S.fkind==='got'?'Money you got from '+S.fperson+'. Your balance goes up. It is not counted as income or a loan.':'Money you gave '+S.fperson+'. Your balance goes down. It is not counted as an expense or a loan.';
 }
 function paintTmode(){
   var tr=S.ftype==='transfer',pm=tr&&S.tmode==='person';
@@ -1934,12 +1925,6 @@ function paintTmode(){
   $('#tmodefld').hidden=!tr;$('#selfblock').hidden=pm;$('#fblock').hidden=!pm;
   if(tr){$('#accblock').hidden=!pm;if(pm){$('#catfld').hidden=true;$('#acclabel').textContent=S.fkind==='got'?'Received in':'Paid from'}}
   if(pm){$$('#fkindseg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.fk===S.fkind))});paintFchips()}
-}
-function addFP(){
-  var n=($('#fpname').value||'').trim().replace(/\s+/g,' '),m=$('#fpmsg');
-  if(!n){m.textContent='Type a name.';return}
-  if(FP.some(function(x){return pkey(x)===pkey(n)})){m.textContent='That name is already in your list.';return}
-  FP.push(n);fpSave();ptAdd(n,'p');S.fperson=n;$('#fpname').value='';m.textContent='';$('#faddbox').hidden=true;paintFchips();
 }
 function paintPresets(){
   var f=$('#from').value,t=$('#to').value;
@@ -2016,6 +2001,7 @@ function setType(t){
   $('#accblock').hidden=tr;$('#tblock').hidden=!tr;$('#lblock').hidden=!ln;$('#catfld').hidden=ln||sp;$('#sblock').hidden=!sp;
   $('#acclabel').textContent=t==='expense'||(ln&&!loanIn({kind:S.lkind}))?'Paid from':'Received in';
   $('#catlabel').textContent=t==='expense'?'Spent on':'Income from';
+  $('#incfld').hidden=t!=='income';if(t==='income')ppRender('incpp',INCPP);
   if(t==='expense'||t==='income')fillCats(t);
   if(ln)paintLoan();
   if(sp)paintSipForm();
@@ -2079,11 +2065,11 @@ function ppRows(id){
 function ppRender(id,cfg){
   var host=document.getElementById(id);if(!host)return;
   var st=PP[id]||(PP[id]={open:false,add:false,q:'',type:'p'});
-  if(cfg)st.cfg=cfg;cfg=st.cfg;
+  if(cfg)st.cfg=cfg;cfg=st.cfg;if(!cfg)return;
   if(!host._pp){host._pp=1;ppWire(host,id)}
   var v=(cfg.value()||'').trim(),vt=v?ptType(v):'p';
   var h='<button type="button" class="ppbtn" data-pp="toggle" aria-expanded="'+st.open+'"><span class="ppav'+(vt==='c'?' co':'')+'">'+PPI[vt]+'</span><span class="ppv'+(v?'':' ph')+'">'+esc(v||cfg.ph)+'</span>'+PPI.d+'</button>';
-  if(st.open)h+='<div class="ppdrop"><input class="ppq" type="search" placeholder="Search" autocomplete="off" value="'+esc(st.q)+'"><button type="button" class="ppnew" data-pp="new">+ Add new</button><div class="pplist">'+ppRows(id)+'</div></div>';
+  if(st.open)h+='<div class="ppdrop"><input class="ppq" type="search" placeholder="Search" autocomplete="off" value="'+esc(st.q)+'"><button type="button" class="ppnew" data-pp="new">+ Add new</button>'+(cfg.clear&&v?'<button type="button" class="ppnew" data-pp="clear">Clear selection</button>':'')+'<div class="pplist">'+ppRows(id)+'</div></div>';
   if(st.add)h+='<div class="ppadd"><b>Add new</b><input class="ppname" maxlength="40" placeholder="Name" autocomplete="off"><div class="seg2" role="group" aria-label="Type"><button type="button" data-pp="type" data-t="p" aria-pressed="'+(st.type==='p')+'">Person</button><button type="button" data-pp="type" data-t="c" aria-pressed="'+(st.type==='c')+'">Company / Firm</button></div><p class="ppmsg" role="alert"></p><div class="ppacts"><button type="button" class="btn2" data-pp="cancel">Cancel</button><button type="button" class="btn" data-pp="save">Save</button></div></div>';
   host.innerHTML=h;
 }
@@ -2092,6 +2078,7 @@ function ppWire(host,id){
     var b=ev.target.closest('[data-pp]');if(!b||!host.contains(b))return;
     var st=PP[id],a=b.dataset.pp;
     if(a==='toggle'){st.open=!st.open;st.add=false;st.q='';ppRender(id);if(st.open){var q=host.querySelector('.ppq');if(q)q.focus({preventScroll:true});var dr=host.querySelector('.ppdrop');if(dr)dr.scrollIntoView({block:'center',behavior:'smooth'})}}
+    else if(a==='clear'){st.open=false;st.add=false;st.cfg.onPick('');ppRender(id)}
     else if(a==='pick'){st.open=false;st.add=false;st.cfg.onPick(b.dataset.n);ppRender(id)}
     else if(a==='new'){var nm=st.q;st.open=false;st.add=true;st.q='';ppRender(id);var ni=host.querySelector('.ppname');if(ni){ni.value=nm;ni.focus({preventScroll:true})}}
     else if(a==='type'){st.type=b.dataset.t==='c'?'c':'p';host.querySelectorAll('[data-pp=type]').forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.t===st.type))})}
@@ -2121,6 +2108,8 @@ function loanPickList(){
   if(rc||cw)return lp.filter(function(o){return rc?woCurs(o).length>0:dirCurs(o,k).length>0}).map(function(o){return {n:o.name,t:ptType(o.name),sub:bal(o)}});
   return ptAll().map(function(o){return {n:o.n,t:o.t,sub:bal(by[pkey(o.n)])}});
 }
+var FAMPP={ph:'Pick a person or company',value:function(){return S.fperson},list:function(){return ptAll().map(function(o){return {n:o.n,t:o.t,sub:''}})},onPick:function(n){S.fperson=n;paintFchips()}};
+var INCPP={ph:'Pick a person or company',clear:true,value:function(){return S.party},list:function(){return ptAll().map(function(o){return {n:o.n,t:o.t,sub:''}})},onPick:function(n){S.party=n;ppRender('incpp')}};
 var LOANPP={ph:'Pick a person or company',value:function(){return $('#person').value},list:loanPickList,onPick:function(n){$('#person').value=n;applyPersonCur();paintLoan()}};
 function setCurSafe(c){if(!c)return;if(!noBalForm()&&!allowsCur(entryAccount(),c))S.fgroup='Cash';S.fcur=c;paintAccount()}
 function applyPersonCur(){
@@ -2137,15 +2126,17 @@ function updateSubmit(){
 function resetForm(keepDate){
   S.editId=null;S.estep=1;$('#amt').value='';$('#note').value='';$('#igTagIn').value='';$('#err').textContent='';
   $('#person').value='';$('#oldloan').checked=false;$('#wooff').checked=false;$('#woamt').value='';$('#ixon').checked=false;$('#ixamt').value='';$('#fee').value='';$('#trate').value='';$('#tstatus').textContent='';S.trateTouched=false;S.feeOn='from';
-  S.fperson='';$('#faddbox').hidden=true;$('#fpname').value='';$('#fpmsg').textContent='';
+  S.fperson='';S.party='';
   if(!keepDate)$('#date').value=todayStr();
   updateSubmit();if(S.ftype==='transfer')paintTransfer();estepApply();
+  ppRender('incpp');ppRender('famp');ppRender('loanpp');
 }
 function startEdit(id){
   var e=S.entries.find(function(x){return x.id===id});if(!e)return;
   S.editId=id;S.confirmDel=null;S.estep=2;
   setTab('entry',true);
   if(e.type==='sip')S.skind=e.kind==='draw'?'draw':'invest';
+  S.party=e.type==='income'&&typeof e.party==='string'?e.party:'';
   if(e.type==='fam'){S.tmode='person';S.fkind=e.kind==='got'?'got':'sent';S.fperson=e.person||''}else if(e.type==='transfer')S.tmode='self';
   setType(e.type==='fam'?'transfer':e.type);
   if(e.type==='loan'){S.lkind=e.kind;$('#person').value=e.person||'';$('#oldloan').checked=!!e.noBal;$('#ixon').checked=e.interest>0;$('#ixamt').value=e.interest>0?String(e.interest):'';$('#wooff').checked=e.writeOff>0;$('#woamt').value=e.writeOff>0?String(e.writeOff):''}
@@ -3497,15 +3488,6 @@ $('#trate').addEventListener('input',function(){this.value=this.value.replace(/[
 $('#feeonseg').addEventListener('click',function(ev){var b=ev.target.closest('button');if(!b)return;S.feeOn=b.dataset.fo;paintTransfer()});
 $('#tmodeseg').addEventListener('click',function(ev){var b=ev.target.closest('button[data-tm]');if(!b)return;S.tmode=b.dataset.tm==='person'?'person':'self';$('#err').textContent='';paintTmode();paintAccount();updateSubmit()});
 $('#fkindseg').addEventListener('click',function(ev){var b=ev.target.closest('button[data-fk]');if(!b)return;S.fkind=b.dataset.fk==='got'?'got':'sent';paintTmode();paintAccount()});
-$('#fchips').addEventListener('click',function(ev){
-  var x=ev.target.closest('button[data-fpdel]');
-  if(x){var nm=x.dataset.fpdel;askOk('Remove '+nm+' from your list? Past transfers with '+nm+' are kept.',function(){FP=FP.filter(function(n){return pkey(n)!==pkey(nm)});fpSave();if(pkey(S.fperson)===pkey(nm))S.fperson='';paintFchips()});return}
-  var c=ev.target.closest('button[data-fp]');if(c){S.fperson=c.dataset.fp;paintFchips();return}
-  if(ev.target.closest('#fpaddbtn')){$('#faddbox').hidden=false;$('#fpname').focus()}
-});
-$('#fpsave').addEventListener('click',addFP);
-$('#fpcancel').addEventListener('click',function(){$('#faddbox').hidden=true;$('#fpname').value='';$('#fpmsg').textContent=''});
-$('#fpname').addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();addFP()}});
 $('#lkindseg').addEventListener('click',function(ev){var b=ev.target.closest('button');if(!b)return;S.lkind=b.dataset.lk;applyPersonCur();paintLoan();applyCurLock();$('#acclabel').textContent=loanIn({kind:S.lkind})?'Received in':'Paid from'});
 $('#fullrow').addEventListener('click',function(ev){var b=ev.target.closest('button[data-full]');if(!b)return;var o=personByName($('#person').value);if(!o)return;var c=b.dataset.full;setCurSafe(c);$('#amt').value=String(S.lkind==='recall'?woLeft(o,c):rnd(Math.abs(o.net[c]),c));paintLoan()});
 $('#oldloan').addEventListener('change',function(){paintLoan();applyCurLock()});
@@ -3536,9 +3518,10 @@ $('#f').addEventListener('submit',function(ev){
   amt=rnd(amt,S.fcur);if(!(amt>0)&&!woOnly){err.textContent='That amount is too small to record.';return}
   var old=S.editId?S.entries.find(function(x){return x.id===S.editId}):null;
   var entry={id:old?old.id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),type:S.ftype,currency:S.fcur,amount:amt,note:$('#note').value.trim(),date:date,ts:old?(old.ts||Date.now()):Date.now()};
+  if(S.ftype==='income'){var _pa=(S.party||'').trim().slice(0,40);if(_pa)entry.party=_pa}
   if(S.ftype==='transfer'&&S.tmode==='person'){
     var fpn=(S.fperson||'').trim();
-    if(!fpn){err.textContent='Choose a person, or add one with + Add person.';return}
+    if(!fpn){err.textContent='Pick a person or company, or choose + Add new.';var _fb=document.querySelector('#famp .ppbtn');if(_fb)_fb.focus();return}
     entry.type='fam';entry.kind=S.fkind==='got'?'got':'sent';entry.person=fpn;entry.category='Family & friends';
     entry.account=entryAccount();
     if(!allowsCur(entry.account,entry.currency)){err.textContent=entry.account+' holds '+curs(entry.account)[0]+' only.';return}
