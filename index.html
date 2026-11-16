@@ -1728,7 +1728,7 @@ function actionsHtml(e){
     '<button class="ra" data-act="edit" data-id="'+esc(e.id)+'" aria-label="Edit entry"><svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M4 14.5V16h1.5l7.8-7.8-1.5-1.5L4 14.5zM14.2 5.8l-1-1a1 1 0 0 0-1.4 0l-.8.8 2.4 2.4.8-.8a1 1 0 0 0 0-1.4z"/></svg></button><button class="ra" data-act="del" data-id="'+esc(e.id)+'" aria-label="Delete entry"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6h11M8 6V4.5h4V6M6 6l.6 9.5h6.8L14 6"/></svg></button>';
 }
 function woText(e){if(e.type!=='loan')return '';return (e.interest>0?' · '+(e.kind==='repay'?'interest paid ':'interest received ')+money(e.interest,e.currency):'')+(e.writeOff>0?' · written off '+money(e.writeOff,e.currency):'')}
-function narration(e){if(e.type==='fam')return famText(e)+(e.note?' · '+e.note:'');if(e.type==='loan')return loanText(e)+(e.note?' · '+e.note:'');return e.note||(e.type==='transfer'?'Self transfer':e.category)}
+function narration(e){if(e.type==='income'&&String(e.party||'').trim())return incNote(e)+(e.note?' · '+e.note:'');if(e.type==='fam')return famText(e)+(e.note?' · '+e.note:'');if(e.type==='loan')return loanText(e)+(e.note?' · '+e.note:'');return e.note||(e.type==='transfer'?'Self transfer':e.category)}
 function transferText(e){
   var s=money(e.amount,e.currency);
   if(recvCurOf(e)!==e.currency)s+=' → '+money(recvAmtOf(e),recvCurOf(e));
@@ -4613,6 +4613,9 @@ function chatAttr(e){
   if(e.type==='expense'||e.type==='income')return q('cat',e.category||'Other',e.type);
   return '';
 }
+function isCo(n){return ptType(n)==='c'}
+/* income line: "Salary from X Company" when a party was picked */
+function incNote(e){var p=String(e.party||'').trim();return (e.category||'Other')+(p?' from '+p:'')}
 function chatItems(a){
   var out=[];
   S.entries.forEach(function(e){
@@ -4626,6 +4629,7 @@ function chatItems(a){
       if(e.type!=='loan'||pkey(e.person)!==a.key)return;
       out.push({e:e,amt:e.amount,dir:chatDir(e),note:loanLabel(e)+woText(e)+(e.note?' · '+e.note:'')});
     }else if(a.kind==='fp'){
+      if(e.type==='income'&&String(e.party||'').trim()&&pkey(e.party)===a.key){out.push({e:e,amt:e.amount,dir:'recv',note:incNote(e)+(e.note?' · '+e.note:'')});return}
       if(e.type!=='fam'||pkey(e.person)!==a.key)return;
       out.push({e:e,amt:e.amount,dir:chatDir(e),note:accOf(e)+(e.note?' · '+e.note:'')});
     }else if(a.kind==='tot'){
@@ -4636,7 +4640,7 @@ function chatItems(a){
       out.push({e:e,amt:e.interest,dir:a.key===LOAN_INT_PAID?'paid':'recv',note:loanText(e)});
     }else{
       if((e.type!=='expense'&&e.type!=='income')||e.type!==a.ct||(e.category||'Other')!==a.key)return;
-      out.push({e:e,amt:e.amount,dir:chatDir(e),note:e.note||''});
+      out.push({e:e,amt:e.amount,dir:chatDir(e),note:(e.type==='income'&&String(e.party||'').trim()?incNote(e)+(e.note?' · '+e.note:''):e.note||'')});
     }
   });
   return out.sort(function(x,y){return byDate(x.e,y.e)});
@@ -4653,7 +4657,7 @@ function hasCurs(a){var h={OMR:0,INR:0};
   if(a.kind==='acct'){['OMR','INR'].forEach(function(c){if(allowsCur(a.key,c))h[c]=1});return h}['OMR','INR'].forEach(function(c){if(chatItems({kind:a.kind,key:a.key,ct:a.ct,cur:c}).length)h[c]=1});return h}
 function openChat(a){
   var items=chatItems(a),last=items[items.length-1];
-  var title=a.kind==='person'?(last&&String(last.e.person||'').trim())||a.key:a.kind==='fp'?(FP.filter(function(n){return pkey(n)===a.key})[0])||(last&&String(last.e.person||'').trim())||a.key:a.kind==='tot'?({expense:'Spend',income:'Income',sip:'SIP'}[a.key]||a.key):a.key;
+  var title=a.kind==='person'?(last&&String(last.e.person||'').trim())||a.key:a.kind==='fp'?(ptAll().filter(function(o){return pkey(o.n)===a.key}).map(function(o){return o.n})[0])||(last&&String(last.e.person||'').trim())||a.key:a.kind==='tot'?({expense:'Spend',income:'Income',sip:'SIP'}[a.key]||a.key):a.key;
   CH={kind:a.kind,key:a.key,ct:a.ct||'',cur:a.cur==='INR'?'INR':'OMR',title:title};
   chatEl.hidden=false;renderChat(true);
 }
@@ -4671,7 +4675,7 @@ function renderChat(toBottom){
   else if(CH.kind==='tot'){var tt=CH.key==='income'?recv:CH.key==='sip'?paid-recv:paid;bal=Math.abs(rnd(tt,cur));lbl=CH.key==='income'?'Total income this month':CH.key==='sip'?'Net put into SIP this month':'Total spent this month'}
   else if(CH.kind==='acct'){var ab=rnd(balanceOf(CH.key,cur,todayStr()),cur);bal=Math.abs(ab);lbl=ab>0?'Balance: money in this account now':ab<0?'Balance: this account is overdrawn':'Balance: empty'}
   else{var d=rnd(recv-paid,cur);bal=Math.abs(d);lbl=d>0?'Balance: received more than paid':d<0?'Balance: paid more than received':'Balance: even'}
-  var kl=CH.kind==='person'?'Person':CH.kind==='fp'?'Family & friends':CH.kind==='acct'?'Account':CH.kind==='tot'?'This month':CH.ct==='income'?'Income category':'Expense category';
+  var kl=CH.kind==='person'?(isCo(CH.title)?'Company':'Person'):CH.kind==='fp'?(isCo(CH.title)?'Company':'Family & friends'):CH.kind==='acct'?'Account':CH.kind==='tot'?'This month':CH.ct==='income'?'Income category':'Expense category';
   var h='<div class="sbar"><button type="button" data-ch="close" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>'+esc(CH.title)+'</b><small>'+kl+' · '+(cur==='INR'?'₹ INR':'OMR')+'</small></div></div><div class="cw">';
   var f=CH.f||'all',fpk=CH.kind==='fp',hue=hueOf(CH.title||'?'),ini=esc((CH.title||'?').trim().charAt(0).toUpperCase()||'?'),tot=paid+recv,pp=tot?Math.round(paid*100/tot):0;
   h+='<div class="cdash" id="cdash"><div class="cd1"><div class="cdb"><small>'+esc(lbl)+'</small><b>'+money(bal,cur)+'</b></div><div class="cds"><span><i class="dot out"></i>'+(fpk?'Given':'Paid')+' <b>'+money(paid,cur)+'</b></span><span><i class="dot in"></i>Received <b>'+money(recv,cur)+'</b></span><span>'+n+' payment'+(n===1?'':'s')+'</span></div></div>'+
@@ -4732,6 +4736,7 @@ function chatAccounts(){
     }else if(e.type==='fam'){
       var fn=String(e.person||'').trim();if(fn)add('fp',pkey(fn),'',e.currency,fn,e,e.amount,chatDir(e));
     }else if(e.type==='expense'||e.type==='income'){
+      var ip=e.type==='income'?String(e.party||'').trim():'';if(ip)add('fp',pkey(ip),'',e.currency,ip,e,e.amount,'recv');
       var c=e.category||'Other';add('cat',c,e.type,e.currency,c,e,e.amount,chatDir(e));
     }
   });
@@ -4750,7 +4755,7 @@ function chatAccounts(){
 function hueOf(t){var h=0;for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))%360;return h}
 function renderChatList(){
   var q=($('#lallq').value||'').trim().toLowerCase(),all=chatAccounts();
-  var list=all.filter(function(o){return !q||(o.title+' '+(o.kind==='person'?'person':o.kind==='acct'?'account':o.kind==='fp'?'family friends':o.ct)+' '+o.cur).toLowerCase().indexOf(q)>-1});
+  var list=all.filter(function(o){return !q||(o.title+' '+((o.kind==='person'||o.kind==='fp')&&isCo(o.title)?'company':o.kind==='person'?'person':o.kind==='acct'?'account':o.kind==='fp'?'family friends':o.ct)+' '+o.cur).toLowerCase().indexOf(q)>-1});
   $('#lallsub').textContent=all.length+' account'+(all.length===1?'':'s');
   if(S.mode==='loading'){$('#lallList').innerHTML='<div class="empty">Loading your wallet…</div>';return}
   if(!list.length){$('#lallList').innerHTML='<div class="empty"><b>'+(q?'Nothing found':'No names or categories yet')+'</b>'+(q?'Try another word.':'They appear here as soon as you record entries.')+'</div>';return}
@@ -4777,27 +4782,29 @@ var LICON={
   gift:'<rect x="3" y="9" width="18" height="12" rx="1"/><path d="M12 9v12M3 13h18"/><path d="M12 9c-3 0-4-4-1.5-4S12 9 12 9zm0 0c3 0 4-4 1.5-4S12 9 12 9z"/>',
   undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/>',
   bank:'<path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18"/>',
+  co:'<path d="M5 21V4a1 1 0 011-1h8a1 1 0 011 1v17"/><path d="M15 9h3a1 1 0 011 1v11"/><path d="M3 21h18"/><path d="M9 7h2M9 11h2M9 15h2"/>',
   tag:'<path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.3"/>'
 };
 var LCATICON={'Food & Groceries':['food',140],'Rent':['home',215],'Transport & Fuel':['car',265],'Bills & Utilities':['bolt',45],'Shopping':['bag',340],'Health':['heart',355],'Family & Remittance':['users',20],'Travel':['send',195],'Education':['cap',235],'Entertainment':['play',290],'Bank charges':['pct',205],'Salary':['note',150],'Business':['brief',30],'Freelance':['laptop',185],'Bonus':['star',50],'Gift':['gift',320],'Refund':['undo',165]};
 function lIcon(k){return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(LICON[k]||LICON.tag)+'</svg>'}
 function lAv(o){
+  if((o.kind==='person'||o.kind==='fp')&&isCo(o.title))return '<span class="av ic" style="--h:'+hueOf(o.title)+'">'+lIcon('co')+'</span>';
   if(o.kind==='person'||o.kind==='fp'){var h=hueOf(o.title);return '<span class="av pf" style="--h:'+h+'">'+esc(o.title.trim().charAt(0).toUpperCase()||'?')+'</span>'}
   if(o.kind==='acct'){var ca=o.key==='Cash';return '<span class="av ic" style="--h:'+(ca?150:215)+'">'+lIcon(ca?'note':'bank')+'</span>'}
   var m=LCATICON[o.key]||(o.key===LOAN_INT_PAID||o.key===LOAN_INT_GOT?['pct',205]:['tag',hueOf(o.title)]);
   return '<span class="av ic" style="--h:'+m[1]+'">'+lIcon(m[0])+'</span>';
 }
 function lAttrs(o){return 'data-chat="'+o.kind+'" data-key="'+esc(o.key)+'" data-cur="'+o.cur+'" data-ct="'+o.ct+'" role="button" tabindex="0"'}
-function lTag(o){return o.kind==='person'?'Person':o.kind==='fp'?'Family':o.kind==='acct'?'Account':o.ct==='income'?'Income':'Expense'}
+function lTag(o){return (o.kind==='person'||o.kind==='fp')&&isCo(o.title)?'Company':o.kind==='person'?'Person':o.kind==='fp'?'Family':o.kind==='acct'?'Account':o.ct==='income'?'Income':'Expense'}
 function lSub(o){return o.last?money(o.last.amt,o.cur)+' '+(o.last.dir==='recv'?'received':o.last.dir==='paid'?'sent':'noted'):(o.cur==='INR'?'₹ INR':'OMR')+' · no entries yet'}
 function lRowHtml(o){
   var c=!o.last?'':o.last.dir==='recv'?'in':'out';
   return '<div class="lrow" '+lAttrs(o)+'>'+lAv(o)+'<div class="lm"><b>'+esc(o.title)+'</b><small>'+(o.last?'<span class="ar '+c+'">'+(o.last.dir==='recv'?'↙':'↗')+'</span> ':'')+lSub(o)+'</small></div><div class="lr"><small>'+(o.last?F_LEDG.format(parse(o.last.date)):'')+'</small><span class="lt">'+lTag(o)+' \u00b7 '+(o.cur==='INR'?'\u20b9':'OMR')+'</span></div></div>';
 }
 function paintChatList(list,all){
-  var cnt={all:all.length,person:0,cat:0,acct:0};all.forEach(function(o){if(o.kind==='person'||o.kind==='fp')cnt.person++;else if(o.kind==='cat')cnt.cat++;else cnt.acct++});
-  $('#lflt').innerHTML=[['all','All'],['person','People'],['cat','Categories'],['acct','Accounts']].map(function(x){return '<button type="button" data-lf="'+x[0]+'" aria-pressed="'+(LF===x[0])+'">'+x[1]+' <em>'+cnt[x[0]]+'</em></button>'}).join('');
-  var L=list.filter(function(o){return LF==='all'||(LF==='person'?(o.kind==='person'||o.kind==='fp'):o.kind===LF)});
+  var cnt={all:all.length,person:0,co:0,cat:0,acct:0};all.forEach(function(o){if((o.kind==='person'||o.kind==='fp')&&isCo(o.title))cnt.co++;else if(o.kind==='person'||o.kind==='fp')cnt.person++;else if(o.kind==='cat')cnt.cat++;else cnt.acct++});
+  $('#lflt').innerHTML=[['all','All'],['person','People'],['co','Companies'],['cat','Categories'],['acct','Accounts']].map(function(x){return '<button type="button" data-lf="'+x[0]+'" aria-pressed="'+(LF===x[0])+'">'+x[1]+' <em>'+cnt[x[0]]+'</em></button>'}).join('');
+  var L=list.filter(function(o){return LF==='all'||(LF==='person'?((o.kind==='person'||o.kind==='fp')&&!isCo(o.title)):LF==='co'?((o.kind==='person'||o.kind==='fp')&&isCo(o.title)):o.kind===LF)});
   $('#lallList').innerHTML=L.length?L.map(lRowHtml).join(''):'<div class="empty"><b>Nothing here</b>Try another filter.</div>';
 }
 
