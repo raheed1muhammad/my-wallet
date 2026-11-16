@@ -547,6 +547,28 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 #igChat .cb .am{font-size:20px;font-weight:700}#igChat .cb .st{font-size:13px;font-weight:600;margin-top:2px}
 #igChat .cb .nt{font-size:12px;opacity:.85;margin-top:4px;overflow-wrap:anywhere}#igChat .cb .tm{font-size:11px;opacity:.75;margin-top:4px;text-align:right}
 #igChat .cnote{text-align:center;font-size:12px;color:var(--muted);margin:8px 0}
+#igChat .chero{text-align:center;padding:18px 12px 14px;margin:8px 0 12px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 9%,var(--surface)),var(--surface))}
+#igChat .chav{width:64px;height:64px;border-radius:50%;color:#fff;font-weight:700;font-size:28px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+#igChat .chn{font-size:19px;font-weight:700;margin-top:8px;overflow-wrap:anywhere}#igChat .chk{font-size:12px;color:var(--muted);margin-top:1px}
+#igChat .chbal{font-size:30px;font-weight:800;letter-spacing:-.5px;margin-top:10px;overflow-wrap:anywhere}#igChat .chlb{font-size:12px;color:var(--muted);margin-top:2px}
+#igChat .chbar{height:6px;border-radius:99px;background:var(--pos);margin:14px 6px 0;overflow:hidden}#igChat .chbar i{display:block;height:100%;background:var(--ink);opacity:.55;border-radius:99px}
+#igChat .chstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
+#igChat .chstat div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 4px}
+#igChat .chstat small{display:block;color:var(--muted);font-size:11px}#igChat .chstat b{font-size:13px;overflow-wrap:anywhere}
+#igChat .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:1px}#igChat .dot.out{background:var(--ink);opacity:.55}#igChat .dot.in{background:var(--pos)}
+#igChat .chflt{display:flex;gap:8px;justify-content:center;margin:4px 0 6px}
+#igChat .chflt button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer}
+#igChat .chflt button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#igChat .cday{position:sticky;top:var(--sbh,71px);z-index:1;display:flex;align-items:center;justify-content:center;gap:8px;margin:0;padding:10px 0 6px;background:var(--bg)}
+#igChat .cday em{font-style:normal;font-size:12px;font-weight:700;color:var(--muted)}#igChat .cday em.in{color:var(--pos)}
+#igChat .cb{box-shadow:0 1px 2px rgba(0,0,0,.06)}
+#igChat .crow.paid .cb{border-radius:20px 20px 6px 20px}#igChat .crow.recv .cb{border-radius:20px 20px 20px 6px;border-left:3px solid var(--pos)}
+#igChat .chd{display:flex;align-items:center;gap:6px}#igChat .chd .tm{margin:0 0 0 auto;font-size:11px;opacity:.7}
+#igChat .chd .ico{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;background:color-mix(in srgb,var(--ink) 12%,transparent)}
+#igChat .crow.recv .ico{background:color-mix(in srgb,var(--pos) 20%,transparent);color:var(--pos)}
+#igChat .chd .st{margin:0;font-size:12px;font-weight:600;letter-spacing:.2px;text-transform:uppercase;opacity:.8}
+#igChat .cb .am{margin-top:6px;font-size:22px}#igChat .crow.recv .am{color:var(--pos)}
+#igChat .cb .ac{display:inline-block;margin-top:8px;font-size:11px;border:1px solid var(--line);border-radius:99px;padding:1px 9px;color:var(--muted)}
 #igChats .lrow{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer}
 #igChats .lrow:last-child{border-bottom:0}#igChats .lrow:hover,#igChats .lrow:focus-visible{background:var(--hover)}
 #igChats .av{flex:none;width:44px;height:44px;border-radius:50%;color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center}
@@ -4483,6 +4505,7 @@ $('#sync').addEventListener('click',function(){if(S.save&&S.save.failed>0&&windo
    It only reads the entries already saved, so nothing is entered twice. */
 var listEl=document.getElementById('igChats');
 var chatEl=document.createElement('div');chatEl.id='igChat';chatEl.hidden=true;document.body.appendChild(chatEl);
+var F_CDAY=new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short'});
 var CH=null,F_TIME=new Intl.DateTimeFormat('en-GB',{hour:'numeric',minute:'2-digit',hour12:true});
 /* money direction of one entry: 'paid' (you sent), 'recv' (you received) or '' (no money moved) */
 function chatDir(e){
@@ -4561,18 +4584,26 @@ function renderChat(toBottom){
   else{var d=rnd(recv-paid,cur);bal=Math.abs(d);lbl=d>0?'Balance: received more than paid':d<0?'Balance: paid more than received':'Balance: even'}
   var kl=CH.kind==='person'?'Person':CH.kind==='fp'?'Family & friends':CH.kind==='acct'?'Account':CH.kind==='tot'?'This month':CH.ct==='income'?'Income category':'Expense category';
   var h='<div class="sbar"><button type="button" data-ch="close" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>'+esc(CH.title)+'</b><small>'+kl+' · '+(cur==='INR'?'₹ INR':'OMR')+'</small></div></div><div class="cw">';
+  var f=CH.f||'all',fpk=CH.kind==='fp',hue=hueOf(CH.title||'?'),ini=esc((CH.title||'?').trim().charAt(0).toUpperCase()||'?'),tot=paid+recv,pp=tot?Math.round(paid*100/tot):0;
+  h+='<div class="chero"><span class="chav" style="background:hsl('+hue+',45%,45%)">'+ini+'</span><div class="chn">'+esc(CH.title)+'</div><div class="chk">'+kl+'</div>'+
+     '<div class="chbal">'+money(bal,cur)+'</div><div class="chlb">'+esc(lbl)+'</div>'+
+     (tot?'<div class="chbar" aria-hidden="true"><i style="width:'+pp+'%"></i></div>':'')+
+     '<div class="chstat"><div><small><span class="dot out"></span>'+(fpk?'Given':'Paid')+'</small><b>'+money(paid,cur)+'</b></div><div><small><span class="dot in"></span>Received</small><b>'+money(recv,cur)+'</b></div><div><small>Payments</small><b>'+n+'</b></div></div></div>';
   if(has.OMR&&has.INR)h+='<div class="seg2" role="group" aria-label="Currency"><button type="button" data-ch="cur" data-c="OMR" aria-pressed="'+(cur==='OMR')+'">OMR</button><button type="button" data-ch="cur" data-c="INR" aria-pressed="'+(cur==='INR')+'">₹ INR</button></div>';
-  h+='<div class="csum"><div><small>'+(CH.kind==='fp'?'Total given':'Total paid')+'</small><b>'+money(paid,cur)+'</b></div><div><small>Total received</small><b class="pos">'+money(recv,cur)+'</b></div>'+
-     '<div><small>Payments</small><b>'+n+'</b></div><div><small>Balance</small><b>'+money(bal,cur)+'</b></div><div class="cbal"><small>'+esc(lbl)+'</small></div></div>';
-  if(!items.length)h+='<div class="cempty">No payments yet.</div>';
+  h+='<div class="chflt" role="group" aria-label="Show">'+[['all','All'],['paid',fpk?'Given':'Paid'],['recv','Received']].map(function(o){return '<button type="button" data-ch="flt" data-f="'+o[0]+'" aria-pressed="'+(f===o[0])+'">'+o[1]+'</button>'}).join('')+'</div>';
+  var vis=items.filter(function(x){return f==='all'||x.dir===f});
+  if(!vis.length)h+='<div class="cempty">'+(items.length?'Nothing in this view.':'No payments yet.')+'</div>';
+  var dnet={};vis.forEach(function(x){if(x.dir)dnet[x.e.date]=(dnet[x.e.date]||0)+(x.dir==='recv'?x.amt:-x.amt)});
   var day='';
-  items.forEach(function(x){
+  vis.forEach(function(x){
     var e=x.e;
-    if(e.date!==day){day=e.date;h+='<div class="cday"><span>'+F_LEDG.format(parse(e.date))+'</span></div>'}
+    if(e.date!==day){day=e.date;var dn=rnd(dnet[day]||0,cur);h+='<div class="cday"><span>'+F_CDAY.format(parse(e.date))+'</span>'+(dn?'<em class="'+(dn>0?'in':'out')+'">'+(dn>0?'+':'−')+money(Math.abs(dn),cur)+'</em>':'')+'</div>'}
     var tm=e.ts?F_TIME.format(new Date(e.ts)).toUpperCase():'';
     if(!x.dir){h+='<div class="cnote">'+esc(x.note)+' · '+money(x.amt,cur)+'</div>';return}
-    h+='<div class="crow '+x.dir+'"><div class="cb"><div class="am">'+money(x.amt,cur)+'</div><div class="st">'+(x.dir==='paid'?(CH.kind==='fp'?'Given':'Paid'):'Received')+'</div>'+
-       (x.note?'<div class="nt">'+esc(x.note)+'</div>':'')+'<div class="tm">'+F_LEDG.format(parse(e.date))+(tm?' · '+tm:'')+'</div></div></div>';
+    var ac=CH.kind!=='acct'?accOf(e):'';
+    h+='<div class="crow '+x.dir+'"><div class="cb"><div class="chd"><span class="ico">'+(x.dir==='paid'?'↗':'↙')+'</span><span class="st">'+(x.dir==='paid'?(fpk?'Given':'Paid'):'Received')+'</span><span class="tm">'+tm+'</span></div>'+
+       '<div class="am">'+(x.dir==='paid'?'−':'+')+money(x.amt,cur)+'</div>'+
+       (x.note?'<div class="nt">'+esc(x.note)+'</div>':'')+(ac?'<div class="ac">'+esc(ac)+'</div>':'')+'</div></div>';
   });
   chatEl.innerHTML=h+'</div>';
   if(toBottom)chatEl.scrollTop=0;
@@ -4581,6 +4612,7 @@ chatEl.addEventListener('click',function(ev){
   var b=ev.target.closest('[data-ch]');if(!b)return;
   if(b.dataset.ch==='close')closeChat();
   else if(b.dataset.ch==='cur'&&CH){CH.cur=b.dataset.c;renderChat(true)}
+  else if(b.dataset.ch==='flt'&&CH){CH.f=b.dataset.f;renderChat(false)}
 });
 /* any element with data-chat opens the screen */
 function chatTap(ev){
