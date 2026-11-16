@@ -551,15 +551,21 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 #igChat .chav{width:64px;height:64px;border-radius:50%;color:#fff;font-weight:700;font-size:28px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.18)}
 #igChat .chn{font-size:19px;font-weight:700;margin-top:8px;overflow-wrap:anywhere}#igChat .chk{font-size:12px;color:var(--muted);margin-top:1px}
 #igChat .chbal{font-size:30px;font-weight:800;letter-spacing:-.5px;margin-top:10px;overflow-wrap:anywhere}#igChat .chlb{font-size:12px;color:var(--muted);margin-top:2px}
-#igChat .chbar{height:6px;border-radius:99px;background:var(--pos);margin:14px 6px 0;overflow:hidden}#igChat .chbar i{display:block;height:100%;background:var(--ink);opacity:.55;border-radius:99px}
+#igChat .chbar{height:5px;border-radius:99px;background:var(--pos);margin:10px 0 0;overflow:hidden}#igChat .chbar i{display:block;height:100%;background:var(--ink);opacity:.55;border-radius:99px}
 #igChat .chstat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
 #igChat .chstat div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 4px}
 #igChat .chstat small{display:block;color:var(--muted);font-size:11px}#igChat .chstat b{font-size:13px;overflow-wrap:anywhere}
 #igChat .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:1px}#igChat .dot.out{background:var(--ink);opacity:.55}#igChat .dot.in{background:var(--pos)}
-#igChat .chflt{display:flex;gap:8px;justify-content:center;margin:4px 0 6px}
-#igChat .chflt button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer}
+#igChat .cdash{position:sticky;top:78px;z-index:1;margin:8px 0 10px;padding:12px 14px 10px;border-radius:20px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 9%,var(--surface)),var(--surface));border:1px solid var(--line);box-shadow:0 10px 28px rgba(0,0,0,.28);transition:transform .38s cubic-bezier(.4,0,.2,1),opacity .3s ease}
+#igChat .cdash.hid{transform:translateY(-140%);opacity:0;pointer-events:none}
+#igChat .cd1{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#igChat .cdb small{display:block;font-size:11px;color:var(--muted)}#igChat .cdb b{font-size:24px;font-weight:800;letter-spacing:-.4px}
+#igChat .cds{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--muted);text-align:right}#igChat .cds b{color:var(--ink);font-size:12px}
+#igChat .cd2{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}#igChat .cd2 .seg2{margin:0}
+#igChat .chflt{display:flex;gap:6px;justify-content:flex-start;margin:0}
+#igChat .chflt button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer}
 #igChat .chflt button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-#igChat .cday{position:sticky;top:var(--sbh,71px);z-index:1;display:flex;align-items:center;justify-content:center;gap:8px;margin:0;padding:10px 0 6px;background:var(--bg)}
+#igChat .cday{display:flex;align-items:center;justify-content:center;gap:8px;margin:0;padding:10px 0 6px;background:var(--bg)}
 #igChat .cday em{font-style:normal;font-size:12px;font-weight:700;color:var(--muted)}#igChat .cday em.in{color:var(--pos)}
 #igChat .cb{box-shadow:0 1px 2px rgba(0,0,0,.06)}
 #igChat .crow.paid .cb{border-radius:20px 20px 6px 20px}#igChat .crow.recv .cb{border-radius:20px 20px 20px 6px;border-left:3px solid var(--pos)}
@@ -576,6 +582,43 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 #igChats .lr{text-align:right;flex:none}#igChats .lr small{display:block;color:var(--muted);font-size:12px}
 #igChats .lt{font-size:11px;font-weight:600;color:var(--ink-2);border:1px solid var(--line);border-radius:99px;padding:1px 8px}
 #igChats[hidden]{display:none}
+#igChats #lallq{width:100%}
+#igChats .lswi{display:flex;align-items:center;gap:6px;margin:0 0 10px;font-size:12px;color:var(--muted)}
+#igChats .lswi button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer}
+#igChats .lswi button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+#igChats #lflt{display:flex;gap:6px;overflow-x:auto;margin:10px 0 6px;padding-bottom:2px;scrollbar-width:none}
+#igChats #lflt button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}
+#igChats #lflt button em{font-style:normal;opacity:.6;margin-left:2px}
+#igChats #lflt button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#igChats .ar{font-weight:800}#igChats .in{color:var(--pos)}
+#igChats .lbadge{display:inline-block;min-width:20px;text-align:center;font-size:11px;font-weight:700;border-radius:99px;padding:1px 6px;background:var(--ink);color:var(--bg)}
+#igChats .lr{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+/* design 2: cards */
+#igChats .ld2 .lcard{display:flex;align-items:center;gap:12px;padding:12px;margin:0 0 10px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(90deg,hsl(var(--h) 45% 45%/.16),var(--surface) 55%);cursor:pointer}
+#igChats .ld2 .av.ring{box-shadow:0 0 0 3px var(--surface),0 0 0 5px hsl(var(--h) 45% 45%)}
+#igChats .ld2 .lm{flex:1;min-width:0}#igChats .ld2 .lm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#igChats .ld2 .lm small{color:var(--muted);font-size:12px}
+#igChats .ld2 .lr b{font-size:17px}#igChats .ld2 .lr small{color:var(--muted);font-size:11px}
+/* design 3: tiles */
+#igChats .ld3{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#igChats .ltile{display:flex;flex-direction:column;gap:3px;padding:14px 12px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,hsl(var(--h) 45% 45%/.28),var(--surface) 62%);cursor:pointer;min-width:0}
+#igChats .ltile b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#igChats .ltile small{color:var(--muted);font-size:11px}
+#igChats .ltile .av{width:40px;height:40px;font-size:17px;margin-bottom:6px}
+#igChats .ltile .tam{font-size:18px;font-weight:800;margin-top:6px;overflow-wrap:anywhere}
+#igChats .mbar{height:4px;border-radius:99px;background:var(--pos);margin:6px 0 2px;overflow:hidden}#igChats .mbar.off{background:var(--line)}#igChats .mbar i{display:block;height:100%;background:var(--ink);opacity:.55}
+/* design 4: story rail + sections */
+#igChats .lrail{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 12px;scrollbar-width:none}
+#igChats .story{flex:none;text-align:center;cursor:pointer;width:62px}#igChats .story small{display:block;margin-top:4px;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#igChats .sring{display:inline-flex;padding:3px;border-radius:50%;background:conic-gradient(hsl(var(--h) 70% 55%),hsl(calc(var(--h) + 60) 70% 60%),hsl(var(--h) 70% 55%))}
+#igChats .sring .av{width:52px;height:52px;box-shadow:0 0 0 3px var(--bg)}
+#igChats .lsec{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 4px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}#igChats .lsec span{border:1px solid var(--line);border-radius:99px;padding:0 8px}
+/* design 5: gradient cards */
+#igChats .ld5{display:grid;grid-template-columns:1fr;gap:12px}
+#igChats .lgrad{position:relative;overflow:hidden;padding:14px 16px 16px;border-radius:22px;color:#fff;cursor:pointer;background:linear-gradient(135deg,hsl(var(--h) 55% 38%),hsl(calc(var(--h) + 35) 60% 28%));box-shadow:0 8px 20px rgba(0,0,0,.25)}
+#igChats .lgrad .gt{display:flex;justify-content:space-between;font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:.6px}
+#igChats .lgrad .gn{display:block;font-size:18px;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62%}
+#igChats .lgrad .ga{font-size:26px;font-weight:800;margin-top:2px;letter-spacing:-.4px}
+#igChats .lgrad .gs{position:absolute;right:14px;bottom:14px;display:flex;align-items:flex-end;gap:4px;height:48px;width:36%}
+#igChats .lgrad .gs i{flex:1;border-radius:3px;background:rgba(255,255,255,.45)}#igChats .lgrad .gs i.r{background:rgba(255,255,255,.95)}
 #igChats{position:fixed;inset:0;z-index:90;background:var(--bg);color:var(--ink);overflow:auto;padding-bottom:40px}
 #igChats .sbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--band);color:var(--band-ink)}
 #igChats .sbar button{background:none;border:0;color:inherit;font-size:22px;cursor:pointer}
@@ -1306,7 +1349,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
 <div id="bc" aria-live="polite"></div>
 <div id="tip" role="tooltip"></div>
 <button type="button" class="lfab" id="lfab" aria-label="Open chat list: people, categories and accounts"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M2.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16 7h6M16 12h6M16 17h6"/></svg></button>
-<div id="igChats" hidden><div class="sbar"><button type="button" id="chatsBack" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>Transaction chats</b><small id="lallsub"></small></div></div><div class="cw"><input id="lallq" type="search" placeholder="Search a name, category or account" autocomplete="off"><div id="lallList"></div></div></div>
+<div id="igChats" hidden><div class="sbar"><button type="button" id="chatsBack" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>Transaction chats</b><small id="lallsub"></small></div></div><div class="cw"><div id="lsw"></div><input id="lallq" type="search" placeholder="Search a name, category or account" autocomplete="off"><div id="lflt"></div><div id="lallList"></div></div></div>
 <div id="toast" role="status"></div>
 
 <script>
@@ -3771,6 +3814,11 @@ function renderExchange(noFetch){
 $('#lallq').addEventListener('input',renderChatList);
 $('#lfab').addEventListener('click',function(){var l=$('#igChats');l.hidden=false;renderChatList();l.scrollTop=0});
 $('#chatsBack').addEventListener('click',function(){$('#igChats').hidden=true});
+$('#igChats').addEventListener('click',function(ev){
+  var d=ev.target.closest('[data-ld]'),f=ev.target.closest('[data-lf]');
+  if(d){LD=+d.dataset.ld;try{localStorage.setItem('mywallet.listdesign',String(LD))}catch(e){}renderChatList()}
+  else if(f){LF=f.dataset.lf;renderChatList()}
+});
 /* Chat tab timer (Settings): after a main page change the button stays this long, then floats down and hides. 0 = always */
 var CHTK='mywallet.chattimer',CHT=0,chtT=null;
 try{var _ch=localStorage.getItem(CHTK);if(_ch==='3'||_ch==='5'||_ch==='10')CHT=+_ch}catch(e){}
@@ -4573,7 +4621,7 @@ function renderChat(toBottom){
   if(!CH)return;
   var has=hasCurs(CH),cur=CH.cur;
   if(!has[cur]&&(has.OMR||has.INR))cur=CH.cur=has.OMR?'OMR':'INR';
-  var items=chatItems({kind:CH.kind,key:CH.key,ct:CH.ct,cur:cur}).slice().reverse(),paid=0,recv=0,n=0;
+  var items=chatItems({kind:CH.kind,key:CH.key,ct:CH.ct,cur:cur}),paid=0,recv=0,n=0;
   items.forEach(function(x){if(x.dir==='paid'){paid+=x.amt;n++}else if(x.dir==='recv'){recv+=x.amt;n++}});
   paid=rnd(paid,cur);recv=rnd(recv,cur);
   var bal,lbl;
@@ -4585,12 +4633,10 @@ function renderChat(toBottom){
   var kl=CH.kind==='person'?'Person':CH.kind==='fp'?'Family & friends':CH.kind==='acct'?'Account':CH.kind==='tot'?'This month':CH.ct==='income'?'Income category':'Expense category';
   var h='<div class="sbar"><button type="button" data-ch="close" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>'+esc(CH.title)+'</b><small>'+kl+' · '+(cur==='INR'?'₹ INR':'OMR')+'</small></div></div><div class="cw">';
   var f=CH.f||'all',fpk=CH.kind==='fp',hue=hueOf(CH.title||'?'),ini=esc((CH.title||'?').trim().charAt(0).toUpperCase()||'?'),tot=paid+recv,pp=tot?Math.round(paid*100/tot):0;
-  h+='<div class="chero"><span class="chav" style="background:hsl('+hue+',45%,45%)">'+ini+'</span><div class="chn">'+esc(CH.title)+'</div><div class="chk">'+kl+'</div>'+
-     '<div class="chbal">'+money(bal,cur)+'</div><div class="chlb">'+esc(lbl)+'</div>'+
-     (tot?'<div class="chbar" aria-hidden="true"><i style="width:'+pp+'%"></i></div>':'')+
-     '<div class="chstat"><div><small><span class="dot out"></span>'+(fpk?'Given':'Paid')+'</small><b>'+money(paid,cur)+'</b></div><div><small><span class="dot in"></span>Received</small><b>'+money(recv,cur)+'</b></div><div><small>Payments</small><b>'+n+'</b></div></div></div>';
+  h+='<div class="cdash" id="cdash"><div class="cd1"><div class="cdb"><small>'+esc(lbl)+'</small><b>'+money(bal,cur)+'</b></div><div class="cds"><span><i class="dot out"></i>'+(fpk?'Given':'Paid')+' <b>'+money(paid,cur)+'</b></span><span><i class="dot in"></i>Received <b>'+money(recv,cur)+'</b></span><span>'+n+' payment'+(n===1?'':'s')+'</span></div></div>'+
+     (tot?'<div class="chbar" aria-hidden="true"><i style="width:'+pp+'%"></i></div>':'')+'<div class="cd2">';
   if(has.OMR&&has.INR)h+='<div class="seg2" role="group" aria-label="Currency"><button type="button" data-ch="cur" data-c="OMR" aria-pressed="'+(cur==='OMR')+'">OMR</button><button type="button" data-ch="cur" data-c="INR" aria-pressed="'+(cur==='INR')+'">₹ INR</button></div>';
-  h+='<div class="chflt" role="group" aria-label="Show">'+[['all','All'],['paid',fpk?'Given':'Paid'],['recv','Received']].map(function(o){return '<button type="button" data-ch="flt" data-f="'+o[0]+'" aria-pressed="'+(f===o[0])+'">'+o[1]+'</button>'}).join('')+'</div>';
+  h+='<div class="chflt" role="group" aria-label="Show">'+[['all','All'],['paid',fpk?'Given':'Paid'],['recv','Received']].map(function(o){return '<button type="button" data-ch="flt" data-f="'+o[0]+'" aria-pressed="'+(f===o[0])+'">'+o[1]+'</button>'}).join('')+'</div></div></div>';
   var vis=items.filter(function(x){return f==='all'||x.dir===f});
   if(!vis.length)h+='<div class="cempty">'+(items.length?'Nothing in this view.':'No payments yet.')+'</div>';
   var dnet={};vis.forEach(function(x){if(x.dir)dnet[x.e.date]=(dnet[x.e.date]||0)+(x.dir==='recv'?x.amt:-x.amt)});
@@ -4606,13 +4652,19 @@ function renderChat(toBottom){
        (x.note?'<div class="nt">'+esc(x.note)+'</div>':'')+(ac?'<div class="ac">'+esc(ac)+'</div>':'')+'</div></div>';
   });
   chatEl.innerHTML=h+'</div>';
-  if(toBottom)chatEl.scrollTop=0;
+  cdSkip=Date.now()+400;
+  if(toBottom)chatEl.scrollTop=chatEl.scrollHeight;
 }
+var cdT=null,cdSkip=0;
+chatEl.addEventListener('scroll',function(){
+  if(Date.now()<cdSkip)return;var d=chatEl.querySelector('#cdash');if(!d)return;
+  d.classList.add('hid');clearTimeout(cdT);cdT=setTimeout(function(){d.classList.remove('hid')},700);
+},{passive:true});
 chatEl.addEventListener('click',function(ev){
   var b=ev.target.closest('[data-ch]');if(!b)return;
   if(b.dataset.ch==='close')closeChat();
   else if(b.dataset.ch==='cur'&&CH){CH.cur=b.dataset.c;renderChat(true)}
-  else if(b.dataset.ch==='flt'&&CH){CH.f=b.dataset.f;renderChat(false)}
+  else if(b.dataset.ch==='flt'&&CH){CH.f=b.dataset.f;renderChat(true)}
 });
 /* any element with data-chat opens the screen */
 function chatTap(ev){
@@ -4661,13 +4713,47 @@ function renderChatList(){
   $('#lallsub').textContent=all.length+' account'+(all.length===1?'':'s');
   if(S.mode==='loading'){$('#lallList').innerHTML='<div class="empty">Loading your wallet…</div>';return}
   if(!list.length){$('#lallList').innerHTML='<div class="empty"><b>'+(q?'Nothing found':'No names or categories yet')+'</b>'+(q?'Try another word.':'They appear here as soon as you record entries.')+'</div>';return}
-  $('#lallList').innerHTML=list.map(function(o){
-    var tag=o.kind==='person'?'Person':o.kind==='fp'?'Family':o.kind==='acct'?'Account':o.ct==='income'?'Income':'Expense',w=!o.last?'':o.last.dir==='recv'?'received':o.last.dir==='paid'?'sent':'noted';
-    return '<div class="lrow" data-chat="'+o.kind+'" data-key="'+esc(o.key)+'" data-cur="'+o.cur+'" data-ct="'+o.ct+'" role="button" tabindex="0">'+
-      '<span class="av" style="background:hsl('+hueOf(o.title)+',45%,45%)">'+esc(o.title.trim().charAt(0).toUpperCase()||'?')+'</span>'+
-      '<div class="lm"><b>'+esc(o.title)+'</b><small>'+(o.last?money(o.last.amt,o.cur)+' '+w:(o.cur==='INR'?'₹ INR':'OMR')+' · no entries yet')+'</small></div>'+
-      '<div class="lr"><span class="lt">'+tag+'</span><small>'+(o.last?F_LEDG.format(parse(o.last.date)):'')+'</small></div></div>';
-  }).join('');
+  paintChatList(list,all);
+}
+/* ---------- chat list: several looks (the demo shows a 1-5 switcher; the app keeps one) ---------- */
+var LD=1,LF='all';try{LD=+localStorage.getItem('mywallet.listdesign')||1}catch(e){}
+function lAttrs(o){return 'data-chat="'+o.kind+'" data-key="'+esc(o.key)+'" data-cur="'+o.cur+'" data-ct="'+o.ct+'" role="button" tabindex="0"'}
+function lTag(o){return o.kind==='person'?'Person':o.kind==='fp'?'Family':o.kind==='acct'?'Account':o.ct==='income'?'Income':'Expense'}
+function lStat(o){
+  var it=chatItems({kind:o.kind,key:o.key,ct:o.ct,cur:o.cur}),p=0,r=0,n=0,sp=[];
+  it.forEach(function(x){if(x.dir==='paid'){p+=x.amt;n++;sp.push({a:x.amt,d:'p'})}else if(x.dir==='recv'){r+=x.amt;n++;sp.push({a:x.amt,d:'r'})}});
+  return {p:rnd(p,o.cur),r:rnd(r,o.cur),n:n,sp:sp.slice(-8)};
+}
+function lAv(o,c){return '<span class="av'+(c?' '+c:'')+'" style="background:hsl('+hueOf(o.title)+',45%,45%)">'+esc(o.title.trim().charAt(0).toUpperCase()||'?')+'</span>'}
+function lSub(o){return o.last?money(o.last.amt,o.cur)+' '+(o.last.dir==='recv'?'received':o.last.dir==='paid'?'sent':'noted'):(o.cur==='INR'?'₹ INR':'OMR')+' · no entries yet'}
+function lDate(o){return o.last?F_LEDG.format(parse(o.last.date)):''}
+function lSign(o){return !o.last?'':o.last.dir==='recv'?'+':o.last.dir==='paid'?'−':''}
+function lCls(o){return !o.last?'':o.last.dir==='recv'?'in':'out'}
+function lRowHtml(o,d){
+  var st=lStat(o);
+  if(d===2)return '<div class="lcard" style="--h:'+hueOf(o.title)+'" '+lAttrs(o)+'>'+lAv(o,'ring')+'<div class="lm"><b>'+esc(o.title)+'</b><small><span class="lt">'+lTag(o)+'</span> '+st.n+' payment'+(st.n===1?'':'s')+'</small></div><div class="lr"><b class="'+lCls(o)+'">'+(o.last?lSign(o)+money(o.last.amt,o.cur):'—')+'</b><small>'+lDate(o)+'</small></div></div>';
+  if(d===3){var tt=st.p+st.r,pp=tt?Math.round(st.p*100/tt):0;return '<div class="ltile" style="--h:'+hueOf(o.title)+'" '+lAttrs(o)+'>'+lAv(o)+'<b>'+esc(o.title)+'</b><small>'+lTag(o)+' · '+(o.cur==='INR'?'₹':'OMR')+'</small><div class="tam '+lCls(o)+'">'+(o.last?lSign(o)+money(o.last.amt,o.cur):'—')+'</div>'+(tt?'<div class="mbar"><i style="width:'+pp+'%"></i></div>':'<div class="mbar off"></div>')+'<small>'+(lDate(o)||'no entries')+'</small></div>'}
+  if(d===5){var mx=1;st.sp.forEach(function(x){if(x.a>mx)mx=x.a});return '<div class="lgrad" style="--h:'+hueOf(o.title)+'" '+lAttrs(o)+'><div class="gt"><span>'+lTag(o)+'</span><span>'+lDate(o)+'</span></div><b class="gn">'+esc(o.title)+'</b><div class="ga">'+(o.last?lSign(o)+money(o.last.amt,o.cur):'—')+'</div><div class="gs">'+st.sp.map(function(x){return '<i class="'+x.d+'" style="height:'+Math.max(14,Math.round(x.a*100/mx))+'%"></i>'}).join('')+'</div></div>'}
+  /* 1 and 4: compact WhatsApp-style row */
+  return '<div class="lrow" '+lAttrs(o)+'>'+lAv(o)+'<div class="lm"><b>'+esc(o.title)+'</b><small>'+(o.last?'<span class="ar '+lCls(o)+'">'+(o.last.dir==='recv'?'↙':'↗')+'</span> ':'')+lSub(o)+'</small></div><div class="lr"><small>'+lDate(o)+'</small>'+(st.n?'<span class="lbadge">'+st.n+'</span>':'<span class="lt">'+lTag(o)+'</span>')+'</div></div>';
+}
+function paintChatList(list,all){
+  var sw=$('#lsw');
+  if(window.__LISTDEMO){sw.innerHTML='<div class="lswi">Design '+[1,2,3,4,5].map(function(i){return '<button type="button" data-ld="'+i+'" aria-pressed="'+(LD===i)+'">'+i+'</button>'}).join('')+'</div>'}else sw.innerHTML='';
+  var cnt={all:all.length,person:0,cat:0,acct:0};all.forEach(function(o){if(o.kind==='person'||o.kind==='fp')cnt.person++;else if(o.kind==='cat')cnt.cat++;else cnt.acct++});
+  $('#lflt').innerHTML=[['all','All'],['person','People'],['cat','Categories'],['acct','Accounts']].map(function(x){return '<button type="button" data-lf="'+x[0]+'" aria-pressed="'+(LF===x[0])+'">'+x[1]+' <em>'+cnt[x[0]]+'</em></button>'}).join('');
+  var L=list.filter(function(o){return LF==='all'||(LF==='person'?(o.kind==='person'||o.kind==='fp'):o.kind===LF)});
+  var box=$('#lallList'),h='';
+  box.className='ld'+LD;
+  if(!L.length){box.innerHTML='<div class="empty"><b>Nothing here</b>Try another filter.</div>';return}
+  if(LD===4){
+    var rail=L.filter(function(o){return o.last}).slice(0,10);
+    if(rail.length)h+='<div class="lrail">'+rail.map(function(o){return '<div class="story" '+lAttrs(o)+'><span class="sring" style="--h:'+hueOf(o.title)+'">'+lAv(o)+'</span><small>'+esc(o.title.split(/\s+/)[0].slice(0,9))+'</small></div>'}).join('')+'</div>';
+    [['person','People',function(o){return o.kind==='person'||o.kind==='fp'}],['cat','Categories',function(o){return o.kind==='cat'}],['acct','Accounts',function(o){return o.kind==='acct'}]].forEach(function(g){
+      var G=L.filter(g[2]);if(!G.length)return;
+      h+='<div class="lsec"><b>'+g[1]+'</b><span>'+G.length+'</span></div>'+G.map(function(o){return lRowHtml(o,4)}).join('')});
+  }else h=L.map(function(o){return lRowHtml(o,LD)}).join('');
+  box.innerHTML=h;
 }
 
 /* ---------- Nepali version: show the second currency as NPR / \u0930\u0942 on every screen ----------
