@@ -590,6 +590,8 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 #igChats .ar{font-weight:800}#igChats .in{color:var(--pos)}
 #igChats .lr{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 #igChats .av.pf{background:linear-gradient(135deg,hsl(var(--h) 55% 55%),hsl(calc(var(--h) + 30) 55% 36%));box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px hsl(var(--h) 50% 52%/.75);font-size:19px}
+#igChats.ivr .av.ic{color:var(--band);background:var(--band-ink);box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px color-mix(in srgb,var(--band) 65%,transparent)}
+#igChats #lflt .lsep{flex:none;width:1px;background:var(--line);margin:0 2px}
 #igChats .av.ic{color:var(--band-ink);background:linear-gradient(135deg,var(--band),color-mix(in srgb,var(--band) 72%,#fff));box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px color-mix(in srgb,var(--band) 55%,transparent)}
 #igChats{position:fixed;inset:0;z-index:90;background:var(--bg);color:var(--ink);overflow:auto;padding-bottom:40px}
 #igChats .sbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--band);color:var(--band-ink)}
@@ -3787,8 +3789,9 @@ $('#lallq').addEventListener('input',renderChatList);
 $('#lfab').addEventListener('click',function(){var l=$('#igChats');l.hidden=false;renderChatList();l.scrollTop=0});
 $('#chatsBack').addEventListener('click',function(){$('#igChats').hidden=true});
 $('#igChats').addEventListener('click',function(ev){
-  var f=ev.target.closest('[data-lf]');
-  if(f){LF=f.dataset.lf;renderChatList()}
+  var f=ev.target.closest('[data-lf]'),v=ev.target.closest('[data-ivr]');
+  if(v){IVR=v.dataset.ivr==='1';renderChatList()}
+  else if(f){LF=f.dataset.lf;renderChatList()}
 });
 /* Chat tab timer (Settings): after a main page change the button stays this long, then floats down and hides. 0 = always */
 var CHTK='mywallet.chattimer',CHT=0,chtT=null;
@@ -4687,7 +4690,7 @@ function renderChatList(){
   paintChatList(list,all);
 }
 /* ---------- chat list: profile picture for people, icon for categories and accounts ---------- */
-var LF='all';
+var LF='all',IVR=false;
 var LICON={
   home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
   food:'<path d="M5 9l3-6M19 9l-3-6"/><path d="M2 9h20l-2 11H4z"/><path d="M9 13v4M15 13v4"/>',
@@ -4726,7 +4729,8 @@ function lRowHtml(o){
 }
 function paintChatList(list,all){
   var cnt={all:all.length,person:0,cat:0,acct:0};all.forEach(function(o){if(o.kind==='person'||o.kind==='fp')cnt.person++;else if(o.kind==='cat')cnt.cat++;else cnt.acct++});
-  $('#lflt').innerHTML=[['all','All'],['person','People'],['cat','Categories'],['acct','Accounts']].map(function(x){return '<button type="button" data-lf="'+x[0]+'" aria-pressed="'+(LF===x[0])+'">'+x[1]+' <em>'+cnt[x[0]]+'</em></button>'}).join('');
+  $('#igChats').classList.toggle('ivr',IVR);
+  $('#lflt').innerHTML=(window.__LISTDEMO?'<button type="button" data-ivr="0" aria-pressed="'+!IVR+'">Filled icon</button><button type="button" data-ivr="1" aria-pressed="'+IVR+'">Reverse icon</button><i class="lsep"></i>':'')+[['all','All'],['person','People'],['cat','Categories'],['acct','Accounts']].map(function(x){return '<button type="button" data-lf="'+x[0]+'" aria-pressed="'+(LF===x[0])+'">'+x[1]+' <em>'+cnt[x[0]]+'</em></button>'}).join('');
   var L=list.filter(function(o){return LF==='all'||(LF==='person'?(o.kind==='person'||o.kind==='fp'):o.kind===LF)});
   $('#lallList').innerHTML=L.length?L.map(lRowHtml).join(''):'<div class="empty"><b>Nothing here</b>Try another filter.</div>';
 }
