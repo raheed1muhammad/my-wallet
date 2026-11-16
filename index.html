@@ -1347,7 +1347,9 @@ var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s
    Inside the app and the data the second currency always keeps the code INR; the Nepali version only shows it as NPR / \u0930\u0942 (see the end of this file). */
 var VER='indian';try{VER=localStorage.getItem('mywallet.ver')==='nepali'?'nepali':'indian'}catch(e){}
 var NEP=VER==='nepali',CUR2=NEP?'NPR':'INR';
-var ACCS=NEP?['Cash']:['Cash','Airtel Payments Bank','Federal Bank','Bank Muscat'];
+/* Cash is the only account every user has. Three older default banks stay known to the app (so old entries still open) but are shown only to a user who has entries, an opening balance or added them by hand. */
+var LEGACY=NEP?[]:['Airtel Payments Bank','Federal Bank','Bank Muscat'];
+var ACCS=NEP?['Cash']:['Cash'].concat(LEGACY);
 var BANKS=ACCS.slice(1);
 /* Each bank account holds one currency for good; Cash holds both. */
 var ACC_CUR=NEP?{'Cash':['OMR','INR']}:{'Cash':['OMR','INR'],'Airtel Payments Bank':['INR'],'Federal Bank':['INR'],'Bank Muscat':['OMR']};
@@ -1840,7 +1842,7 @@ function renderLedger(){
 }
 function paintLedgerExtras(){
   var oh='<table style="min-width:300px"><thead><tr><th>Account</th><th class="r">OMR</th><th class="r">₹ INR</th></tr></thead><tbody>';
-  ACCS.forEach(function(a){oh+='<tr class="row"><td>'+esc(a)+'</td><td class="r">'+(allowsCur(a,'OMR')?fnum(openOf(a,'OMR'),'OMR'):'—')+'</td><td class="r">'+(allowsCur(a,'INR')?fnum(openOf(a,'INR'),'INR'):'—')+'</td></tr>'});
+  vAccs().forEach(function(a){oh+='<tr class="row"><td>'+esc(a)+'</td><td class="r">'+(allowsCur(a,'OMR')?fnum(openOf(a,'OMR'),'OMR'):'—')+'</td><td class="r">'+(allowsCur(a,'INR')?fnum(openOf(a,'INR'),'INR'):'—')+'</td></tr>'});
   $('#obview').innerHTML='<div class="tw">'+oh+'</tbody></table></div>';
   $('#clrcount').textContent=String(S.entries.length);
 }
@@ -1875,10 +1877,10 @@ function fillAccountSelects(){
   $('#from').innerHTML=o;$('#to').innerHTML=o;
   $('#lacc').innerHTML='<option value="all">All accounts</option>'+listAccs(true).map(function(a){return '<option>'+esc(a)+'</option>'}).join('');
   $('#lacc').value=S.lacc;
-  $('#bankchips').innerHTML=BANKS.filter(function(b){return SET.closed.indexOf(b)<0}).map(function(b){return '<button type="button" class="chipbtn" data-bank="'+esc(b)+'" aria-pressed="false">'+esc(b)+'</button>'}).join('');
+  $('#bankchips').innerHTML=BANKS.filter(function(b){return accUsed(b)&&SET.closed.indexOf(b)<0}).map(function(b){return '<button type="button" class="chipbtn" data-bank="'+esc(b)+'" aria-pressed="false">'+esc(b)+'</button>'}).join('');
 }
-function hasBank(){return BANKS.some(function(b){return SET.closed.indexOf(b)<0})}
-function bankOrDefault(){var A=BANKS.filter(function(b){return SET.closed.indexOf(b)<0});return A.indexOf(S.fbank)>-1?S.fbank:(A.indexOf('Federal Bank')>-1?'Federal Bank':(A[0]||'Cash'))}
+function hasBank(){return BANKS.some(function(b){return accUsed(b)&&SET.closed.indexOf(b)<0})}
+function bankOrDefault(){var A=BANKS.filter(function(b){return accUsed(b)&&SET.closed.indexOf(b)<0});return A.indexOf(S.fbank)>-1?S.fbank:(A.indexOf('Federal Bank')>-1?'Federal Bank':(A[0]||'Cash'))}
 function entryAccount(){return S.fgroup==='Cash'?'Cash':bankOrDefault()}
 function sendAccount(){return S.ftype==='transfer'&&S.tmode!=='person'?$('#from').value:entryAccount()}
 function num(id){return parseFloat(($(id).value||'').replace(/,/g,''))||0}
@@ -1930,6 +1932,7 @@ function paintPresets(){
   var f=$('#from').value,t=$('#to').value;
   $('#pre-atm').setAttribute('aria-pressed',String(f!=='Cash'&&t==='Cash'));
   $('#pre-dep').setAttribute('aria-pressed',String(f==='Cash'&&t!=='Cash'));
+  $('#pre-mfx').hidden=NEP||!(accUsed('Bank Muscat')&&accUsed('Federal Bank'));
   $('#pre-mfx').setAttribute('aria-pressed',String(f==='Bank Muscat'&&t==='Federal Bank'));
 }
 /* bank accounts fix the currency; Cash lets you choose */
@@ -2482,7 +2485,7 @@ function paintBC(){
       (rows.length?rows.map(function(r){return '<div class="bc-line"><span>'+esc(r[0])+'</span><span class="num">'+esc(r[1])+'</span></div>'}).join('')+'<div class="bc-sec">Total</div><div class="bc-grid">'+cl('OMR',tot.OMR,'OMR')+cl('INR',tot.INR,'INR')+'</div>':'<div class="bc-name">'+(m==='cred'?'You owe nobody.':'Nobody owes you.')+'</div>')+
       '<div class="bc-bar"><i></i></div><button class="bc-back" type="button" data-bc="close">Hide now</button></div>';
   }else if(m==='menu'){
-    h='<div class="bc-card"><div class="bc-top"><b>Balance check</b><button class="bc-x" type="button" data-bc="close" aria-label="Close">✕</button></div><div class="bc-chips">'+ACCS.map(function(a){return '<button class="bc-chip" type="button" data-bc="acc" data-k="'+esc(a)+'">'+esc(a)+'</button>'}).join('')+'<button class="bc-chip tot" type="button" data-bc="acc" data-k="__total">Total balance</button></div></div>';
+    h='<div class="bc-card"><div class="bc-top"><b>Balance check</b><button class="bc-x" type="button" data-bc="close" aria-label="Close">✕</button></div><div class="bc-chips">'+vAccs().map(function(a){return '<button class="bc-chip" type="button" data-bc="acc" data-k="'+esc(a)+'">'+esc(a)+'</button>'}).join('')+'<button class="bc-chip tot" type="button" data-bc="acc" data-k="__total">Total balance</button></div></div>';
   }else{
     var B=allBalances();
     if(S.bc.key==='__total'){
@@ -2733,7 +2736,7 @@ function prefillSip(){
   setTab('entry');
   S.skind='invest';setType('sip');
   var c=p?p.cur:S.sip.cur;
-  S.fgroup='Bank';S.fbank=c==='OMR'?(ACCS.indexOf('Bank Muscat')>-1?'Bank Muscat':bankOrDefault()):(allowsCur(S.fbank,'INR')?S.fbank:(ACCS.indexOf('Federal Bank')>-1?'Federal Bank':bankOrDefault()));
+  S.fgroup='Bank';S.fbank=c==='OMR'?(accUsed('Bank Muscat')&&ACCS.indexOf('Bank Muscat')>-1?'Bank Muscat':bankOrDefault()):(allowsCur(S.fbank,'INR')&&accUsed(S.fbank)?S.fbank:(accUsed('Federal Bank')&&ACCS.indexOf('Federal Bank')>-1?'Federal Bank':bankOrDefault()));
   S.fcur=c;paintAccount();
   if(p){var rem=p.target-planStatus(p).s.inv;if(rem>0)$('#amt').value=String(rnd(rem,c))}
   $('#date').value=todayStr();
@@ -3009,7 +3012,7 @@ function renderBalance(){
     h+='<section class="card"><div class="chead"><h2>Total balance</h2><div class="sub">Today</div></div><div class="trio">'+balTile('In cash',two(cashO,cashI))+balTile('In banks',two(bankO,bankI))+balTile('Overall',two(cashO+bankO,cashI+bankI))+'</div>'+
       '<p class="fine">Everything together is about <b class="num">'+money(allOMR,'OMR')+'</b> at today\'s rate, 1 OMR = ₹ '+FMT.INR.format(r)+'.</p></section>';
     h+='<section class="card" data-open="1"><div class="chead"><h2>Accounts</h2><div class="sub">Balance in each account</div></div><div class="tw"><table style="min-width:340px"><thead><tr><th>Account</th><th class="r">OMR</th><th class="r">₹ INR</th></tr></thead><tbody>'+
-      ACCS.map(function(a){return '<tr class="row" data-chat="acct" data-key="'+esc(a)+'" data-cur="'+(allowsCur(a,'OMR')?'OMR':'INR')+'" data-ct="" role="button" tabindex="0"><td>'+esc(a)+'</td><td class="r">'+(allowsCur(a,'OMR')?amtTxt(B[a].OMR,'OMR'):'—')+'</td><td class="r">'+(allowsCur(a,'INR')?amtTxt(B[a].INR,'INR'):'—')+'</td></tr>'}).join('')+'</tbody></table></div></section>';
+      vAccs().map(function(a){return '<tr class="row" data-chat="acct" data-key="'+esc(a)+'" data-cur="'+(allowsCur(a,'OMR')?'OMR':'INR')+'" data-ct="" role="button" tabindex="0"><td>'+esc(a)+'</td><td class="r">'+(allowsCur(a,'OMR')?amtTxt(B[a].OMR,'OMR'):'—')+'</td><td class="r">'+(allowsCur(a,'INR')?amtTxt(B[a].INR,'INR'):'—')+'</td></tr>'}).join('')+'</tbody></table></div></section>';
     var LT=loanTotals(),lt=function(o){var x=['OMR','INR'].filter(function(c){return rnd(o[c],c)>0}).map(function(c){return money(o[c],c)});return x.length?x.join(' · '):'Nothing'};
     var sp={OMR:0,INR:0};S.entries.forEach(function(e){if(e.type==='sip')sp[e.currency]+=e.kind==='draw'?-e.amount:e.amount});
     h+='<div class="blocks"><section class="card"><div class="chead"><h2>Loans</h2><div class="sub">Right now</div></div><div class="rl"><div class="it"><span>You owe</span><span class="num neg">'+lt(LT.owe)+'</span></div><div class="it"><span>Owed to you</span><span class="num pos">'+lt(LT.owed)+'</span></div></div></section>'+
@@ -3171,17 +3174,30 @@ function setSave(){try{localStorage.setItem(SETK,JSON.stringify(SET))}catch(e){}
    so another device can no longer erase it. Without the cloud, the old local save is used. after(true) = the cloud already saved it. */
 function adoptSet(n){
   SET.profile=n.profile||{};SET.accounts=Array.isArray(n.accounts)?n.accounts:[];SET.closed=Array.isArray(n.closed)?n.closed:[];SET.showClosed=!!n.showClosed;
-  SET.accounts.forEach(function(a){if(a&&typeof a.name==='string'&&ACCS.indexOf(a.name)<0){ACCS.push(a.name);BANKS.push(a.name);ACC_CUR[a.name]=a.cur==='both'?['OMR','INR']:[a.cur]}});
+  SET.accounts.forEach(function(a){if(a&&typeof a.name==='string'){if(ACCS.indexOf(a.name)<0){ACCS.push(a.name);BANKS.push(a.name)}ACC_CUR[a.name]=a.cur==='both'?['OMR','INR']:[a.cur]}});
 }
 function setChange(op,localApply,after,onFail){
   if(!window.__cloudPatch){localApply();after(false);return}
   window.__cloudPatch(op,JSON.stringify(SET)).then(function(n){adoptSet(n);after(true)},function(e){
     onFail((e&&e.message)==='offline'?'You need internet to change this. Try again when online.':'Could not save this change. Check your connection and try again.')});
 }
-SET.accounts.forEach(function(a){if(ACCS.indexOf(a.name)<0){ACCS.push(a.name);BANKS.push(a.name);ACC_CUR[a.name]=a.cur==='both'?['OMR','INR']:[a.cur]}});
+SET.accounts.forEach(function(a){if(ACCS.indexOf(a.name)<0){ACCS.push(a.name);BANKS.push(a.name)}ACC_CUR[a.name]=a.cur==='both'?['OMR','INR']:[a.cur]});
 /* ACCS keeps every account (so old entries still validate); these helpers give the lists the pickers show */
-function actAccs(){return ACCS.filter(function(a){return SET.closed.indexOf(a)<0})}
-function listAccs(ledger){return ACCS.filter(function(a){return SET.closed.indexOf(a)<0||(ledger&&SET.showClosed)})}
+function actAccs(){return ACCS.filter(function(a){return accUsed(a)&&SET.closed.indexOf(a)<0})}
+function listAccs(ledger){return ACCS.filter(function(a){return accUsed(a)&&(SET.closed.indexOf(a)<0||(ledger&&SET.showClosed))})}
+/* an older default bank counts as used when this user has any entry, opening balance or hand-added account with that name */
+var _au={e:null,n:-1,o:null,v:{}};
+function accUsed(a){
+  if(LEGACY.indexOf(a)<0)return true;
+  if(_au.e!==S.entries||_au.n!==S.entries.length||_au.o!==S.opening){
+    _au={e:S.entries,n:S.entries.length,o:S.opening,v:{}};
+    LEGACY.forEach(function(l){
+      var u=SET.accounts.some(function(x){return x&&x.name===l})||['OMR','INR'].some(function(c){return openOf(l,c)!==0})||S.entries.some(function(e){return e.account===l||e.from===l||e.to===l});
+      _au.v[l]=u});
+  }
+  return !!_au.v[a]||SET.accounts.some(function(x){return x&&x.name===a});
+}
+function vAccs(){return ACCS.filter(accUsed)}
 var setEl=document.createElement('div');setEl.id='igSet';setEl.hidden=true;document.body.appendChild(setEl);
 var moreEl=document.createElement('div');moreEl.id='igMore';moreEl.hidden=true;
 moreEl.innerHTML='<button type="button" data-m="set"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37 1 .608 2.296.07 2.572-1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></svg>Settings</button><button type="button" data-m="out"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/><path d="M9 12h12l-3-3"/><path d="M18 15l3-3"/></svg>Sign out</button>';document.body.appendChild(moreEl);
@@ -3191,7 +3207,7 @@ var SETIC={user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4
 function setSvg(n){return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+SETIC[n]+'</svg>'}
 function setRow(ic,t,val,v){return '<button type="button" class="setgo" data-s="go" data-v="'+v+'"><span class="seic">'+setSvg(ic)+'</span><span class="segrow">'+t+'</span><span class="seval">'+esc(val)+'</span><span class="sech">'+setSvg('chev')+'</span></button>'}
 function renderSet(){
-  var p=SET.profile||{},act=actAccs().filter(function(a){return a!=='Cash'}),cl=ACCS.filter(function(a){return SET.closed.indexOf(a)>-1});
+  var p=SET.profile||{},act=actAccs().filter(function(a){return a!=='Cash'}),cl=ACCS.filter(function(a){return accUsed(a)&&SET.closed.indexOf(a)>-1});
   var T={
    pd:['Personal details',function(){return '<div class="card"><div class="chead"><h2>Personal details</h2></div><div class="sform"><label class="fl">Name<input id="spName" placeholder="Your name" maxlength="40" value="'+esc(p.name||'')+'"></label><label class="fl">Country<input id="spCountry" placeholder="Country you live in" maxlength="40" value="'+esc(p.country||'')+'"></label></div><div style="margin-top:10px"><button class="btn2" type="button" data-s="saveprof">Save</button> <span class="fine" id="spMsg"></span></div></div>'}],
    theme:['Themes',function(){return themesHtml()}],
@@ -3247,9 +3263,9 @@ setEl.addEventListener('click',function(e){
   else if(k==='addacc'){
     var n=$('#saName').value.trim().replace(/\s+/g,' '),m=$('#saMsg');
     if(n.length<2){m.textContent='Enter an account name.';return}
-    if(ACCS.some(function(x){return x.toLowerCase()===n.toLowerCase()})){m.textContent='An account with that name already exists.';return}
+    if(vAccs().some(function(x){return x.toLowerCase()===n.toLowerCase()})){m.textContent='An account with that name already exists.';return}
     var cur=$('#saCur').value;
-    setChange({type:'addAccount',name:n,cur:cur},function(){SET.accounts.push({name:n,cur:cur});ACCS.push(n);BANKS.push(n);ACC_CUR[n]=cur==='both'?['OMR','INR']:[cur]},afterAcc,function(msg){m.textContent=msg});
+    setChange({type:'addAccount',name:n,cur:cur},function(){SET.accounts.push({name:n,cur:cur});if(ACCS.indexOf(n)<0){ACCS.push(n);BANKS.push(n)}ACC_CUR[n]=cur==='both'?['OMR','INR']:[cur]},afterAcc,function(msg){m.textContent=msg});
   }
   else if(k==='closeacc'){
     var bal=curs(a).map(function(c){return balanceOf(a,c,todayStr())}).some(function(v){return Math.abs(v)>0.0005});
@@ -3335,7 +3351,15 @@ function paintProfile(){
 }
 document.getElementById('prof').addEventListener('click',function(){setView='main';renderSet();setEl.hidden=false;setEl.scrollTop=0});
 paintProfile();
+var _accSig='';
+/* when the entries arrive, an older bank may become visible: refill the account pickers once and keep what was chosen */
+function syncAccLists(){
+  var sg=vAccs().join('|');if(sg===_accSig)return;_accSig=sg;
+  var f=$('#from').value,t=$('#to').value;fillAccountSelects();buildObRows();
+  var ok=actAccs();if(ok.indexOf(f)>-1)$('#from').value=f;if(ok.indexOf(t)>-1)$('#to').value=t;
+}
 function render(){
+  syncAccLists();
   ensurePlans();
   renderRecent();
   if(S.tab==='analysis'){renderAnalysis();igIns();igTagCard()}
@@ -3808,7 +3832,7 @@ function renderExchange(noFetch){
    +'<label class="fld"><span>Rate used</span><select id="xsrc"><option value="best"'+(X.src==='best'?' selected':'')+'>Best provider today</option><option value="mid"'+(X.src==='mid'?' selected':'')+'>Mid-market</option><option value="custom"'+(X.src==='custom'?' selected':'')+'>My own rate</option></select></label></div>'
    +(X.src==='custom'?'<label class="fld"><span>1 OMR = ₹</span><input id="xcustom" inputmode="decimal" value="'+esc(X.custom)+'" placeholder="0.00"></label>':'')
    +'<div class="xout"><span class="sub">You get</span><b class="num" id="xcres"></b></div><div class="sub" id="xcnote"></div>'
-   +'<button type="button" class="btn" id="xrec" style="width:100%">Record this exchange</button><div class="sub">Opens a Transfer from '+(NEP?'your bank account to the account that receives the money':'Bank Muscat to Federal Bank')+' with this amount and rate. Change accounts or add the service charge there.</div></section>'
+   +'<button type="button" class="btn" id="xrec" style="width:100%">Record this exchange</button><div class="sub">Opens a Transfer from '+(NEP||!(accUsed('Bank Muscat')&&accUsed('Federal Bank'))?'your bank account to the account that receives the money':'Bank Muscat to Federal Bank')+' with this amount and rate. Change accounts or add the service charge there.</div></section>'
    +'<section class="card xc"><div class="chead"><h2>Rate book, today</h2><button type="button" class="btn2" id="xsave">Save today</button></div><div class="sub">Type the OMR to INR rate each service shows. Fees are not included. Rates stay on this device.</div>'
    +XPROV.map(function(p){return '<div class="xprov"><div class="xnm">'+esc(p[0])+' <span id="xt-'+p[1]+'"></span></div><input data-xk="'+p[1]+'" inputmode="decimal" aria-label="'+esc(p[0])+' rate" placeholder="0.00" value="'+esc(X.rates[p[1]]==null?'':X.rates[p[1]])+'"><div class="xres" id="xr-'+p[1]+'"></div></div>'}).join('')+'</section>'
    +'<section class="card xc"><div class="chead"><h2>Today vs your saved days</h2></div><div id="xpos"></div></section>'
@@ -3836,7 +3860,7 @@ function renderExchange(noFetch){
       if(!(r>50&&r<1000)){toast('Enter a rate between 50 and 1000 first');return}
       if(!(omr>0)){toast('Enter an amount first');return}
       var xf='Bank Muscat',xt='Federal Bank';
-      if(NEP){var xa=actAccs();xf=xa.filter(function(a){return a!=='Cash'&&allowsCur(a,'OMR')})[0]||'Cash';xt=xa.filter(function(a){return a!==xf&&allowsCur(a,'INR')})[0]||'Cash';if(xf===xt){toast('Add a bank account in Settings first, then record the exchange.');return}}
+      if(NEP||!(accUsed('Bank Muscat')&&accUsed('Federal Bank'))){var xa=actAccs();xf=xa.filter(function(a){return a!=='Cash'&&allowsCur(a,'OMR')})[0]||'Cash';xt=xa.filter(function(a){return a!==xf&&allowsCur(a,'INR')})[0]||'Cash';if(xf===xt){toast('Add a bank account in Settings first, then record the exchange.');return}}
       resetForm(false);setTab('entry',true);setType('transfer');applyPreset(xf,xt);setFcur('OMR');
       $('#amt').value=String(Math.round(omr*1000)/1000);$('#amt').dispatchEvent(new Event('input',{bubbles:true}));
       $('#trate').value=String(Math.round(r*10000)/10000);S.trateTouched=true;render();window.scrollTo(0,0);
@@ -3921,21 +3945,24 @@ $('#clearform').addEventListener('submit',async function(ev){
   btn.disabled=false;render();
 });
 /* opening balances */
+var OBL=[];
 function buildObRows(){
-  $('#obrows').innerHTML=ACCS.map(function(a,i){
+  OBL=vAccs();
+  $('#obrows').innerHTML=OBL.map(function(a,i){
     var cell=function(c){return allowsCur(a,c)?'<input id="ob-'+i+'-'+c+'" inputmode="decimal" aria-label="'+esc(a)+' '+c+'" placeholder="'+(c==='INR'?'0.00':'0.000')+'">':'<span class="sub" aria-hidden="true">not used</span>'};
     return '<div class="obgrid"><span class="nm">'+esc(a)+'</span>'+cell('OMR')+cell('INR')+'</div>';
   }).join('');
 }
 $('#obtoggle').addEventListener('click',function(){
   var f=$('#obform');f.hidden=!f.hidden;this.textContent=f.hidden?'Edit':'Close';
-  if(!f.hidden){ACCS.forEach(function(a,i){['OMR','INR'].forEach(function(c){if(!allowsCur(a,c))return;var v=openOf(a,c);$('#ob-'+i+'-'+c).value=v?String(v):''})})}
+  if(!f.hidden){buildObRows();OBL.forEach(function(a,i){['OMR','INR'].forEach(function(c){if(!allowsCur(a,c))return;var v=openOf(a,c);$('#ob-'+i+'-'+c).value=v?String(v):''})})}
 });
 $('#obcancel').addEventListener('click',function(){$('#obform').hidden=true;$('#obtoggle').textContent='Edit';$('#oberr').textContent=''});
 $('#obform').addEventListener('submit',function(ev){
   ev.preventDefault();
   var b={},bad=false;
-  ACCS.forEach(function(a,i){b[a]={};['OMR','INR'].forEach(function(c){
+  ACCS.forEach(function(a){b[a]={OMR:openOf(a,'OMR'),INR:openOf(a,'INR')}});
+  OBL.forEach(function(a,i){b[a]={};['OMR','INR'].forEach(function(c){
     if(!allowsCur(a,c)){b[a][c]=0;return}
     var raw=$('#ob-'+i+'-'+c).value.replace(/,/g,'').trim(),v=raw===''?0:parseFloat(raw);
     if(isNaN(v))bad=true;b[a][c]=rnd(v||0,c);
@@ -4826,7 +4853,7 @@ if(NEP)(function(){
 })();
 /* ---------- init ---------- */
 S.amonth=curMk();plLoadLocal();fillAccountSelects();buildObRows();
-$('#to').value='Cash';$('#from').value=ACCS.indexOf('Federal Bank')>-1?'Federal Bank':bankOrDefault();
+$('#to').value='Cash';$('#from').value=accUsed('Federal Bank')&&ACCS.indexOf('Federal Bank')>-1?'Federal Bank':bankOrDefault();
 if(NEP)$('#pre-mfx').hidden=true;
 setType('expense');paintAccount();paintRecForm();
 $('#date').value=todayStr();
