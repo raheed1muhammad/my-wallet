@@ -1881,6 +1881,27 @@ function paintAccount(){
 var FPK='mywallet.fpeople.'+VER,FP=[];
 try{var _fp=JSON.parse(localStorage.getItem(FPK)||'[]');if(Array.isArray(_fp))FP=_fp.filter(function(x){return typeof x==='string'&&x.trim()})}catch(e){}
 function fpSave(){try{localStorage.setItem(FPK,JSON.stringify(FP))}catch(e){}pfSave()}
+/* ---------- parties: one list of people and companies (used by loans, transfers and income) ---------- */
+var PTK='mywallet.parties.'+VER,PT=[];
+function ptOk(x){return !!x&&typeof x.n==='string'&&x.n.trim().length>0&&x.n.length<=40&&(x.t==='p'||x.t==='c')}
+try{var _pt=JSON.parse(localStorage.getItem(PTK)||'[]');if(Array.isArray(_pt))PT=_pt.filter(ptOk).slice(0,200)}catch(e){}
+function ptSave(){try{localStorage.setItem(PTK,JSON.stringify(PT))}catch(e){}pfSave()}
+function ptFind(n){var k=pkey(n);for(var i=0;i<PT.length;i++)if(pkey(PT[i].n)===k)return PT[i];return null}
+function ptType(n){var o=ptFind(n);return o?o.t:'p'}
+function ptAdd(n,t){
+  n=String(n||'').replace(/\s+/g,' ').trim().slice(0,40);if(!n)return null;
+  var o=ptFind(n);if(o)return o;
+  if(PT.length>=200)return null;
+  o={n:n,t:t==='c'?'c':'p'};PT.push(o);ptSave();return o;
+}
+/* every known name: saved parties, Family and friends names, and names already used in entries (old ones count as people) */
+function ptAll(){
+  var out=PT.map(function(o){return {n:o.n,t:o.t}});
+  function add(n){if(typeof n!=='string'||!n.trim())return;n=n.trim();if(!out.some(function(o){return pkey(o.n)===pkey(n)}))out.push({n:n,t:'p'})}
+  FP.forEach(add);(S.entries||[]).forEach(function(e){if(e)add(e.person)});
+  return out.sort(function(a,b){return a.n.localeCompare(b.n)});
+}
+
 function paintFchips(){
   var list=FP.slice(),cur=pkey(S.fperson);
   (S.entries||[]).forEach(function(e){if(e&&e.type==='fam'&&typeof e.person==='string'&&e.person.trim()&&!list.some(function(n){return pkey(n)===pkey(e.person)}))list.push(e.person.trim())});
@@ -1902,7 +1923,7 @@ function addFP(){
   var n=($('#fpname').value||'').trim().replace(/\s+/g,' '),m=$('#fpmsg');
   if(!n){m.textContent='Type a name.';return}
   if(FP.some(function(x){return pkey(x)===pkey(n)})){m.textContent='That name is already in your list.';return}
-  FP.push(n);fpSave();S.fperson=n;$('#fpname').value='';m.textContent='';$('#faddbox').hidden=true;paintFchips();
+  FP.push(n);fpSave();ptAdd(n,'p');S.fperson=n;$('#fpname').value='';m.textContent='';$('#faddbox').hidden=true;paintFchips();
 }
 function paintPresets(){
   var f=$('#from').value,t=$('#to').value;
@@ -3604,7 +3625,7 @@ function xKeyStore(k){ /* signed in: private doc in your own account, outside ba
 /* ---------- synced preferences: theme, timers, family & friends names (one private cloud doc per version) ---------- */
 var PFD='settings/prefs',pfOn=false,pfT=null,pfSig='',pfFirst=true;
 function pfGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100)}}
+function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200)}}
 function pfSave(){
   if(!S.db||!pfOn)return;
   clearTimeout(pfT);pfT=setTimeout(function(){
@@ -3630,6 +3651,11 @@ function pfApply(d){
   if(typeof d.th==='string'&&d.th&&d.th!==pfGet('mywallet.igtheme')&&allThemes().some(function(t){return t.id===d.th}))igSetTheme(d.th);
   if([0,3,5,10].indexOf(d.chat)>-1&&d.chat!==CHT){CHT=d.chat;try{localStorage.setItem(CHTK,CHT?String(CHT):'always')}catch(e){}chatFabShow()}
   if([0,5,10,25].indexOf(d.add)>-1&&d.add!==ADT){ADT=d.add;try{localStorage.setItem(ADDK,ADT?String(ADT):'always')}catch(e){}addBtnShow()}
+  if(Array.isArray(d.pt)){
+    var pc=d.pt.filter(ptOk).map(function(o){return {n:o.n.replace(/\s+/g,' ').trim(),t:o.t}}).slice(0,200);
+    if(pfFirst)PT.forEach(function(o){if(!pc.some(function(c){return pkey(c.n)===pkey(o.n)}))pc.push(o)});
+    PT=pc.slice(0,200);try{localStorage.setItem(PTK,JSON.stringify(PT))}catch(e){}
+  }
   if(Array.isArray(d.fp)){
     var cl=d.fp.filter(function(x){return typeof x==='string'&&x.trim()&&x.length<=30}).map(function(x){return x.trim().replace(/\s+/g,' ')}).slice(0,100);
     if(pfFirst)FP.forEach(function(n){if(!cl.some(function(c){return pkey(c)===pkey(n)}))cl.push(n)});
