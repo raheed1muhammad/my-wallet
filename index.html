@@ -824,7 +824,10 @@ body.ent #tabs{display:none}
 #f.kpcan.kpoff #kpbar{display:none}
 #kpdown{width:44px;height:34px;border:0;border-radius:12px;background:none;color:var(--muted);display:grid;place-items:center;padding:0;cursor:pointer}
 #kpdown:active{background:var(--hover)}
-#f.kphide .kp{display:none}
+#f.kphide .kp,#f.kphide #kpdown{display:none}
+#kpup{display:none;width:44px;height:34px;border:0;border-radius:12px;background:none;color:var(--muted);place-items:center;padding:0;cursor:pointer}
+#kpup:active{background:var(--hover)}
+#f.kphide #kpup{display:grid}
 #kpwrap .row2{margin-top:8px}
 #kpwrap .btn{width:100%;height:54px;border-radius:27px}
 #notice,.sync{display:none}
@@ -1026,7 +1029,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
           <div class="fld"><label for="note">Narration (optional)</label><input id="note" maxlength="90" placeholder="e.g. Lulu Hypermarket, ATM cash, salary for October"></div>
           <div class="fld"><label for="igTagIn">Tags (optional)</label><input id="igTagIn" maxlength="60" placeholder="e.g. trip, family, work (comma separated)" autocomplete="off"></div>
           <div class="kpwrap" id="kpwrap"><p class="err" id="err" role="alert"></p>
-<div id="kpbar"><button type="button" id="kpdown" aria-label="Hide keypad"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+<div id="kpbar"><button type="button" id="kpdown" aria-label="Hide keypad"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" id="kpup" aria-label="Show keypad"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button></div>
 <div class="kp" id="kp" aria-label="Number pad"><button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" data-k=".">.</button><button type="button" data-k="0">0</button><button type="button" data-k="del" aria-label="Delete"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11v12H9l-5-6z"/><path d="M12 9l5 6M17 9l-5 6"/></svg></button></div>
           <div class="etray" id="etray" hidden></div>
           <div class="row2">
@@ -3362,6 +3365,7 @@ paintProfile();
 function kpPaint(){var f=$('#f');if(!f)return;f.classList.toggle('kpcan',!twoStep());if(twoStep())f.classList.remove('kphide')}
 function kpBackable(){var f=$('#f');return S.tab==='entry'&&!!f&&f.classList.contains('kpcan')&&!f.classList.contains('kphide')&&!f.classList.contains('kpoff')}
 $('#kpdown').addEventListener('click',function(){$('#f').classList.add('kphide')});
+$('#kpup').addEventListener('click',function(){$('#f').classList.remove('kphide')});
 $('#amtfld').addEventListener('click',function(){$('#f').classList.remove('kphide')});
 var _accSig='';
 /* when the entries arrive, an older bank may become visible: refill the account pickers once and keep what was chosen */
