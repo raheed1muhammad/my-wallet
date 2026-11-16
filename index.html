@@ -819,6 +819,12 @@ body.ent #tabs{display:none}
 .kp button{height:52px;border:0;background:none;color:var(--ink);font-size:27px;font-weight:600;border-radius:16px;font-variant-numeric:tabular-nums;display:grid;place-items:center}
 .kp button:active{background:var(--hover)}
 #f.kpoff .kp{display:none}
+#kpbar{display:none;justify-content:flex-end;padding:0 8px 2px}
+#f.kpcan #kpbar{display:flex}
+#f.kpcan.kpoff #kpbar{display:none}
+#kpdown{width:44px;height:34px;border:0;border-radius:12px;background:none;color:var(--muted);display:grid;place-items:center;padding:0;cursor:pointer}
+#kpdown:active{background:var(--hover)}
+#f.kphide .kp{display:none}
 #kpwrap .row2{margin-top:8px}
 #kpwrap .btn{width:100%;height:54px;border-radius:27px}
 #notice,.sync{display:none}
@@ -1020,6 +1026,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
           <div class="fld"><label for="note">Narration (optional)</label><input id="note" maxlength="90" placeholder="e.g. Lulu Hypermarket, ATM cash, salary for October"></div>
           <div class="fld"><label for="igTagIn">Tags (optional)</label><input id="igTagIn" maxlength="60" placeholder="e.g. trip, family, work (comma separated)" autocomplete="off"></div>
           <div class="kpwrap" id="kpwrap"><p class="err" id="err" role="alert"></p>
+<div id="kpbar"><button type="button" id="kpdown" aria-label="Hide keypad"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
 <div class="kp" id="kp" aria-label="Number pad"><button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" data-k=".">.</button><button type="button" data-k="0">0</button><button type="button" data-k="del" aria-label="Delete"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11v12H9l-5-6z"/><path d="M12 9l5 6M17 9l-5 6"/></svg></button></div>
           <div class="etray" id="etray" hidden></div>
           <div class="row2">
@@ -1995,7 +2002,7 @@ function estepApply(){
   updateSubmit();
   var tr=$('#etray');if(tr)tr.hidden=true;
 }
-function setType(t){
+function setType(t){var _kf=$('#f');if(_kf)_kf.classList.remove('kphide');
   S.ftype=t;$('#f').dataset.type=t;var _et=document.getElementById('etray');if(_et)_et.hidden=true;
   $$('#typeseg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.type===t))});
   var tr=t==='transfer';
@@ -3351,6 +3358,11 @@ function paintProfile(){
 }
 document.getElementById('prof').addEventListener('click',function(){setView='main';renderSet();setEl.hidden=false;setEl.scrollTop=0});
 paintProfile();
+/* keypad: on the long forms (Loan, SIP) a small down button hides it; tapping the amount shows it again; first Back hides it */
+function kpPaint(){var f=$('#f');if(!f)return;f.classList.toggle('kpcan',!twoStep());if(twoStep())f.classList.remove('kphide')}
+function kpBackable(){var f=$('#f');return S.tab==='entry'&&!!f&&f.classList.contains('kpcan')&&!f.classList.contains('kphide')&&!f.classList.contains('kpoff')}
+$('#kpdown').addEventListener('click',function(){$('#f').classList.add('kphide')});
+$('#amtfld').addEventListener('click',function(){$('#f').classList.remove('kphide')});
 var _accSig='';
 /* when the entries arrive, an older bank may become visible: refill the account pickers once and keep what was chosen */
 function syncAccLists(){
@@ -3359,7 +3371,7 @@ function syncAccLists(){
   var ok=actAccs();if(ok.indexOf(f)>-1)$('#from').value=f;if(ok.indexOf(t)>-1)$('#to').value=t;
 }
 function render(){
-  syncAccLists();
+  syncAccLists();kpPaint();
   ensurePlans();
   renderRecent();
   if(S.tab==='analysis'){renderAnalysis();igIns();igTagCard()}
@@ -4912,12 +4924,13 @@ try{
     if(!HB)return;
     if(HB.skip>0){HB.skip--;return}
     var st=e.state,i=st&&typeof st.i==='number'?st.i:0,t=(st&&st.t)||'home';
-    HB.i=i;
+    var prevI=HB.i;HB.i=i;
     if(!afan.hidden){HB.ovPop=1;afan.hidden=true;return}
     if(!setEl.hidden&&setEl._sub){setEl._sub=0;setView='main';renderSet();setEl.scrollTop=0;return} /* inside a settings page: back returns to the settings list only */
     if(!setEl.hidden){HB.ovPop=1;setEl.hidden=true;return} /* settings screen: back closes it first */
     if(!chatEl.hidden){HB.ovPop=1;closeChat();return} /* detail screen: back closes it first */
     if(!listEl.hidden){HB.ovPop=1;listEl.hidden=true;return} /* chats screen: back closes it */
+    if(i<prevI&&kpBackable()){HB.i=prevI;HB.skip++;history.go(1);$('#f').classList.add('kphide');return} /* long forms: first Back only hides the keypad */
     if(t!==S.tab){HB.pop=1;try{setTab(t)}finally{HB.pop=0}}
   });
   new MutationObserver(function(){ /* settings screen gets its own history entry so back closes it, not the app */
