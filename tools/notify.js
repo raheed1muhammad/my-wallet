@@ -147,7 +147,7 @@ module.exports = { sipDates, recDay, monthActive, dueItems, localNow, buildMessa
 if (require.main === module) {
   (async () => {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!raw) { console.log('The FIREBASE_SERVICE_ACCOUNT secret is missing.'); process.exit(1); }
+    if (!raw) { console.log('The FIREBASE_SERVICE_ACCOUNT secret is not added yet, so nothing was sent.'); process.exit(0); }
     let cred; try { cred = JSON.parse(raw); } catch (e) { console.log('The FIREBASE_SERVICE_ACCOUNT secret is not valid JSON.'); process.exit(1); }
     const admin = require('firebase-admin');
     admin.initializeApp({ credential: admin.credential.cert(cred) });

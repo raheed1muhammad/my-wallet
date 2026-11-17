@@ -233,7 +233,7 @@ function ready(){
   window.__dbRes(dbObj());
 }
 /* ---------- reminders: this phone's address is saved in the user's own private space (users/<uid>/private/push) ---------- */
-var VAPID='';  /* public Web Push key from Firebase console > Cloud Messaging > Web Push certificates (a public key, safe to keep here) */
+var VAPID='BL5nEdB2wYlXGah59GQzDGSDLDv9al--Znzm23KXYCCebCD49-tCJLulTzEHGfeuw0QH_iZO_r3rF-nY0pQ8-qM';  /* public Web Push key from Firebase console > Cloud Messaging > Web Push certificates (a public key, safe to keep here) */
 var MSGURL='https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js';
 function pushRef(){return doc(fs,'users',UID,'private','push')}
 function pushTz(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch(e){return 'UTC'}}
