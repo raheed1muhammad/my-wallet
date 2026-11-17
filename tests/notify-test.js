@@ -104,6 +104,26 @@ const base = () => ({
   f = fake(base()); f.db.collection = () => { throw new Error('db down'); }; ms = msgSvc();
   out = await N.run({ db: f.db, messaging: ms, auth: f.auth }, {}, after9).catch(e => ({ crashed: true }));
   check('a database error does not crash the run', out && !out.crashed || out.crashed === true);
+  /* daily diary: its own message, once a day, no amounts, only for the user who turned it on */
+  const dd = base(); dd['users/A/private/push'].diary = true; dd['users/B/private/push'] = { on: true, hour: 9, tz: 'UTC', tokens: [TOK('b')] };
+  f = fake(dd); ms = msgSvc(); await N.run({ db: f.db, messaging: ms, auth: f.auth }, {}, before9);
+  eq('diary: nothing before the chosen hour', ms.calls.length, 0);
+  await N.run({ db: f.db, messaging: ms, auth: f.auth }, {}, after9);
+  const dm = ms.calls.filter(c => c.data.tag === 'diary');
+  eq('diary: one diary message, only for the user who turned it on', dm.length, 1);
+  check('diary: sent to that user\'s phones only', dm[0].tokens.every(t => t === TOK('a') || t === TOK('d')));
+  check('diary: no amounts or names in the message', !/\d{2,}|Rent|Secret/.test(dm[0].data.body), dm[0].data.body);
+  eq('diary: reminder and diary are two messages', ms.calls.length, 2);
+  await N.run({ db: f.db, messaging: ms, auth: f.auth }, {}, after9 + 3600000);
+  eq('diary: not sent twice the same day', ms.calls.length, 2);
+  await N.run({ db: f.db, messaging: ms, auth: f.auth }, {}, after9 + 86400000);
+  eq('diary: sent again the next day', ms.calls.filter(c => c.data.tag === 'diary').length, 2);
+  const dn = base(); dn['users/A/private/push'].diary = false; f = fake(dn); ms = msgSvc();
+  await N.run({ db: f.db, messaging: ms, auth: f.auth }, {}, after9);
+  eq('diary off: no diary message', ms.calls.filter(c => c.data.tag === 'diary').length, 0);
+  const dx = base(); dx['users/A/private/push'].diary = true; delete dx['users/A/recurring/r1']; f = fake(dx); ms = msgSvc();
+  await N.run({ db: f.db, messaging: ms, auth: f.auth }, {}, after9);
+  eq('diary on with no reminders: only the diary', ms.calls.map(c => c.data.tag), ['diary']);
   console.log(pass + ' checks passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();

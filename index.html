@@ -541,6 +541,22 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 /* ===== v9: Settings ===== */
 #igMore{position:fixed;top:58px;right:14px;z-index:80;min-width:200px;padding:6px;border-radius:16px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 14px 40px rgba(0,0,0,.3)}
 #igMore[hidden],#igSet[hidden]{display:none}
+#igDiary[hidden]{display:none}
+#igDiary{position:fixed;inset:0;z-index:99;display:flex;flex-direction:column;justify-content:flex-end}
+#igDiary .dsc{position:absolute;inset:0;background:color-mix(in srgb,var(--ink) 55%,transparent)}
+#igDiary .dsheet{position:relative;max-width:560px;width:100%;margin:0 auto;box-sizing:border-box;background:var(--surface);color:var(--ink);border-top:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px;animation:dup .35s ease both}
+@keyframes dup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+#igDiary .dhead{display:flex;justify-content:space-between;align-items:baseline}
+#igDiary .dhead b{font-size:17px}
+#igDiary .dmuted{opacity:.75;font-size:13px;line-height:1.4}
+#igDiary .dcur{font-size:12px;font-weight:700;letter-spacing:.06em;opacity:.75;margin-top:2px}
+#igDiary .drow{display:flex;align-items:center;gap:12px;font-size:15px;animation:dup .4s ease both}
+#igDiary .drow>b{margin-left:auto;text-align:right}
+#igDiary .dic{width:34px;height:34px;flex:none;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center}
+#igDiary .dic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#igDiary .dfoot{border-top:1px solid var(--line);padding-top:10px}
+#igDiary .btn2{min-height:46px;border-radius:999px;padding:12px;background:var(--accent);color:var(--surface);border:0;font-weight:700;font-size:15px}
+#igDiary .dtag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
 #igMore button{display:block;width:100%;padding:12px;border:0;background:none;color:inherit;text-align:left;cursor:pointer;border-radius:12px;font-weight:600}
 #igMore button:hover{background:var(--hover)}
 #igSet{position:fixed;inset:0;z-index:90;background:var(--bg);color:var(--ink);overflow:auto;padding-bottom:60px}
@@ -874,7 +890,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
   <div class="wrap">
     <div class="band-top">
       <div class="brand"><i class="brandmark" aria-hidden="true"></i><div class="bt"><b>My Wallet</b><button type="button" class="prof" id="prof"></button></div><span>Income &amp; expense ledger · OMR / INR</span></div>
-      <div class="hwrap"><div class="hbtns"><button class="themebtn" id="xchBtn" type="button" aria-label="Exchange" style="order:7"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10h14l-4-4"/><path d="M17 14H3l4 4"/></svg></button><button class="themebtn" id="igDueBtn" type="button" hidden aria-label="Payments due" style="position:relative;order:8"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="4"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/></svg><span class="dueb" id="igDueN">0</span></button><button class="themebtn" id="igThemeBtn" type="button" aria-label="Choose app theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/></svg></button><button class="themebtn" id="themebtn" type="button" aria-label="Switch between day and night mode"></button></div><button class="themebtn hmenu" id="igMoreBtn" type="button" aria-label="Menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button></div>
+      <div class="hwrap"><div class="hbtns"><button class="themebtn" id="xchBtn" type="button" aria-label="Exchange" style="order:7"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10h14l-4-4"/><path d="M17 14H3l4 4"/></svg></button><button class="themebtn" id="igDiaryBtn" type="button" aria-label="Diary" style="order:9"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h6"/></svg></button><button class="themebtn" id="igDueBtn" type="button" hidden aria-label="Payments due" style="position:relative;order:8"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="4"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/></svg><span class="dueb" id="igDueN">0</span></button><button class="themebtn" id="igThemeBtn" type="button" aria-label="Choose app theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/></svg></button><button class="themebtn" id="themebtn" type="button" aria-label="Switch between day and night mode"></button></div><button class="themebtn hmenu" id="igMoreBtn" type="button" aria-label="Menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button></div>
     </div>
     <div class="sync" id="sync"></div>
     <nav class="tabs" id="tabs" aria-label="Pages">
@@ -1349,6 +1365,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
 <div id="bc" aria-live="polite"></div>
 <div id="tip" role="tooltip"></div>
 <button type="button" class="lfab" id="lfab" aria-label="Open chat list: people, categories and accounts"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M2.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16 7h6M16 12h6M16 17h6"/></svg></button>
+<div id="igDiary" role="dialog" aria-modal="true" aria-label="Daily diary" hidden></div>
 <div id="igChats" hidden><div class="sbar"><button type="button" id="chatsBack" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>Transaction chats</b><small id="lallsub"></small></div></div><div class="cw"><input id="lallq" type="search" placeholder="Search a name, category or account" autocomplete="off"><div id="lflt"></div><div id="lallList"></div></div></div>
 <div id="toast" role="status"></div>
 
@@ -3283,8 +3300,138 @@ var moreEl=document.createElement('div');moreEl.id='igMore';moreEl.hidden=true;
 moreEl.innerHTML='<button type="button" data-m="set"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37 1 .608 2.296.07 2.572-1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></svg>Settings</button><button type="button" data-m="out"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/><path d="M9 12h12l-3-3"/><path d="M18 15l3-3"/></svg>Sign out</button>';document.body.appendChild(moreEl);
 function setBal(a){return curs(a).map(function(c){return money(balanceOf(a,c,todayStr()),c)}).join(' + ')}
 var setView='main';
-var SETIC={bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
+var SETIC={book:'<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h6"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
 function setSvg(n){return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+SETIC[n]+'</svg>'}
+/* ---------- Diary: a rough look at one day, shown as a popup ---------- */
+var DRK='mywallet.diary',DRH='mywallet.diary.hide',DRL='mywallet.diary.last',DRY=false,DRHIDE=false,DMSG='';
+try{DRY=localStorage.getItem(DRK)==='1';DRHIDE=localStorage.getItem(DRH)==='1'}catch(e){}
+var dEl=document.getElementById('igDiary');
+function diaryStore(){try{localStorage.setItem(DRK,DRY?'1':'0');localStorage.setItem(DRH,DRHIDE?'1':'0')}catch(e){}}
+function diaryDay(day){
+  var mk=day.slice(0,7),its=itemsOf(S.entries.filter(function(e){return e.date===day})),
+      mtd=itemsOf(S.entries.filter(function(e){return e.date>=mk+'-01'&&e.date<=day})),r={};
+  ['OMR','INR'].forEach(function(c){
+    var inc=0,exp=0,cat={},top=null,mex=0,n=0;
+    its.forEach(function(it){if(it.currency!==c)return;if(it.type==='income')inc+=it.amount;else{exp+=it.amount;cat[it.category]=(cat[it.category]||0)+it.amount}});
+    mtd.forEach(function(it){if(it.currency===c&&it.type!=='income')mex+=it.amount});
+    S.entries.forEach(function(e){if(e.date===day&&e.currency===c)n++});
+    Object.keys(cat).forEach(function(k){if(!top||cat[k]>top.v)top={k:k,v:rnd(cat[k],c)}});
+    if(inc||exp)r[c]={inc:rnd(inc,c),exp:rnd(exp,c),net:rnd(inc-exp,c),top:top,n:n,mex:rnd(mex,c)};
+  });
+  return r;
+}
+var DIC={inc:'<path d="M17 7L7 17M7 9v8h8"/>',exp:'<path d="M7 17L17 7M9 7h8v8"/>',net:'<path d="M5 12h14M12 5v14"/>',top:'<path d="M3 12l9-9h8v8l-9 9z"/><path d="M15 8h.01"/>'};
+function diaryRow(k,label,val,cls){return '<div class="drow"><span class="dic"><svg viewBox="0 0 24 24" aria-hidden="true">'+DIC[k]+'</svg></span><span>'+label+'</span><b'+(cls?' class="'+cls+'"':'')+'>'+val+'</b></div>'}
+function showDiary(day){
+  var nm=String((SET.profile||{}).name||'').trim(),r=diaryDay(day),cs=Object.keys(r),td=todayStr(),
+      tg=day===td?'Today so far':day===addDays(td,-1)?'Yesterday':'';
+  var h='<div class="dsc" data-dy="close"></div><div class="dsheet"><div class="dhead"><b>Daily diary</b><small>'+F_LEDG.format(parse(day))+'</small></div>'+
+    (tg?'<div class="dtag">'+tg+'</div>':'')+
+    '<div class="dmuted">Hi'+(nm?' '+esc(nm):'')+', here is a quick look at your day.</div>';
+  if(!cs.length)h+='<div class="dmuted">Nothing was recorded on this day.</div>';
+  cs.forEach(function(c){var o=r[c],sg=o.net>0?'+':o.net<0?'−':'';
+    if(cs.length>1)h+='<div class="dcur">'+(c==='INR'?'₹ INR':'OMR')+'</div>';
+    h+=diaryRow('inc','Income',money(o.inc,c),'pos')+diaryRow('exp','Spent',money(o.exp,c),'neg')+
+       diaryRow('net','Net for the day',sg+money(Math.abs(o.net),c),o.net>=0?'pos':'neg')+
+       (o.top?diaryRow('top','Most spent on<br><span class="dmuted">'+esc(o.top.k)+'</span>',money(o.top.v,c)):'')+
+       '<div class="dmuted dfoot">'+o.n+' entr'+(o.n===1?'y':'ies')+' · This month so far: '+money(o.mex,c)+' spent</div>'});
+  dEl.innerHTML=h+'<button type="button" class="btn2" data-dy="close">OK</button></div>';
+  dEl.hidden=false;
+}
+dEl.addEventListener('click',function(ev){if(ev.target.closest('[data-dy="close"]'))dEl.hidden=true});
+function diaryBtnPaint(){var b=document.getElementById('igDiaryBtn');if(b)b.hidden=DRHIDE}
+document.getElementById('igDiaryBtn').addEventListener('click',function(e){e.stopPropagation();showDiary(todayStr())});
+diaryBtnPaint();
+/* a new day: show yesterday once when the app is opened (only if diary is on and yesterday has entries) */
+function diaryCheck(){
+  if(!DRY||document.hidden||!S.entries||!S.entries.length)return;
+  var td=todayStr(),last='';try{last=localStorage.getItem(DRL)||''}catch(e){}
+  if(last===td)return;
+  try{localStorage.setItem(DRL,td)}catch(e){}
+  if(!last)return;
+  var y=addDays(td,-1);if(Object.keys(diaryDay(y)).length&&dEl.hidden&&setEl.hidden)showDiary(y);
+}
+setInterval(diaryCheck,60000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)diaryCheck()});
+setTimeout(diaryCheck,2500);
+/* tapping the phone message opens yesterday's diary (server message, tag "diary") */
+function diaryFromPush(n){
+  if(!S.entries||!S.entries.length){if(n<20)setTimeout(function(){diaryFromPush(n+1)},700);return}
+  try{localStorage.setItem(DRL,todayStr())}catch(e){}
+  showDiary(addDays(todayStr(),-1));
+}
+try{if(/[?&]diary=1(&|$)/.test(location.search)){history.replaceState(history.state,'',location.pathname);diaryFromPush(0)}}catch(e){}
+try{navigator.serviceWorker.addEventListener('message',function(e){if(e.data&&e.data.diary)diaryFromPush(0)})}catch(e){}
+function diarySetNt(on){
+  DRY=on;DMSG='';diaryStore();pfSave();
+  var a=pushApi();
+  if(!a||!a.supported()||!a.configured()){DMSG=on?'This phone cannot show notifications. The diary will show when you open the app.':'';renderSet();return}
+  var st=PUSH.st||{};
+  (on&&!st.on?a.enable():Promise.resolve()).then(function(){return a.update({diary:on})}).then(pushLoad).catch(function(er){
+    if(on){DMSG=pushErr(er)+' The diary will still show when you open the app.'}renderSet()});
+  renderSet();
+}
+/* ---------- Settings > Personal details > Sign-in: hidden email, change email, change password ---------- */
+var ACC={step:'form',v:{},msg:'',busy:false,show:false};
+function accReset(){ACC={step:'form',v:{},msg:'',busy:false,show:false}}
+function acctApi(){return window.__acct||null}
+function maskEm(e){var i=String(e).indexOf('@');return i<1?'':e.slice(0,2)+'##########'+e.slice(i+1)}
+var EYE='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+var EYEX='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg>';
+function signinCard(){
+  var A=acctApi(),em=A?A.email():'';if(!em)return '';
+  return '<div class="card" id="sSign"><div class="chead"><h2>Sign-in</h2></div>'+
+   '<div class="srow"><span>Email<small id="acEmail">'+esc(ACC.show?em:maskEm(em))+'</small></span><button type="button" class="btn2" data-s="acshow" aria-label="'+(ACC.show?'Hide email':'Show email')+'">'+(ACC.show?EYEX:EYE)+'</button></div>'+
+   '<div class="srow"><span>Change email<small>Asks for your password</small></span><button type="button" class="btn2" data-s="go" data-v="chemail">Change</button></div>'+
+   '<div class="srow"><span>Reset password<small>Asks for your old password</small></span><button type="button" class="btn2" data-s="go" data-v="chpass">Reset</button></div></div>';
+}
+function accPage(kind){
+  var e=kind==='e',h='<div class="card" id="sAcc"><div class="chead"><h2>'+(e?'Change email':'Reset password')+'</h2></div>',
+      msg=ACC.msg?'<p class="fine" role="status">'+esc(ACC.msg)+'</p>':'';
+  if(!acctApi())return h+'<p class="fine">Sign in to change this.</p></div>';
+  if(ACC.step==='done')return h+msg+'<div style="margin-top:10px"><button type="button" class="btn2" data-s="acdone">Done</button></div></div>';
+  if(ACC.step==='confirm')return h+'<p><b>Are you sure you want to '+(e?'change your email to '+esc(ACC.v.a)+'?':'change your password?')+'</b></p>'+
+    (e?'<p class="fine">A link goes to the new address. Your email changes only after you open that link.</p>':'')+msg+
+    '<div style="margin-top:10px;display:flex;gap:10px"><button type="button" class="btn2" data-s="acyes"'+(ACC.busy?' disabled':'')+'>'+(ACC.busy?'Please wait…':'Yes')+'</button><button type="button" class="btn2" data-s="acno"'+(ACC.busy?' disabled':'')+'>No</button></div></div>';
+  return h+'<div class="sform" style="grid-template-columns:1fr">'+(e?
+    '<label class="fl">Enter new email<input id="acA" type="email" autocomplete="email" maxlength="254" value="'+esc(ACC.v.a||'')+'"></label><label class="fl">Enter password<input id="acB" type="password" autocomplete="current-password" maxlength="128"></label>':
+    '<label class="fl">Enter old password<input id="acA" type="password" autocomplete="current-password" maxlength="128"></label><label class="fl">Enter new password<input id="acB" type="password" autocomplete="new-password" maxlength="128"></label><label class="fl">Re-enter new password<input id="acC" type="password" autocomplete="new-password" maxlength="128"></label>')+'</div>'+
+    (e?'':'<div><button type="button" data-s="acforgot" style="background:none;border:0;color:inherit;text-decoration:underline;padding:8px 0;font-size:13px">Forgot your old password?</button></div>')+msg+
+    '<div style="margin-top:10px"><button type="button" class="btn2" data-s="acnext">Continue</button></div></div>';
+}
+function accClick(k){
+  var A=acctApi(),kind=setView==='chemail'?'e':'p';
+  if(k==='acshow'){ACC.show=!ACC.show;renderSet();return true}
+  if(k==='acdone'){accReset();setView='pd';renderSet();setEl.scrollTop=0;return true}
+  if(k==='acno'){ACC.step='form';ACC.msg='';ACC.v.b='';renderSet();return true}
+  if(k==='acforgot'){if(!A)return true;ACC.msg='Sending…';renderSet();A.forgot().then(function(){ACC.msg='A reset link was sent to your email. Open it to set a new password.';renderSet()}).catch(function(er){ACC.msg=A.err(er);renderSet()});return true}
+  if(k==='acnext'){
+    var a=($('#acA')||{}).value||'',b=($('#acB')||{}).value||'',c=($('#acC')||{}).value||'';
+    if(kind==='e'){
+      a=a.trim();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a)){ACC.msg='Enter a valid new email.';ACC.v={a:a};renderSet();return true}
+      if(!b){ACC.msg='Enter your password.';ACC.v={a:a};renderSet();return true}
+      if(A&&a.toLowerCase()===String(A.email()).toLowerCase()){ACC.msg='That is already your email.';ACC.v={a:a};renderSet();return true}
+    }else{
+      if(!a){ACC.msg='Enter your old password.';renderSet();return true}
+      if(b.length<8){ACC.msg='New password must be at least 8 characters.';renderSet();return true}
+      if(b!==c){ACC.msg='The two new passwords do not match.';renderSet();return true}
+      if(b===a){ACC.msg='The new password must be different from the old one.';renderSet();return true}
+    }
+    ACC.v={a:a,b:b};ACC.msg='';ACC.step='confirm';renderSet();return true;
+  }
+  if(k==='acyes'){
+    if(!A||ACC.busy)return true;ACC.busy=true;ACC.msg='';renderSet();
+    var v=ACC.v,job=kind==='e'?A.changeEmail(v.a,v.b):A.changePassword(v.a,v.b);
+    job.then(function(){
+      ACC.busy=false;ACC.step='done';
+      ACC.msg=kind==='e'?'We sent a link to '+v.a+'. Open it to finish the change. Until then, keep using your old email.':'Your password was changed.';
+      ACC.v={};renderSet();
+    }).catch(function(er){ACC.busy=false;ACC.step='form';ACC.msg=er&&er.message==='same'?'That is already your email.':A.err(er);ACC.v=kind==='e'?{a:v.a}:{};renderSet()});
+    return true;
+  }
+  return false;
+}
 /* ---------- reminders for recurring items (Settings > Notifications) ---------- */
 var PUSH={st:null,busy:false,msg:''};
 function pushApi(){return window.__push||null}
@@ -3311,7 +3458,7 @@ function setRow(ic,t,val,v){return '<button type="button" class="setgo" data-s="
 function renderSet(){
   var p=SET.profile||{},act=actAccs().filter(function(a){return a!=='Cash'}),cl=ACCS.filter(function(a){return accUsed(a)&&SET.closed.indexOf(a)>-1});
   var T={
-   pd:['Personal details',function(){return '<div class="card"><div class="chead"><h2>Personal details</h2></div><div class="sform"><label class="fl">Name<input id="spName" placeholder="Your name" maxlength="40" value="'+esc(p.name||'')+'"></label><label class="fl">Country<input id="spCountry" placeholder="Country you live in" maxlength="40" value="'+esc(p.country||'')+'"></label></div><div style="margin-top:10px"><button class="btn2" type="button" data-s="saveprof">Save</button> <span class="fine" id="spMsg"></span></div></div>'}],
+   pd:['Personal details',function(){return '<div class="card"><div class="chead"><h2>Personal details</h2></div><div class="sform"><label class="fl">Name<input id="spName" placeholder="Your name" maxlength="40" value="'+esc(p.name||'')+'"></label><label class="fl">Country<input id="spCountry" placeholder="Country you live in" maxlength="40" value="'+esc(p.country||'')+'"></label></div><div style="margin-top:10px"><button class="btn2" type="button" data-s="saveprof">Save</button> <span class="fine" id="spMsg"></span></div></div>'+signinCard()}],
    theme:['Themes',function(){return themesHtml()}],
    timer:['Chat tab Timer',function(){return '<div class="card" id="sChatTimer"><div class="chead"><h2>Chat tab Timer</h2></div><div class="pills">'+
     [['3','3s'],['5','5s'],['10','10s'],['always','Always']].map(function(o){var on=o[0]==='always'?CHT===0:+o[0]===CHT;return '<button type="button" class="pill'+(on?' on':'')+'" data-s="chattimer" data-v="'+o[0]+'">'+o[1]+'</button>'}).join('')+
@@ -3326,7 +3473,14 @@ function renderSet(){
      '<label class="srow" style="cursor:pointer"><span>Show closed accounts in Ledger</span><input type="checkbox" data-s="showclosed"'+(SET.showClosed?' checked':'')+'></label>':'')+
     '<div class="fine" style="margin-top:14px"><b>Add a new account</b> \u2014 its currency is fixed once created.</div>'+
     '<div class="sform"><input id="saName" placeholder="Account name" maxlength="30"><select id="saCur" aria-label="Currency"><option value="OMR">OMR</option><option value="INR">INR (\u20b9)</option><option value="both">OMR + INR</option></select><button class="btn2" type="button" data-s="addacc">Add account</button></div><p class="fine" id="saMsg"></p></div>'}],
+   chemail:['Change email',function(){return accPage('e')}],
+   chpass:['Reset password',function(){return accPage('p')}],
    notif:['Notifications',function(){return pushPage()}],
+   diary:['Diary',function(){return '<div class="card" id="sDiary"><div class="chead"><h2>Diary</h2></div><p class="fine">A short look at each day: what came in, what went out and where most of it went. No amounts are ever shown in the phone message.</p>'+
+    '<label class="srow" style="cursor:pointer"><span>Diary notification<small>A message every morning at your reminder time. It also shows when you open the app.</small></span><input type="checkbox" style="flex:none;width:22px;height:22px" data-s="diarynt"'+(DRY?' checked':'')+'></label>'+
+    '<label class="srow" style="cursor:pointer"><span>Hide diary from the top bar<small>You can always open it from here.</small></span><input type="checkbox" style="flex:none;width:22px;height:22px" data-s="diaryhide"'+(DRHIDE?' checked':'')+'></label>'+
+    '<div class="srow"><span>See your diary<small>Today so far</small></span><button type="button" class="btn2" data-s="diaryshow">Open</button></div>'+
+    (DMSG?'<p class="fine" role="status">'+esc(DMSG)+'</p>':'')+'</div>'}],
    ver:['Version',function(){return '<div class="card" id="sVersion"><div class="chead"><h2>Version</h2></div><div class="vsw"><button type="button" class="'+(!NEP?'on':'')+'" data-s="version" data-v="indian">Indian<small data-nofx="1">OMR + INR</small></button><button type="button" class="'+(NEP?'on':'')+'" data-s="version" data-v="nepali">Nepali<small>OMR + NPR</small></button></div><p class="fine">Each version keeps its own separate entries, accounts and plans. Nothing is deleted when you switch.</p></div>'}],
    cur:['Currencies',function(){return '<div class="card"><div class="chead"><h2>Currencies</h2></div><div class="srow"><span>OMR<span class="tag">in use</span></span></div><div class="srow"><span>\u20b9 INR<span class="tag">in use</span></span></div><p class="fine">Adding a third currency is not available yet. It affects every screen, rate and chart, so it needs a separate update.</p></div>'}]
   };
@@ -3335,7 +3489,7 @@ function renderSet(){
   if(main){
     var cth=allThemes().filter(function(t){return t.id===igCur()})[0];
     body='<h3 class="sgrp">Data settings</h3><div class="card sgl">'+setRow('user','Personal details',p.name||'Not set','pd')+setRow('bank','Accounts',(act.length+1)+' open','acc')+setRow('coin','Currencies','OMR, INR','cur')+'</div>'+
-     '<h3 class="sgrp">App settings</h3><div class="card sgl">'+setRow('palette','Themes',cth?cth.name:'','theme')+setRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer')+setRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer')+setRow('bell','Notifications',PUSH.st&&PUSH.st.on?'On':'Off','notif')+setRow('globe','Version',NEP?'Nepali':'Indian','ver')+'</div>';
+     '<h3 class="sgrp">App settings</h3><div class="card sgl">'+setRow('palette','Themes',cth?cth.name:'','theme')+setRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer')+setRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer')+setRow('bell','Notifications',PUSH.st&&PUSH.st.on?'On':'Off','notif')+setRow('book','Diary',DRY?'On':'Off','diary')+setRow('globe','Version',NEP?'Nepali':'Indian','ver')+'</div>';
   }else body=T[setView][1]();
   setEl.classList.toggle('sub',!main);
   setEl.innerHTML='<div class="sbar"><button type="button" data-s="close" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>'+(main?'Settings':T[setView][0])+'</b></div><div class="sw">'+body+'</div>';
@@ -3348,6 +3502,8 @@ function afterAcc(cloudSaved){
 }
 setEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-s]');if(!b)return;var k=b.dataset.s,a=b.dataset.a;
+  if(k==='diaryshow'){showDiary(todayStr());return}
+  if(k.indexOf('ac')===0&&accClick(k))return;
   if(k==='pushtoggle'){
     var pa=pushApi();if(!pa||PUSH.busy)return;PUSH.busy=true;PUSH.msg='';renderSet();
     var on0=!!(PUSH.st&&PUSH.st.on);
@@ -3355,7 +3511,7 @@ setEl.addEventListener('click',function(e){
     return;
   }
   if(k==='pushtest'){var pb=pushApi();if(pb)pb.test().then(function(){PUSH.msg='Test sent. If you did not see it, check the phone notification settings for this app.';renderSet()}).catch(function(){PUSH.msg='Could not show a test message here.';renderSet()});return}
-  if(k==='go'){setView=b.dataset.v;if(setView==='notif')pushLoad();renderSet();setEl.scrollTop=0;
+  if(k==='go'){setView=b.dataset.v;if(setView==='chemail'||setView==='chpass'||setView==='pd')accReset();if(setView==='notif'||setView==='diary')pushLoad();renderSet();setEl.scrollTop=0;
     if(!setEl._sub){setEl._sub=1;try{if(HB){HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=S.tab;history.pushState({i:HB.i,t:S.tab},'')}}catch(er){}}}
   else if(k==='close'){if(setView!=='main'){setView='main';renderSet();setEl.scrollTop=0;
     if(setEl._sub){setEl._sub=0;try{if(HB){HB.skip++;HB.i--;history.go(-1)}}catch(er){}}}else setEl.hidden=true}
@@ -3393,6 +3549,8 @@ setEl.addEventListener('change',function(e){
   if(e.target.dataset.s==='pushhour'||e.target.dataset.s==='pushamt'){
     var pu=pushApi();if(!pu)return;var f=e.target.dataset.s==='pushhour'?{hour:+e.target.value}:{amounts:e.target.checked};
     pu.update(f).then(function(){PUSH.st=Object.assign({},PUSH.st,f);PUSH.msg='Saved.';renderSet()}).catch(function(){PUSH.msg='Could not save. Check your internet and try again.';renderSet()});return}
+  if(e.target.dataset.s==='diarynt'){diarySetNt(e.target.checked);return}
+  if(e.target.dataset.s==='diaryhide'){DRHIDE=e.target.checked;diaryStore();diaryBtnPaint();pfSave();renderSet();return}
   if(e.target.dataset.s==='showclosed'){var sc=e.target.checked;setChange({type:'showClosed',value:sc},function(){SET.showClosed=sc},afterAcc,function(msg){toast(msg);renderSet()})}});
 document.getElementById('igMoreBtn').addEventListener('click',function(e){e.stopPropagation();igMenu.hidden=true;moreEl.hidden=!moreEl.hidden});
 moreEl.addEventListener('click',function(e){
@@ -3822,7 +3980,7 @@ function xKeyStore(k){ /* signed in: private doc in your own account, outside ba
 /* ---------- synced preferences: theme, timers, family & friends names (one private cloud doc per version) ---------- */
 var PFD='settings/prefs',pfOn=false,pfT=null,pfSig='',pfFirst=true;
 function pfGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200),sp:SIPL.slice(0,50)}}
+function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200),sp:SIPL.slice(0,50),dy:[DRY?1:0,DRHIDE?1:0]}}
 function pfSave(){
   if(!S.db||!pfOn)return;
   clearTimeout(pfT);pfT=setTimeout(function(){
@@ -3853,6 +4011,7 @@ function pfApply(d){
     if(pfFirst)PT.forEach(function(o){if(!pc.some(function(c){return pkey(c.n)===pkey(o.n)}))pc.push(o)});
     PT=pc.slice(0,200);try{localStorage.setItem(PTK,JSON.stringify(PT))}catch(e){}
   }
+  if(Array.isArray(d.dy)&&d.dy.length===2){var dn=d.dy[0]===1,dh=d.dy[1]===1;if(dn!==DRY||dh!==DRHIDE){DRY=dn;DRHIDE=dh;diaryStore();diaryBtnPaint()}}
   if(Array.isArray(d.sp)){
     var sc=d.sp.filter(sipNmOk).map(function(x){return x.replace(/\s+/g,' ').trim()}).slice(0,50);
     if(pfFirst)SIPL.forEach(function(n){if(!sc.some(function(c){return pkey(c)===pkey(n)}))sc.push(n)});
@@ -5060,6 +5219,7 @@ try{
     if(HB.skip>0){HB.skip--;return}
     var st=e.state,i=st&&typeof st.i==='number'?st.i:0,t=(st&&st.t)||'home';
     var prevI=HB.i;HB.i=i;
+    if(!dEl.hidden){HB.ovPop=1;dEl.hidden=true;return} /* diary popup: back closes it */
     if(!afan.hidden){HB.ovPop=1;afan.hidden=true;return}
     if(!setEl.hidden&&setEl._sub){setEl._sub=0;setView='main';renderSet();setEl.scrollTop=0;return} /* inside a settings page: back returns to the settings list only */
     if(!setEl.hidden){HB.ovPop=1;setEl.hidden=true;return} /* settings screen: back closes it first */
@@ -5088,6 +5248,11 @@ try{
     if(open&&!afan._o){afan._o=1;HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=S.tab;history.pushState({i:HB.i,t:S.tab},'')}
     else if(!open&&afan._o){afan._o=0;if(HB.ovPop)HB.ovPop=0;else{HB.skip++;HB.i--;history.go(-1)}}
   }).observe(afan,{attributes:true,attributeFilter:['hidden']});
+  new MutationObserver(function(){ /* the diary popup gets its own history entry too */
+    var open=!dEl.hidden;
+    if(open&&!dEl._o){dEl._o=1;HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=S.tab;history.pushState({i:HB.i,t:S.tab},'')}
+    else if(!open&&dEl._o){dEl._o=0;if(HB.ovPop)HB.ovPop=0;else{HB.skip++;HB.i--;history.go(-1)}}
+  }).observe(dEl,{attributes:true,attributeFilter:['hidden']});
 }catch(e){HB=null}
 paintBC();
 render();

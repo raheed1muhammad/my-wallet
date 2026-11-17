@@ -1,7 +1,7 @@
 /* My Wallet cloud layer: Firebase email+password login, a per-user private Firestore space,
    and the same db API the app already uses. No personal data lives in this file or the repo. */
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,verifyBeforeUpdateEmail} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,collection,onSnapshot,setDoc,deleteDoc,getDoc,getDocs,writeBatch,runTransaction,terminate,clearIndexedDbPersistence} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 var firebaseConfig={
@@ -224,12 +224,39 @@ function begin(){
     ready();
   }).catch(function(){PM('settings_read_failed_or_timeout');ready()});
 }
+/* ---------- account changes: email and password. The password is only passed to Firebase, never saved or logged. ---------- */
+function acctErr(e){
+  var c=String(e&&e.code||e&&e.message||e);
+  var m={'auth/invalid-email':'That email address is not valid.','auth/invalid-credential':'Wrong password.','auth/wrong-password':'Wrong password.','auth/too-many-requests':'Too many tries. Wait a few minutes and try again.','auth/network-request-failed':'No internet connection. Try again.','auth/weak-password':'New password is too weak. Use at least 8 characters.','auth/email-already-in-use':'That email cannot be used.','auth/requires-recent-login':'Please sign out, log in again and retry.','auth/operation-not-allowed':'That email cannot be used.','not-signed-in':'You are not signed in.'};
+  return m[c]||'Something went wrong. Try again.';
+}
+function reauth(pw){
+  var u=auth.currentUser;if(!u||!u.email)return Promise.reject(new Error('not-signed-in'));
+  return reauthenticateWithCredential(u,EmailAuthProvider.credential(u.email,pw));
+}
+var ACCT={
+  email:function(){return auth.currentUser&&auth.currentUser.email||EMAIL||''},
+  /* sends a confirmation link to the new address; the email changes only after that link is opened */
+  changeEmail:function(newEmail,pw){
+    var em=String(newEmail||'').trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)||em.length>254)return Promise.reject(new Error('auth/invalid-email'));
+    if(em.toLowerCase()===String(ACCT.email()).toLowerCase())return Promise.reject(new Error('same'));
+    return reauth(pw).then(function(){return verifyBeforeUpdateEmail(auth.currentUser,em)});
+  },
+  changePassword:function(oldPw,newPw){
+    if(String(newPw||'').length<8)return Promise.reject(new Error('auth/weak-password'));
+    return reauth(oldPw).then(function(){return updatePassword(auth.currentUser,newPw)});
+  },
+  forgot:function(){var e=ACCT.email();if(!e)return Promise.reject(new Error('not-signed-in'));return sendPasswordResetEmail(auth,e)},
+  err:acctErr
+};
 function ready(){
   PM('ready_open_app');
   el.hidden=true;
   window.__cloudSet=function(json){if(UID)track(setDoc(uref('settings/app'),{set:json,t:Date.now()})).catch(function(){})};
   window.__cloud={email:EMAIL,signOut:doSignOut,exportData:exportData,importData:importData,switchVersion:switchVersion};
   window.__push=PUSH;
+  window.__acct=ACCT;
   window.__dbRes(dbObj());
 }
 /* ---------- reminders: this phone's address is saved in the user's own private space (users/<uid>/private/push) ---------- */
@@ -259,7 +286,7 @@ var PUSH={
       return getDoc(pushRef()).then(function(s){
         var d=s.exists()?s.data():{},t=(Array.isArray(d.tokens)?d.tokens:[]).filter(function(x){return x!==tok});
         t.unshift(tok);
-        return setDoc(pushRef(),{tokens:t.slice(0,5),on:true,hour:(o&&o.hour>=0&&o.hour<=23)?o.hour:(d.hour>=0&&d.hour<=23?d.hour:9),amounts:!!(o&&o.amounts!=null?o.amounts:d.amounts),tz:pushTz(),t:Date.now()});
+        return setDoc(pushRef(),{tokens:t.slice(0,5),on:true,hour:(o&&o.hour>=0&&o.hour<=23)?o.hour:(d.hour>=0&&d.hour<=23?d.hour:9),amounts:!!(o&&o.amounts!=null?o.amounts:d.amounts),diary:!!d.diary,tz:pushTz(),t:Date.now()});
       });
     });
   },
@@ -267,6 +294,7 @@ var PUSH={
     var d={tz:pushTz(),t:Date.now()};
     if(f&&f.hour>=0&&f.hour<=23)d.hour=Math.floor(f.hour);
     if(f&&f.amounts!=null)d.amounts=!!f.amounts;
+    if(f&&f.diary!=null)d.diary=!!f.diary;
     return setDoc(pushRef(),d,{merge:true});
   },
   disable:function(){

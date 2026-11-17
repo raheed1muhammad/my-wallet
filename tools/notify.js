@@ -106,12 +106,14 @@ async function run(deps, env, nowMs) {
       const pd = ps.data() || {}, tokens = (Array.isArray(pd.tokens) ? pd.tokens : []).filter(t => typeof t === 'string' && t.length > 20).slice(0, 5);
       if (!pd.on || !tokens.length) continue;
       stat.users++;
-      let msg = null, logged = null;
-      if (test) msg = { title: 'My Wallet · test', body: 'The reminder server can reach this phone.', tag: 'server-test' };
+      const jobs = []; /* each job: one message and the log keys to remember once it was delivered */
+      let logRef = null, prev = {};
+      if (test) jobs.push({ msg: { title: 'My Wallet · test', body: 'The reminder server can reach this phone.', tag: 'server-test' }, keys: [] });
       else {
         const hour = pd.hour >= 0 && pd.hour <= 23 ? Math.floor(pd.hour) : 9, now = localNow(pd.tz || 'UTC', nowMs);
         if (now.hour < hour) continue;
-        const logRef = db.doc('users/' + uid + '/private/pushlog'), ls = await logRef.get(), sent = (ls.exists && ls.data().sent) || {};
+        logRef = db.doc('users/' + uid + '/private/pushlog');
+        const ls = await logRef.get(); prev = (ls.exists && ls.data().sent) || {};
         const rs = await db.collection('users/' + uid + '/recurring').get(), items = [];
         for (const doc of rs.docs) {
           const np = doc.id.indexOf(NP) === 0, pre = np ? NP : '';
@@ -122,21 +124,26 @@ async function run(deps, env, nowMs) {
             items.push(c);
           }
         }
-        const fresh = items.filter(i => !sent[hash(i.key)]);
-        if (!fresh.length) continue;
-        msg = buildMessage(fresh, !!pd.amounts);
-        logged = { ref: logRef, keys: fresh.map(i => hash(i.key)), prev: sent };
+        const fresh = items.filter(i => !prev[hash(i.key)]);
+        if (fresh.length) jobs.push({ msg: buildMessage(fresh, !!pd.amounts), keys: fresh.map(i => hash(i.key)) });
+        /* the daily diary: one short message a day, never with amounts; the app builds the diary itself when tapped */
+        const dk = hash('diary:' + now.date);
+        if (pd.diary === true && !prev[dk]) jobs.push({ msg: { title: 'My Wallet', body: 'Your daily diary is ready. Tap to see your day.', tag: 'diary' }, keys: [dk] });
+        if (!jobs.length) continue;
       }
-      const res = await messaging.sendEachForMulticast({ tokens, data: { title: msg.title, body: msg.body, tag: msg.tag }, webpush: { headers: { TTL: '43200', Urgency: 'high' } } });
-      const dead = [];
-      res.responses.forEach((x, i) => { if (x.success) stat.sent++; else { stat.failed++; if (x.error && BAD.includes(x.error.code)) dead.push(tokens[i]); } });
+      const dead = [], doneKeys = [];
+      for (const job of jobs) {
+        const res = await messaging.sendEachForMulticast({ tokens, data: { title: job.msg.title, body: job.msg.body, tag: job.msg.tag }, webpush: { headers: { TTL: '43200', Urgency: 'high' } } });
+        res.responses.forEach((x, i) => { if (x.success) stat.sent++; else { stat.failed++; if (x.error && BAD.includes(x.error.code) && !dead.includes(tokens[i])) dead.push(tokens[i]); } });
+        if (res.successCount > 0) doneKeys.push(...job.keys);
+      }
       if (dead.length) await pref.set({ tokens: tokens.filter(t => !dead.includes(t)) }, { merge: true });
-      if (logged && res.successCount > 0) {
+      if (logRef && doneKeys.length) {
         const keep = {}, cut = new Date(nowMs - 45 * DAY).toISOString().slice(0, 10);
-        Object.keys(logged.prev).forEach(k => { if (typeof logged.prev[k] === 'string' && logged.prev[k] >= cut) keep[k] = logged.prev[k]; });
+        Object.keys(prev).forEach(k => { if (typeof prev[k] === 'string' && prev[k] >= cut) keep[k] = prev[k]; });
         const today = new Date(nowMs).toISOString().slice(0, 10);
-        logged.keys.forEach(k => { keep[k] = today; });
-        await logged.ref.set({ sent: keep });
+        doneKeys.forEach(k => { keep[k] = today; });
+        await logRef.set({ sent: keep });
       }
     } catch (e) { stat.failed++; }
   }
