@@ -7,9 +7,10 @@ on:
     - cron: '7 * * * *'
   workflow_dispatch:
     inputs:
-      test_email:
-        description: 'Send ONE test message to the account with this email (leave empty for the normal run)'
-        required: false
+      send_test:
+        description: 'Send ONE test message to the account whose email is in the TEST_EMAIL secret (leave off for the normal run)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -34,5 +35,5 @@ jobs:
         run: node tools/notify.js
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          ONLY_EMAIL: ${{ github.event.inputs.test_email }}
-          SEND_TEST: ${{ github.event.inputs.test_email != '' && '1' || '0' }}
+          ONLY_EMAIL: ${{ secrets.TEST_EMAIL }}
+          SEND_TEST: ${{ github.event.inputs.send_test == 'true' && '1' || '0' }}

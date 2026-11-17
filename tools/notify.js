@@ -93,7 +93,8 @@ const BAD = ['messaging/registration-token-not-registered', 'messaging/invalid-r
 /* ---- one run. db / messaging / auth are the Firebase Admin objects (or stand-ins in the tests) ---- */
 async function run(deps, env, nowMs) {
   const { db, messaging, auth } = deps;
-  const onlyEmail = (env.ONLY_EMAIL || '').trim().toLowerCase(), test = env.SEND_TEST === '1' && !!onlyEmail;
+  const wantTest = env.SEND_TEST === '1', onlyEmail = wantTest ? (env.ONLY_EMAIL || '').trim().toLowerCase() : '', test = wantTest && !!onlyEmail;
+  if (wantTest && !onlyEmail) return { users: 0, sent: 0, failed: 0, note: 'test needs the TEST_EMAIL secret' };
   let uids;
   if (onlyEmail) { try { uids = [(await auth.getUserByEmail(onlyEmail)).uid]; } catch (e) { return { users: 0, sent: 0, failed: 0, note: 'no such account' }; } }
   else uids = (await db.collection('users').listDocuments()).map(d => d.id);
