@@ -825,6 +825,9 @@ body.ent #tabs{display:none}
 #kpdown{width:44px;height:34px;border:0;border-radius:12px;background:none;color:var(--muted);display:grid;place-items:center;padding:0;cursor:pointer}
 #kpdown:active{background:var(--hover)}
 #f.kphide .kp,#f.kphide #kpdown{display:none}
+#f[data-st="2"] #sblock{display:none}
+#sipw .seg2{margin:6px 0 8px}#sipw input{width:100%;margin-top:4px}
+.sg{font-weight:600}.sg.g{color:var(--pos)}.sg.l{color:var(--neg)}
 #kpup{display:none;width:44px;height:34px;border:0;border-radius:12px;background:none;color:var(--muted);place-items:center;padding:0;cursor:pointer}
 #kpup:active{background:var(--hover)}
 #f.kphide #kpup{display:grid}
@@ -969,7 +972,9 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
               <div class="chips" id="bankchips" hidden></div>
             </div>
             <div class="fld" id="catfld"><label for="cat" id="catlabel">Spent on</label><select id="cat"></select><div class="chips hs" id="catchips"></div></div>
-            <div class="fld" id="incfld" hidden><label id="inclabel">Received from (optional)</label><div class="pp" id="incpp"></div></div>
+            <div class="fld" id="sipfld" hidden><label>Which SIP</label><div class="pp" id="sippp"></div></div>
+          <div class="fld" id="sipw" hidden><label>How much of the SIP are you taking out?</label><div class="seg2 g2" id="sipfseg" role="group" aria-label="Part or full"><button type="button" data-sf="part" aria-pressed="true">Part of it</button><button type="button" data-sf="full" aria-pressed="false">Full (close it)</button></div><div id="sipvalbox"><label for="sipvalin" class="fine">SIP value now, before this withdrawal (optional)</label><input id="sipvalin" inputmode="decimal" placeholder="e.g. 1200" autocomplete="off"></div><p class="lhint" id="siphint"></p></div>
+          <div class="fld" id="incfld" hidden><label id="inclabel">Received from (optional)</label><div class="pp" id="incpp"></div></div>
           </div>
 
           <div id="tblock" hidden>
@@ -1840,7 +1845,7 @@ function renderLedger(){
     if(e.type==='transfer'){vc='<span class="vc transfer">Transfer</span>';accCell=esc(e.from)+' → '+esc(e.to);sub=esc(transferNote(e,acc))}
     else if(e.type==='loan'){vc='<span class="vc loan">'+esc(loanLabel(e))+'</span>';accCell=esc(accOf(e));sub='Loan · '+esc(e.person||'')+esc(woText(e))}
     else if(e.type==='income'){vc='<span class="vc receipt">Receipt</span>';accCell=esc(accOf(e));sub=esc(e.category)}
-    else if(e.type==='sip'){vc='<span class="vc sip">'+esc(voucher(e))+'</span>';accCell=esc(accOf(e));sub='SIP'}
+    else if(e.type==='sip'){vc='<span class="vc sip">'+esc(voucher(e))+'</span>';accCell=esc(accOf(e));sub='SIP \u00b7 '+esc(sipLabel(e))+(typeof e.sipGain==='number'?' \u00b7 <span class="sg '+(e.sipGain<0?'l':'g')+'">'+esc(sipGainTxt(e))+'</span>':'')}
     else if(e.type==='fam'){vc='<span class="vc transfer">'+esc(voucher(e))+'</span>';accCell=esc(accOf(e));sub='Family &amp; friends · '+esc(e.person||'')}
     else{vc='<span class="vc payment">Payment</span>';accCell=esc(accOf(e));sub=esc(e.category)}
     h+='<tr class="row"><td class="dt">'+F_LEDG.format(parse(e.date))+'</td><td><div class="nar">'+vc+esc(narration(e))+'</div><div class="nsub">'+sub+'</div></td><td>'+accCell+'</td><td class="r pos">'+rec+'</td><td class="r">'+pay+'</td><td class="r">'+amtHtml(bal,cur)+'</td><td class="acts">'+actionsHtml(e)+'</td></tr>';
@@ -1910,6 +1915,41 @@ function fpSave(){try{localStorage.setItem(FPK,JSON.stringify(FP))}catch(e){}pfS
 var PTK='mywallet.parties.'+VER,PT=[];
 function ptOk(x){return !!x&&typeof x.n==='string'&&x.n.trim().length>0&&x.n.length<=40&&(x.t==='p'||x.t==='c')}
 try{var _pt=JSON.parse(localStorage.getItem(PTK)||'[]');if(Array.isArray(_pt))PT=_pt.filter(ptOk).slice(0,200)}catch(e){}
+/* named SIPs: a synced list of names, plus every name already used in entries or schedules */
+var SIPK='mywallet.sips.'+VER,SIPL=[];
+function sipNmOk(x){return typeof x==='string'&&x.trim().length>0&&x.length<=40}
+try{var _sl=JSON.parse(localStorage.getItem(SIPK)||'[]');if(Array.isArray(_sl))SIPL=_sl.filter(sipNmOk).slice(0,50)}catch(e){}
+function sipListSave(){try{localStorage.setItem(SIPK,JSON.stringify(SIPL))}catch(e){}pfSave()}
+function sipNm(e){
+  var n=String(e.sip||'').trim();
+  if(!n&&e.recurringId&&Array.isArray(REC)){var r=REC.filter(function(x){return x&&x.id===e.recurringId})[0];if(r&&r.name)n=String(r.name).trim()}
+  return n;
+}
+function sipLabel(e){return sipNm(e)||'General SIP'}
+function sipAllNames(){
+  var m={},o=[];function a(n){n=String(n||'').trim();if(!n)return;var k=pkey(n);if(!m[k]){m[k]=1;o.push(n)}}
+  SIPL.forEach(a);S.entries.forEach(function(e){if(e.type==='sip')a(sipNm(e))});
+  if(Array.isArray(REC))REC.forEach(function(r){if(r&&r.kind==='sip')a(r.name)});
+  return o.sort(function(x,y){return x.toLowerCase()<y.toLowerCase()?-1:1});
+}
+function sipAddName(n){
+  n=String(n||'').replace(/\s+/g,' ').trim().slice(0,40);if(!n)return '';
+  var ex=sipAllNames().filter(function(x){return pkey(x)===pkey(n)})[0];if(ex)return ex;
+  if(SIPL.length>=50)return '';SIPL.push(n);sipListSave();return n;
+}
+/* money still invested in one SIP (in one currency): what went in, minus the invested part of what came out */
+function sipLeft(name,cur,excl){
+  var k=pkey(name),inv=0,out=0;
+  S.entries.forEach(function(e){
+    if(e.type!=='sip'||e.currency!==cur||e.id===excl||pkey(sipNm(e))!==k)return;
+    if(e.kind==='draw')out+=(typeof e.sipCost==='number'?e.sipCost:e.amount);else inv+=e.amount;
+  });
+  return Math.max(0,rnd(inv-out,cur));
+}
+function sipGainTxt(e){
+  if(e.type!=='sip'||typeof e.sipGain!=='number')return '';
+  var g=e.sipGain;return (g<0?'Loss \u2212':'Gain +')+money(Math.abs(g),e.currency);
+}
 function ptSave(){try{localStorage.setItem(PTK,JSON.stringify(PT))}catch(e){}pfSave()}
 function ptFind(n){var k=pkey(n);for(var i=0;i<PT.length;i++)if(pkey(PT[i].n)===k)return PT[i];return null}
 function ptType(n){var o=ptFind(n);return o?o.t:'p'}
@@ -1980,7 +2020,7 @@ function paintTransfer(){
   $('#tsum').innerHTML=s;
   paintPresets();
 }
-function twoStep(){return S.ftype==='expense'||S.ftype==='income'||S.ftype==='transfer'}
+function twoStep(){return S.ftype==='expense'||S.ftype==='income'||S.ftype==='transfer'||S.ftype==='sip'}
 var XOLD='';
 var ICN={cart:'<circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M3 4h2l2.4 11h11l2-8H6"/>',home:'<path d="M4 11l8-7 8 7v9H4z"/>',car:'<path d="M4 17v-5l2-5h12l2 5v5H4zM4 12h16"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/>',bolt:'<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>',bag:'<path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/>',heart:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',users:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5M17 11a3 3 0 0 0 0-6M21 20c0-2-1.5-3.5-3.5-4.5"/>',plane:'<path d="M3 13l18-8-6 15-3-6z"/>',book:'<path d="M4 5h6a3 3 0 0 1 2 1 3 3 0 0 1 2-1h6v14h-6a3 3 0 0 0-2 1 3 3 0 0 0-2-1H4z"/>',film:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/>',card:'<rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18"/>',dots:'<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',wallet:'<rect x="3" y="6" width="18" height="14" rx="4"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/>',case:'<rect x="3" y="8" width="18" height="12" rx="3"/><path d="M9 8V6h6v2M3 13h18"/>',laptop:'<rect x="5" y="5" width="14" height="10" rx="2"/><path d="M3 19h18"/>',star:'<path d="M12 4l2.5 5 5.5.8-4 3.9 1 5.5-5-2.7-5 2.7 1-5.5-4-3.9 5.5-.8z"/>',gift:'<rect x="4" y="9" width="16" height="11" rx="2"/><path d="M12 9v11M4 13h16M12 9c-3 0-4-4-1-4s1 4 1 4zm0 0c3 0 4-4 1-4s-1 4-1 4z"/>',redo:'<path d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2"/>',tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1"/>'};
 function catIcon(n){var k=/food|groc/i.test(n)?'cart':/rent/i.test(n)?'home':/transport|fuel/i.test(n)?'car':/bill|util/i.test(n)?'bolt':/shop/i.test(n)?'bag':/health/i.test(n)?'heart':/family|remit/i.test(n)?'users':/travel/i.test(n)?'plane':/educ/i.test(n)?'book':/entertain/i.test(n)?'film':/bank|charge/i.test(n)?'card':/other/i.test(n)?'dots':/salary/i.test(n)?'wallet':/business/i.test(n)?'case':/freelance/i.test(n)?'laptop':/bonus/i.test(n)?'star':/gift/i.test(n)?'gift':/refund/i.test(n)?'redo':'tag';return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICN[k]+'</svg>'}
@@ -1988,7 +2028,7 @@ function paintAcc2(){
   var h=$('#accchips');if(!h||!twoStep())return;
   if(S.fgroup==='Bank'&&!allowsCur(bankOrDefault(),S.fcur))S.fgroup='Cash';
   var cur=entryAccount();
-  var L=['Cash'].concat(BANKS.filter(function(b){return SET.closed.indexOf(b)<0&&allowsCur(b,S.fcur)}));
+  var L=['Cash'].concat(BANKS.filter(function(b){return accUsed(b)&&SET.closed.indexOf(b)<0&&allowsCur(b,S.fcur)}));
   h.innerHTML=L.map(function(a){return '<button type="button" class="chipbtn" data-acc2="'+esc(a)+'" aria-pressed="'+(a===cur)+'">'+esc(a)+'</button>'}).join('');
 }
 function estepApply(){
@@ -2001,7 +2041,7 @@ function estepApply(){
   var back=two&&st===2&&!S.editId;
   xc.innerHTML=back?'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>':XOLD;
   xc.setAttribute('aria-label',back?'Back to amount':'Close');
-  if(two&&st===2){$('#sum2v').textContent=money(rnd(num('#amt'),S.fcur),S.fcur);paintAcc2()}
+  if(two&&st===2){$('#sum2v').textContent=money(rnd(num('#amt'),S.fcur),S.fcur);paintAcc2();if(S.ftype==='sip')paintSipHint()}
   updateSubmit();
   var tr=$('#etray');if(tr)tr.hidden=true;
 }
@@ -2015,6 +2055,7 @@ function setType(t){var _kf=$('#f');if(_kf)_kf.classList.remove('kphide');
   $('#acclabel').textContent=t==='expense'||(ln&&!loanIn({kind:S.lkind}))?'Paid from':'Received in';
   $('#catlabel').textContent=t==='expense'?'Spent on':'Income from';
   $('#incfld').hidden=t!=='income';if(t==='income')ppRender('incpp',INCPP);
+  if(!sp){$('#sipfld').hidden=true;$('#sipw').hidden=true}
   if(t==='expense'||t==='income')fillCats(t);
   if(ln)paintLoan();
   if(sp)paintSipForm();
@@ -2068,22 +2109,22 @@ function paintLoan(){
 }
 /* ---------- reusable "pick a person or company" control: list opens on tap, with search and + Add new ---------- */
 var PP={};
-var PPI={p:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>',
+var PPI={s:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',p:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>',
   c:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 011-1h9a1 1 0 011 1v16M15 10h4a1 1 0 011 1v10M3 21h18M8 8h3M8 12h3M8 16h3"/></svg>',
   d:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'};
 function ppRows(id){
   var st=PP[id],q=pkey(st.q),L=st.cfg.list().filter(function(o){return !q||pkey(o.n).indexOf(q)>-1});
-  return L.length?L.map(function(o){return '<button type="button" class="pprow" data-pp="pick" data-n="'+esc(o.n)+'"><span class="ppav'+(o.t==='c'?' co':'')+'">'+PPI[o.t==='c'?'c':'p']+'</span><span class="ppt"><b>'+esc(o.n)+'</b>'+(o.sub?'<small>'+esc(o.sub)+'</small>':'')+'</span><em>'+(o.t==='c'?'Company':'Person')+'</em></button>'}).join(''):'<p class="ppnone">'+(q?'No match.':'No one in your list yet.')+'</p>';
+  return L.length?L.map(function(o){return '<button type="button" class="pprow" data-pp="pick" data-n="'+esc(o.n)+'"><span class="ppav'+(o.t==='c'?' co':'')+'">'+PPI[o.t==='c'?'c':o.t==='s'?'s':'p']+'</span><span class="ppt"><b>'+esc(o.n)+'</b>'+(o.sub?'<small>'+esc(o.sub)+'</small>':'')+'</span><em>'+(o.t==='c'?'Company':o.t==='s'?'SIP':'Person')+'</em></button>'}).join(''):'<p class="ppnone">'+(q?'No match.':'No one in your list yet.')+'</p>';
 }
 function ppRender(id,cfg){
   var host=document.getElementById(id);if(!host)return;
   var st=PP[id]||(PP[id]={open:false,add:false,q:'',type:'p'});
   if(cfg)st.cfg=cfg;cfg=st.cfg;if(!cfg)return;
   if(!host._pp){host._pp=1;ppWire(host,id)}
-  var v=(cfg.value()||'').trim(),vt=v?ptType(v):'p';
+  var v=(cfg.value()||'').trim(),vt=cfg.simple?'s':(v?ptType(v):'p');
   var h='<button type="button" class="ppbtn" data-pp="toggle" aria-expanded="'+st.open+'"><span class="ppav'+(vt==='c'?' co':'')+'">'+PPI[vt]+'</span><span class="ppv'+(v?'':' ph')+'">'+esc(v||cfg.ph)+'</span>'+PPI.d+'</button>';
   if(st.open)h+='<div class="ppdrop"><input class="ppq" type="search" placeholder="Search" autocomplete="off" value="'+esc(st.q)+'"><button type="button" class="ppnew" data-pp="new">+ Add new</button>'+(cfg.clear&&v?'<button type="button" class="ppnew" data-pp="clear">Clear selection</button>':'')+'<div class="pplist">'+ppRows(id)+'</div></div>';
-  if(st.add)h+='<div class="ppadd"><b>Add new</b><input class="ppname" maxlength="40" placeholder="Name" autocomplete="off"><div class="seg2" role="group" aria-label="Type"><button type="button" data-pp="type" data-t="p" aria-pressed="'+(st.type==='p')+'">Person</button><button type="button" data-pp="type" data-t="c" aria-pressed="'+(st.type==='c')+'">Company / Firm</button></div><p class="ppmsg" role="alert"></p><div class="ppacts"><button type="button" class="btn2" data-pp="cancel">Cancel</button><button type="button" class="btn" data-pp="save">Save</button></div></div>';
+  if(st.add)h+='<div class="ppadd"><b>Add new</b><input class="ppname" maxlength="40" placeholder="Name" autocomplete="off">'+(cfg.simple?'':'<div class="seg2" role="group" aria-label="Type"><button type="button" data-pp="type" data-t="p" aria-pressed="'+(st.type==='p')+'">Person</button><button type="button" data-pp="type" data-t="c" aria-pressed="'+(st.type==='c')+'">Company / Firm</button></div>')+'<p class="ppmsg" role="alert"></p><div class="ppacts"><button type="button" class="btn2" data-pp="cancel">Cancel</button><button type="button" class="btn" data-pp="save">Save</button></div></div>';
   host.innerHTML=h;
 }
 function ppWire(host,id){
@@ -2099,6 +2140,7 @@ function ppWire(host,id){
     else if(a==='save'){
       var nv=(host.querySelector('.ppname').value||'').replace(/\s+/g,' ').trim(),m=host.querySelector('.ppmsg');
       if(!nv){m.textContent='Type a name.';return}
+      if(st.cfg.simple){var sn=st.cfg.addName(nv);if(!sn){m.textContent='Your list is full.';return}st.add=false;st.cfg.onPick(sn);ppRender(id);return}
       var had=!!ptFind(nv),o=ptAdd(nv,st.type);
       if(!o){m.textContent='Your list is full.';return}
       st.add=false;st.cfg.onPick(o.n);ppRender(id);
@@ -2124,6 +2166,33 @@ function loanPickList(){
 var FAMPP={ph:'Pick a person or company',value:function(){return S.fperson},list:function(){return ptAll().map(function(o){return {n:o.n,t:o.t,sub:''}})},onPick:function(n){S.fperson=n;paintFchips()}};
 var INCPP={ph:'Pick a person or company',clear:true,value:function(){return S.party},list:function(){return ptAll().map(function(o){return {n:o.n,t:o.t,sub:''}})},onPick:function(n){S.party=n;ppRender('incpp')}};
 var LOANPP={ph:'Pick a person or company',value:function(){return $('#person').value},list:loanPickList,onPick:function(n){$('#person').value=n;applyPersonCur();paintLoan()}};
+var SIPPP={ph:'General SIP (no name)',simple:true,clear:true,value:function(){return S.sipn||''},list:function(){return sipAllNames().map(function(n){return {n:n,t:'s',sub:''}})},addName:sipAddName,onPick:function(n){S.sipn=n;ppRender('sippp');paintSipHint()}};
+/* gain or loss of a withdrawal: what you got minus the invested part of it */
+function sipCalc(){
+  var cur=S.fcur,amt=rnd(num('#amt'),cur),left=sipLeft(S.sipn||'',cur,S.editId),out={left:left,amt:amt,cost:null,gain:null,err:''};
+  if(!(amt>0))return out;
+  if(S.sfull){out.cost=left;out.gain=rnd(amt-left,cur);return out}
+  var raw=($('#sipvalin').value||'').replace(/,/g,'').trim();
+  if(raw==='')return out;
+  var val=parseFloat(raw);
+  if(isNaN(val)||!(val>0)){out.err='Type the SIP value as a number.';return out}
+  if(val<amt-0.0005){out.err='The SIP value cannot be less than what you take out.';return out}
+  out.cost=rnd(Math.min(left,left*amt/val),cur);out.gain=rnd(amt-out.cost,cur);return out;
+}
+function paintSipHint(){
+  var h=$('#siphint');if(!h||S.ftype!=='sip')return;
+  $$('#sipfseg button').forEach(function(b){b.setAttribute('aria-pressed',String((b.dataset.sf==='full')===!!S.sfull))});
+  $('#sipvalbox').hidden=!!S.sfull;
+  if(S.skind!=='draw'){h.textContent='';return}
+  var c=sipCalc(),cur=S.fcur,t='Still invested in this SIP: '+money(c.left,cur)+'. ';
+  if(c.err)t+=c.err;
+  else if(c.gain!==null)t+=(c.gain<0?'Loss \u2212':'Gain +')+money(Math.abs(c.gain),cur)+' on this withdrawal.';
+  else t+=S.sfull?'':'Add the SIP value now to see your gain or loss.';
+  h.textContent=t;
+}
+$('#sipfseg').addEventListener('click',function(ev){var b=ev.target.closest('button[data-sf]');if(!b)return;S.sfull=b.dataset.sf==='full';paintSipHint()});
+$('#sipvalin').addEventListener('input',paintSipHint);
+$('#amt').addEventListener('input',function(){if(S.ftype==='sip')paintSipHint()});
 function setCurSafe(c){if(!c)return;if(!noBalForm()&&!allowsCur(entryAccount(),c))S.fgroup='Cash';S.fcur=c;paintAccount()}
 function applyPersonCur(){
   var o=personByName($('#person').value);if(!o)return;
@@ -2139,16 +2208,16 @@ function updateSubmit(){
 function resetForm(keepDate){
   S.editId=null;S.estep=1;$('#amt').value='';$('#note').value='';$('#igTagIn').value='';$('#err').textContent='';
   $('#person').value='';$('#oldloan').checked=false;$('#wooff').checked=false;$('#woamt').value='';$('#ixon').checked=false;$('#ixamt').value='';$('#fee').value='';$('#trate').value='';$('#tstatus').textContent='';S.trateTouched=false;S.feeOn='from';
-  S.fperson='';S.party='';
+  S.fperson='';S.party='';S.sipn='';S.sfull=false;$('#sipvalin').value='';
   if(!keepDate)$('#date').value=todayStr();
   updateSubmit();if(S.ftype==='transfer')paintTransfer();estepApply();
-  ppRender('incpp');ppRender('famp');ppRender('loanpp');
+  ppRender('incpp');ppRender('famp');ppRender('loanpp');ppRender('sippp');paintSipHint();
 }
 function startEdit(id){
   var e=S.entries.find(function(x){return x.id===id});if(!e)return;
   S.editId=id;S.confirmDel=null;S.estep=2;
   setTab('entry',true);
-  if(e.type==='sip')S.skind=e.kind==='draw'?'draw':'invest';
+  if(e.type==='sip'){S.skind=e.kind==='draw'?'draw':'invest';S.sipn=sipNm(e);S.sfull=!!e.sipFull;$('#sipvalin').value=typeof e.sipVal==='number'?String(e.sipVal):''}
   S.party=e.type==='income'&&typeof e.party==='string'?e.party:'';
   if(e.type==='fam'){S.tmode='person';S.fkind=e.kind==='got'?'got':'sent';S.fperson=e.person||''}else if(e.type==='transfer')S.tmode='self';
   setType(e.type==='fam'?'transfer':e.type);
@@ -2505,7 +2574,7 @@ function paintBC(){
       var cell=function(label,v,c){return '<div><small>'+label+'</small><b class="'+(rnd(v,c)<0?'neg':'')+'">'+money(v,c)+'</b></div>'};
       h='<div class="bc-card" style="--dur:16s"><div class="bc-top"><b>Total balance</b><button class="bc-x" type="button" data-bc="close" aria-label="Hide">✕</button></div>'+
         '<div class="bc-sec" style="margin-top:0">Cash</div><div class="bc-line"><span>Cash</span>'+pairFor('Cash',B)+'</div>'+
-        '<div class="bc-sec">Bank</div>'+BANKS.map(function(a){return '<div class="bc-line"><span>'+esc(a)+'</span>'+pairFor(a,B)+'</div>'}).join('')+
+        '<div class="bc-sec">Bank</div>'+BANKS.filter(accUsed).map(function(a){return '<div class="bc-line"><span>'+esc(a)+'</span>'+pairFor(a,B)+'</div>'}).join('')+
         '<div class="bc-sec">Totals</div><div class="bc-grid">'+cell('INR in cash',cashI,'INR')+cell('OMR in cash',cashO,'OMR')+cell('INR in bank',bankI,'INR')+cell('OMR in bank',bankO,'OMR')+'</div>'+
         '<div class="bc-sec">Loans</div><div class="bc-line"><span>You owe</span><span class="num">'+loanTxt(LT.owe)+'</span></div><div class="bc-line"><span>Owed to you</span><span class="num">'+loanTxt(LT.owed)+'</span></div>'+
         '<div class="bc-sec">Overall</div><div class="bc-grid">'+cell('Total OMR',cashO+bankO,'OMR')+cell('Total INR',cashI+bankI,'INR')+'</div>'+
@@ -2757,6 +2826,7 @@ function paintSipForm(){
   $$('#skindseg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.sk===S.skind))});
   $('#acclabel').textContent=d?'Received in':'Paid from';
   $('#shint').textContent=d?'The money comes back into the account you pick. It is not income, and it is counted as drawn out of your SIP.':'The money leaves the account you pick and is counted as invested in your SIP. It is not an expense.';
+  $('#sipfld').hidden=false;$('#sipw').hidden=!d;ppRender('sippp',SIPPP);paintSipHint();
   updateSubmit();
 }
 $('#skindseg').addEventListener('click',function(ev){var b=ev.target.closest('button');if(!b)return;S.skind=b.dataset.sk;paintSipForm()});
@@ -3591,7 +3661,17 @@ $('#f').addEventListener('submit',function(ev){
       if(noBalForm())entry.noBal=true;
       if((S.lkind==='repay'||S.lkind==='collect')&&$('#ixon').checked){var iv=rnd(num('#ixamt'),S.fcur);if(!(iv>0)){err.textContent='Enter the interest or extra charge amount.';$('#ixamt').focus();return}entry.interest=iv}
       if((S.lkind==='repay'||S.lkind==='collect')&&$('#wooff').checked){var w=rnd(num('#woamt'),S.fcur);if(!(w>0)){err.textContent='Enter the write-off amount.';$('#woamt').focus();return}entry.writeOff=w}
-    }else if(S.ftype==='sip'){entry.kind=S.skind==='draw'?'draw':'invest';entry.category=entry.kind==='draw'?'SIP withdrawal':'SIP investment'}
+    }else if(S.ftype==='sip'){
+      entry.kind=S.skind==='draw'?'draw':'invest';entry.category=entry.kind==='draw'?'SIP withdrawal':'SIP investment';
+      var _sn=(S.sipn||'').trim();if(_sn)entry.sip=_sn.slice(0,40);
+      if(entry.kind==='draw'){
+        var sc=sipCalc();
+        if(sc.err){err.textContent=sc.err;return}
+        if(S.sfull)entry.sipFull=true;
+        else{var _sv=parseFloat(($('#sipvalin').value||'').replace(/,/g,''));if(_sv>0)entry.sipVal=rnd(_sv,S.fcur)}
+        if(sc.gain!==null){entry.sipCost=sc.cost;entry.sipGain=sc.gain}
+      }
+    }
     else entry.category=$('#cat').value;
     if(!entry.noBal){entry.account=entryAccount();
     if(!allowsCur(entry.account,entry.currency)){err.textContent=entry.account+' holds '+curs(entry.account)[0]+' only.';return}}
@@ -3709,7 +3789,7 @@ function xKeyStore(k){ /* signed in: private doc in your own account, outside ba
 /* ---------- synced preferences: theme, timers, family & friends names (one private cloud doc per version) ---------- */
 var PFD='settings/prefs',pfOn=false,pfT=null,pfSig='',pfFirst=true;
 function pfGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200)}}
+function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200),sp:SIPL.slice(0,50)}}
 function pfSave(){
   if(!S.db||!pfOn)return;
   clearTimeout(pfT);pfT=setTimeout(function(){
@@ -3739,6 +3819,11 @@ function pfApply(d){
     var pc=d.pt.filter(ptOk).map(function(o){return {n:o.n.replace(/\s+/g,' ').trim(),t:o.t}}).slice(0,200);
     if(pfFirst)PT.forEach(function(o){if(!pc.some(function(c){return pkey(c.n)===pkey(o.n)}))pc.push(o)});
     PT=pc.slice(0,200);try{localStorage.setItem(PTK,JSON.stringify(PT))}catch(e){}
+  }
+  if(Array.isArray(d.sp)){
+    var sc=d.sp.filter(sipNmOk).map(function(x){return x.replace(/\s+/g,' ').trim()}).slice(0,50);
+    if(pfFirst)SIPL.forEach(function(n){if(!sc.some(function(c){return pkey(c)===pkey(n)}))sc.push(n)});
+    SIPL=sc.slice(0,50);try{localStorage.setItem(SIPK,JSON.stringify(SIPL))}catch(e){}
   }
   if(Array.isArray(d.fp)){
     var cl=d.fp.filter(function(x){return typeof x==='string'&&x.trim()&&x.length<=30}).map(function(x){return x.trim().replace(/\s+/g,' ')}).slice(0,100);
@@ -4030,7 +4115,7 @@ function recKindText(r){return r.kind==='sip'?'SIP investment':r.kind==='repay'?
 function recEntry(r,mk){
   var e={id:'rec_'+r.id+'_'+mk,date:recDay(r,mk),currency:r.cur,amount:r.amount,note:r.name,ts:Date.now(),account:r.account,recurringId:r.id,recurringMonth:mk};
   if(r.kind==='repay'||r.kind==='collect'){e.type='loan';e.kind=r.kind;e.person=r.person;e.category='Loan'}
-  else if(r.kind==='sip'){e.type='sip';e.kind='invest';e.category='SIP investment'}
+  else if(r.kind==='sip'){e.type='sip';e.kind='invest';e.category='SIP investment';e.sip=String(r.name||'').slice(0,40)}
   else{e.type=r.kind==='income'?'income':'expense';e.category=r.category||'Other'}
   return e;
 }
@@ -4654,6 +4739,7 @@ function chatAttr(e){
   if(e.type==='loan')return String(e.person||'').trim()?q('person',pkey(e.person),''):'';
   if(e.type==='fam')return String(e.person||'').trim()?q('fp',pkey(e.person),''):'';
   if(e.type==='expense'||e.type==='income')return q('cat',e.category||'Other',e.type);
+  if(e.type==='sip')return q('cat',sipLabel(e),'sip');
   return '';
 }
 function isCo(n){return ptType(n)==='c'}
@@ -4678,6 +4764,9 @@ function chatItems(a){
     }else if(a.kind==='tot'){
       if(e.type!==a.key||e.date.slice(0,7)!==curMk())return;
       out.push({e:e,amt:e.amount,dir:chatDir(e),note:(e.type==='sip'?voucher(e):(e.category||''))+(e.note?' · '+e.note:'')});
+    }else if(a.kind==='cat'&&a.ct==='sip'){
+      if(e.type!=='sip'||sipLabel(e)!==a.key)return;
+      out.push({e:e,amt:e.amount,dir:chatDir(e),note:(e.kind==='draw'?'Withdrawal':'Investment')+(typeof e.sipGain==='number'?' \u00b7 '+sipGainTxt(e):'')+(e.note?' \u00b7 '+e.note:'')});
     }else if(a.key===LOAN_INT_PAID||a.key===LOAN_INT_GOT){
       if(e.type!=='loan'||!(e.interest>0)||(e.kind==='repay'?LOAN_INT_PAID:LOAN_INT_GOT)!==a.key)return;
       out.push({e:e,amt:e.interest,dir:a.key===LOAN_INT_PAID?'paid':'recv',note:loanText(e)});
@@ -4717,8 +4806,13 @@ function renderChat(toBottom){
   else if(CH.kind==='fp'){var fd=rnd(recv-paid,cur);bal=Math.abs(fd);lbl=fd>0?'Net: you got more than you gave':fd<0?'Net: you gave more than you got':'Net: even'}
   else if(CH.kind==='tot'){var tt=CH.key==='income'?recv:CH.key==='sip'?paid-recv:paid;bal=Math.abs(rnd(tt,cur));lbl=CH.key==='income'?'Total income this month':CH.key==='sip'?'Net put into SIP this month':'Total spent this month'}
   else if(CH.kind==='acct'){var ab=rnd(balanceOf(CH.key,cur,todayStr()),cur);bal=Math.abs(ab);lbl=ab>0?'Balance: money in this account now':ab<0?'Balance: this account is overdrawn':'Balance: empty'}
+  else if(CH.kind==='cat'&&CH.ct==='sip'){
+    var sl=sipLeft(CH.key==='General SIP'?'':CH.key,cur),sg=0,sgn=false;
+    items.forEach(function(x){if(typeof x.e.sipGain==='number'){sg+=x.e.sipGain;sgn=true}});
+    sg=rnd(sg,cur);bal=sl;lbl='Still invested'+(sgn?' \u00b7 '+(sg<0?'Loss \u2212':'Gain +')+money(Math.abs(sg),cur)+' so far':'');
+  }
   else{var d=rnd(recv-paid,cur);bal=Math.abs(d);lbl=d>0?'Balance: received more than paid':d<0?'Balance: paid more than received':'Balance: even'}
-  var kl=CH.kind==='person'?(isCo(CH.title)?'Company':'Person'):CH.kind==='fp'?(isCo(CH.title)?'Company':'Family & friends'):CH.kind==='acct'?'Account':CH.kind==='tot'?'This month':CH.ct==='income'?'Income category':'Expense category';
+  var kl=CH.kind==='person'?(isCo(CH.title)?'Company':'Person'):CH.kind==='fp'?(isCo(CH.title)?'Company':'Family & friends'):CH.kind==='acct'?'Account':CH.kind==='tot'?'This month':CH.ct==='sip'?'SIP':CH.ct==='income'?'Income category':'Expense category';
   var h='<div class="sbar"><button type="button" data-ch="close" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>'+esc(CH.title)+'</b><small>'+kl+' · '+(cur==='INR'?'₹ INR':'OMR')+'</small></div></div><div class="cw">';
   var f=CH.f||'all',fpk=CH.kind==='fp',hue=hueOf(CH.title||'?'),ini=esc((CH.title||'?').trim().charAt(0).toUpperCase()||'?'),tot=paid+recv,pp=tot?Math.round(paid*100/tot):0;
   h+='<div class="cdash" id="cdash"><div class="cd1"><div class="cdb"><small>'+esc(lbl)+'</small><b>'+money(bal,cur)+'</b></div><div class="cds"><span><i class="dot out"></i>'+(fpk?'Given':'Paid')+' <b>'+money(paid,cur)+'</b></span><span><i class="dot in"></i>Received <b>'+money(recv,cur)+'</b></span><span>'+n+' payment'+(n===1?'':'s')+'</span></div></div>'+
@@ -4781,6 +4875,8 @@ function chatAccounts(){
     }else if(e.type==='expense'||e.type==='income'){
       var ip=e.type==='income'?String(e.party||'').trim():'';if(ip)add('fp',pkey(ip),'',e.currency,ip,e,e.amount,'recv');
       var c=e.category||'Other';add('cat',c,e.type,e.currency,c,e,e.amount,chatDir(e));
+    }else if(e.type==='sip'){
+      var sl2=sipLabel(e);add('cat',sl2,'sip',e.currency,sl2,e,e.amount,chatDir(e));
     }
   });
   var res=Object.keys(m).map(function(k){return m[k]}).sort(function(a,b){return a.last.date<b.last.date?1:a.last.date>b.last.date?-1:b.last.ts-a.last.ts});
@@ -4826,6 +4922,7 @@ var LICON={
   undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/>',
   bank:'<path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18"/>',
   co:'<path d="M5 21V4a1 1 0 011-1h8a1 1 0 011 1v17"/><path d="M15 9h3a1 1 0 011 1v11"/><path d="M3 21h18"/><path d="M9 7h2M9 11h2M9 15h2"/>',
+  sip:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
   tag:'<path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.3"/>'
 };
 var LCATICON={'Food & Groceries':['food',140],'Rent':['home',215],'Transport & Fuel':['car',265],'Bills & Utilities':['bolt',45],'Shopping':['bag',340],'Health':['heart',355],'Family & Remittance':['users',20],'Travel':['send',195],'Education':['cap',235],'Entertainment':['play',290],'Bank charges':['pct',205],'Salary':['note',150],'Business':['brief',30],'Freelance':['laptop',185],'Bonus':['star',50],'Gift':['gift',320],'Refund':['undo',165]};
@@ -4834,11 +4931,12 @@ function lAv(o){
   if((o.kind==='person'||o.kind==='fp')&&isCo(o.title))return '<span class="av ic" style="--h:'+hueOf(o.title)+'">'+lIcon('co')+'</span>';
   if(o.kind==='person'||o.kind==='fp'){var h=hueOf(o.title);return '<span class="av pf" style="--h:'+h+'">'+esc(o.title.trim().charAt(0).toUpperCase()||'?')+'</span>'}
   if(o.kind==='acct'){var ca=o.key==='Cash';return '<span class="av ic" style="--h:'+(ca?150:215)+'">'+lIcon(ca?'note':'bank')+'</span>'}
+  if(o.kind==='cat'&&o.ct==='sip')return '<span class="av ic" style="--h:150">'+lIcon('sip')+'</span>';
   var m=LCATICON[o.key]||(o.key===LOAN_INT_PAID||o.key===LOAN_INT_GOT?['pct',205]:['tag',hueOf(o.title)]);
   return '<span class="av ic" style="--h:'+m[1]+'">'+lIcon(m[0])+'</span>';
 }
 function lAttrs(o){return 'data-chat="'+o.kind+'" data-key="'+esc(o.key)+'" data-cur="'+o.cur+'" data-ct="'+o.ct+'" role="button" tabindex="0"'}
-function lTag(o){return (o.kind==='person'||o.kind==='fp')&&isCo(o.title)?'Company':o.kind==='person'?'Person':o.kind==='fp'?'Family':o.kind==='acct'?'Account':o.ct==='income'?'Income':'Expense'}
+function lTag(o){return (o.kind==='person'||o.kind==='fp')&&isCo(o.title)?'Company':o.kind==='person'?'Person':o.kind==='fp'?'Family':o.kind==='acct'?'Account':o.ct==='sip'?'SIP':o.ct==='income'?'Income':'Expense'}
 function lSub(o){return o.last?money(o.last.amt,o.cur)+' '+(o.last.dir==='recv'?'received':o.last.dir==='paid'?'sent':'noted'):(o.cur==='INR'?'₹ INR':'OMR')+' · no entries yet'}
 function lRowHtml(o){
   var c=!o.last?'':o.last.dir==='recv'?'in':'out';
