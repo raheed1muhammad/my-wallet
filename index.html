@@ -556,6 +556,10 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 #igDiary .dic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #igDiary .dfoot{border-top:1px solid var(--line);padding-top:10px}
 #igDiary .btn2{min-height:46px;border-radius:999px;padding:12px;background:var(--accent);color:var(--surface);border:0;font-weight:700;font-size:15px}
+/* with the diary icon in the top bar the name gets a little smaller so "My Wallet" still fits; hide the icon and it is back to normal */
+:root.dyon .brand b{font-size:17px!important;letter-spacing:0!important;text-overflow:clip}
+:root.dyon .brand{gap:8px}
+:root.dyon .brandmark{height:28px}
 #igSet input.swc[type=checkbox]{-webkit-appearance:none;appearance:none;flex:none;width:50px;height:30px;min-height:30px;border-radius:99px;background:var(--line);position:relative;margin:0;padding:0;border:0;cursor:pointer;transition:background .2s;box-shadow:none}
 #igSet input.swc::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--ink);opacity:.55;transition:left .2s,opacity .2s,background .2s}
 #igSet input.swc:checked{background:var(--ink)}
@@ -3344,7 +3348,7 @@ function showDiary(day){
   dEl.hidden=false;
 }
 dEl.addEventListener('click',function(ev){if(ev.target.closest('[data-dy="close"]'))dEl.hidden=true});
-function diaryBtnPaint(){var b=document.getElementById('igDiaryBtn');if(b)b.hidden=DRHIDE}
+function diaryBtnPaint(){var b=document.getElementById('igDiaryBtn');if(b)b.hidden=DRHIDE;document.documentElement.classList.toggle('dyon',!DRHIDE)}
 document.getElementById('igDiaryBtn').addEventListener('click',function(e){e.stopPropagation();showDiary(todayStr())});
 diaryBtnPaint();
 /* a new day: show yesterday once when the app is opened (only if diary is on and yesterday has entries) */
@@ -3450,7 +3454,7 @@ function pushPage(){
   for(var i=5;i<=22;i++)opts+='<option value="'+i+'"'+(i===hr?' selected':'')+'>'+(i%12||12)+':00 '+(i<12?'AM':'PM')+'</option>';
   h+='<div class="srow"><span>Reminders<span class="tag">'+(on?'On':'Off')+'</span><small>Permission: '+esc(a.permission())+'</small></span><button type="button" class="btn2" data-s="pushtoggle"'+(PUSH.busy?' disabled':'')+'>'+(on?'Turn off':'Turn on')+'</button></div>';
   if(on)h+='<label class="srow"><span>Time of the reminder<small>Your phone\u2019s time zone</small></span><select data-s="pushhour" aria-label="Reminder time">'+opts+'</select></label>'+
-   '<label class="srow" style="cursor:pointer"><span>Show the amount in the message<small>Off by default: anyone can read the lock screen</small></span><input type="checkbox" data-s="pushamt"'+(st.amounts?' checked':'')+'></label>'+
+   '<label class="srow" style="cursor:pointer"><span>Show the amount in the message<small>Off by default: anyone can read the lock screen</small></span><input type="checkbox" class="swc" role="switch" data-s="pushamt"'+(st.amounts?' checked':'')+'></label>'+
    '<div class="srow"><span>Check this phone<small>Shows a test message here</small></span><button type="button" class="btn2" data-s="pushtest">Show test</button></div>';
   if(PUSH.msg)h+='<p class="fine" role="status">'+esc(PUSH.msg)+'</p>';
   return h+'</div>';
