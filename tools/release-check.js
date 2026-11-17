@@ -27,6 +27,9 @@ console.log('2. tests');
 const t = spawnSync(process.execPath, [path.join(root, 'tests', 'run.js')], { cwd: root, encoding: 'utf8' });
 const last = t.stdout.trim().split('\n').pop();
 t.status === 0 ? ok(last) : (no(last), console.log(t.stdout.split('\n').filter(l => l.startsWith('FAIL')).join('\n')));
+const t2 = spawnSync(process.execPath, [path.join(root, 'tests', 'notify-test.js')], { cwd: root, encoding: 'utf8' });
+const last2 = t2.stdout.trim().split('\n').pop();
+t2.status === 0 ? ok('reminders: ' + last2) : (no('reminders: ' + last2), console.log(t2.stdout.split('\n').filter(l => l.startsWith('FAIL')).join('\n')));
 
 console.log('3. secrets');
 const files = ['index.html', 'cloud.js', 'trading.js', 'sw.js', 'manifest.json', 'firestore.rules', 'README.md'].filter(f => fs.existsSync(path.join(root, f)));

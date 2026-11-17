@@ -1,0 +1,38 @@
+name: Recurring reminders
+
+# Runs every hour and sends a reminder for recurring items that are due today.
+# Only a schedule and a manual start can run this, so the secret below is never given to pull requests from other people.
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+    inputs:
+      test_email:
+        description: 'Send ONE test message to the account with this email (leave empty for the normal run)'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reminders
+  cancel-in-progress: false
+
+jobs:
+  send:
+    if: github.repository == 'raheed1muhammad/my-wallet'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install the Firebase tool
+        run: npm install --no-save --no-audit --no-fund firebase-admin@12.7.0
+      - name: Send reminders
+        run: node tools/notify.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          ONLY_EMAIL: ${{ github.event.inputs.test_email }}
+          SEND_TEST: ${{ github.event.inputs.test_email != '' && '1' || '0' }}
