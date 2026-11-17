@@ -229,8 +229,61 @@ function ready(){
   el.hidden=true;
   window.__cloudSet=function(json){if(UID)track(setDoc(uref('settings/app'),{set:json,t:Date.now()})).catch(function(){})};
   window.__cloud={email:EMAIL,signOut:doSignOut,exportData:exportData,importData:importData,switchVersion:switchVersion};
+  window.__push=PUSH;
   window.__dbRes(dbObj());
 }
+/* ---------- reminders: this phone's address is saved in the user's own private space (users/<uid>/private/push) ---------- */
+var VAPID='';  /* public Web Push key from Firebase console > Cloud Messaging > Web Push certificates (a public key, safe to keep here) */
+var MSGURL='https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js';
+function pushRef(){return doc(fs,'users',UID,'private','push')}
+function pushTz(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch(e){return 'UTC'}}
+var PUSH={
+  supported:function(){return typeof Notification!=='undefined'&&'serviceWorker' in navigator&&'PushManager' in window},
+  configured:function(){return !!VAPID},
+  permission:function(){return typeof Notification!=='undefined'?Notification.permission:'denied'},
+  status:function(){return getDoc(pushRef()).then(function(s){return s.exists()?s.data():{}})},
+  enable:function(o){
+    if(!VAPID)return Promise.reject(new Error('not-configured'));
+    if(!PUSH.supported())return Promise.reject(new Error('unsupported'));
+    return Notification.requestPermission().then(function(p){
+      if(p!=='granted')throw new Error('denied');
+      return Promise.all([import(MSGURL),navigator.serviceWorker.ready]);
+    }).then(function(a){
+      var M=a[0];
+      return M.isSupported().then(function(ok){
+        if(!ok)throw new Error('unsupported');
+        return M.getToken(M.getMessaging(app),{vapidKey:VAPID,serviceWorkerRegistration:a[1]});
+      });
+    }).then(function(tok){
+      if(!tok)throw new Error('no-token');
+      return getDoc(pushRef()).then(function(s){
+        var d=s.exists()?s.data():{},t=(Array.isArray(d.tokens)?d.tokens:[]).filter(function(x){return x!==tok});
+        t.unshift(tok);
+        return setDoc(pushRef(),{tokens:t.slice(0,5),on:true,hour:(o&&o.hour>=0&&o.hour<=23)?o.hour:(d.hour>=0&&d.hour<=23?d.hour:9),amounts:!!(o&&o.amounts!=null?o.amounts:d.amounts),tz:pushTz(),t:Date.now()});
+      });
+    });
+  },
+  update:function(f){
+    var d={tz:pushTz(),t:Date.now()};
+    if(f&&f.hour>=0&&f.hour<=23)d.hour=Math.floor(f.hour);
+    if(f&&f.amounts!=null)d.amounts=!!f.amounts;
+    return setDoc(pushRef(),d,{merge:true});
+  },
+  disable:function(){
+    return Promise.all([import(MSGURL),navigator.serviceWorker.ready]).then(function(a){
+      var M=a[0],m=M.getMessaging(app);
+      return M.getToken(m,{vapidKey:VAPID,serviceWorkerRegistration:a[1]}).then(function(tok){
+        return getDoc(pushRef()).then(function(s){
+          var d=s.exists()?s.data():{},t=(Array.isArray(d.tokens)?d.tokens:[]).filter(function(x){return x!==tok});
+          return setDoc(pushRef(),{tokens:t,on:t.length>0,tz:pushTz(),t:Date.now()},{merge:true});
+        }).then(function(){return M.deleteToken(m)});
+      });
+    }).catch(function(){return setDoc(pushRef(),{on:false,t:Date.now()},{merge:true})});
+  },
+  test:function(){
+    return navigator.serviceWorker.ready.then(function(r){return r.showNotification('My Wallet',{body:'Test: notifications work on this phone.',icon:'icons/icon-192.png',badge:'icons/favicon-64.png',tag:'test'})});
+  }
+};
 var started=false,INVK='mywallet.invok';
 function timeout(p,ms){return Promise.race([p,new Promise(function(_,j){setTimeout(function(){j(new Error('timeout'))},ms)})])}
 onAuthStateChanged(auth,function(user){

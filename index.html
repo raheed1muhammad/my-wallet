@@ -3283,8 +3283,30 @@ var moreEl=document.createElement('div');moreEl.id='igMore';moreEl.hidden=true;
 moreEl.innerHTML='<button type="button" data-m="set"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37 1 .608 2.296.07 2.572-1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></svg>Settings</button><button type="button" data-m="out"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/><path d="M9 12h12l-3-3"/><path d="M18 15l3-3"/></svg>Sign out</button>';document.body.appendChild(moreEl);
 function setBal(a){return curs(a).map(function(c){return money(balanceOf(a,c,todayStr()),c)}).join(' + ')}
 var setView='main';
-var SETIC={user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
+var SETIC={bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
 function setSvg(n){return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+SETIC[n]+'</svg>'}
+/* ---------- reminders for recurring items (Settings > Notifications) ---------- */
+var PUSH={st:null,busy:false,msg:''};
+function pushApi(){return window.__push||null}
+function pushLoad(){var a=pushApi();if(!a)return;a.status().then(function(d){PUSH.st=d||{};if(setView==='notif'||setView==='main')renderSet()}).catch(function(){})}
+function pushPage(){
+  var a=pushApi(),st=PUSH.st||{},on=!!st.on,h='<div class="card" id="sPush"><div class="chead"><h2>Notifications</h2></div>'+
+   '<p class="fine">A reminder on the morning a recurring item is due: SIP, loan repayment, income or expense you have set to repeat. Nothing else is sent.</p>';
+  if(!a||!a.supported())return h+'<p class="fine"><b>This browser cannot show notifications.</b> On iPhone, open the app from the Home Screen icon (Safari \u2192 Share \u2192 Add to Home Screen).</p></div>';
+  if(!a.configured())return h+'<p class="fine"><b>Not set up yet.</b> The app owner still has to add the notification key.</p></div>';
+  var hr=st.hour>=0&&st.hour<=23?st.hour:9,opts='';
+  for(var i=5;i<=22;i++)opts+='<option value="'+i+'"'+(i===hr?' selected':'')+'>'+(i%12||12)+':00 '+(i<12?'AM':'PM')+'</option>';
+  h+='<div class="srow"><span>Reminders<span class="tag">'+(on?'On':'Off')+'</span><small>Permission: '+esc(a.permission())+'</small></span><button type="button" class="btn2" data-s="pushtoggle"'+(PUSH.busy?' disabled':'')+'>'+(on?'Turn off':'Turn on')+'</button></div>';
+  if(on)h+='<label class="srow"><span>Time of the reminder<small>Your phone\u2019s time zone</small></span><select data-s="pushhour" aria-label="Reminder time">'+opts+'</select></label>'+
+   '<label class="srow" style="cursor:pointer"><span>Show the amount in the message<small>Off by default: anyone can read the lock screen</small></span><input type="checkbox" data-s="pushamt"'+(st.amounts?' checked':'')+'></label>'+
+   '<div class="srow"><span>Check this phone<small>Shows a test message here</small></span><button type="button" class="btn2" data-s="pushtest">Show test</button></div>';
+  if(PUSH.msg)h+='<p class="fine" role="status">'+esc(PUSH.msg)+'</p>';
+  return h+'</div>';
+}
+function pushErr(e){
+  var m=String(e&&e.message||e);
+  return m==='denied'?'Permission was not given. Allow notifications for this app in your phone settings and try again.':m==='unsupported'?'This phone or browser does not support notifications.':m==='not-configured'?'Notifications are not set up yet.':'Could not turn on notifications. Try again.';
+}
 function setRow(ic,t,val,v){return '<button type="button" class="setgo" data-s="go" data-v="'+v+'"><span class="seic">'+setSvg(ic)+'</span><span class="segrow">'+t+'</span><span class="seval">'+esc(val)+'</span><span class="sech">'+setSvg('chev')+'</span></button>'}
 function renderSet(){
   var p=SET.profile||{},act=actAccs().filter(function(a){return a!=='Cash'}),cl=ACCS.filter(function(a){return accUsed(a)&&SET.closed.indexOf(a)>-1});
@@ -3304,6 +3326,7 @@ function renderSet(){
      '<label class="srow" style="cursor:pointer"><span>Show closed accounts in Ledger</span><input type="checkbox" data-s="showclosed"'+(SET.showClosed?' checked':'')+'></label>':'')+
     '<div class="fine" style="margin-top:14px"><b>Add a new account</b> \u2014 its currency is fixed once created.</div>'+
     '<div class="sform"><input id="saName" placeholder="Account name" maxlength="30"><select id="saCur" aria-label="Currency"><option value="OMR">OMR</option><option value="INR">INR (\u20b9)</option><option value="both">OMR + INR</option></select><button class="btn2" type="button" data-s="addacc">Add account</button></div><p class="fine" id="saMsg"></p></div>'}],
+   notif:['Notifications',function(){return pushPage()}],
    ver:['Version',function(){return '<div class="card" id="sVersion"><div class="chead"><h2>Version</h2></div><div class="vsw"><button type="button" class="'+(!NEP?'on':'')+'" data-s="version" data-v="indian">Indian<small data-nofx="1">OMR + INR</small></button><button type="button" class="'+(NEP?'on':'')+'" data-s="version" data-v="nepali">Nepali<small>OMR + NPR</small></button></div><p class="fine">Each version keeps its own separate entries, accounts and plans. Nothing is deleted when you switch.</p></div>'}],
    cur:['Currencies',function(){return '<div class="card"><div class="chead"><h2>Currencies</h2></div><div class="srow"><span>OMR<span class="tag">in use</span></span></div><div class="srow"><span>\u20b9 INR<span class="tag">in use</span></span></div><p class="fine">Adding a third currency is not available yet. It affects every screen, rate and chart, so it needs a separate update.</p></div>'}]
   };
@@ -3312,7 +3335,7 @@ function renderSet(){
   if(main){
     var cth=allThemes().filter(function(t){return t.id===igCur()})[0];
     body='<h3 class="sgrp">Data settings</h3><div class="card sgl">'+setRow('user','Personal details',p.name||'Not set','pd')+setRow('bank','Accounts',(act.length+1)+' open','acc')+setRow('coin','Currencies','OMR, INR','cur')+'</div>'+
-     '<h3 class="sgrp">App settings</h3><div class="card sgl">'+setRow('palette','Themes',cth?cth.name:'','theme')+setRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer')+setRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer')+setRow('globe','Version',NEP?'Nepali':'Indian','ver')+'</div>';
+     '<h3 class="sgrp">App settings</h3><div class="card sgl">'+setRow('palette','Themes',cth?cth.name:'','theme')+setRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer')+setRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer')+setRow('bell','Notifications',PUSH.st&&PUSH.st.on?'On':'Off','notif')+setRow('globe','Version',NEP?'Nepali':'Indian','ver')+'</div>';
   }else body=T[setView][1]();
   setEl.classList.toggle('sub',!main);
   setEl.innerHTML='<div class="sbar"><button type="button" data-s="close" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>'+(main?'Settings':T[setView][0])+'</b></div><div class="sw">'+body+'</div>';
@@ -3325,7 +3348,14 @@ function afterAcc(cloudSaved){
 }
 setEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-s]');if(!b)return;var k=b.dataset.s,a=b.dataset.a;
-  if(k==='go'){setView=b.dataset.v;renderSet();setEl.scrollTop=0;
+  if(k==='pushtoggle'){
+    var pa=pushApi();if(!pa||PUSH.busy)return;PUSH.busy=true;PUSH.msg='';renderSet();
+    var on0=!!(PUSH.st&&PUSH.st.on);
+    (on0?pa.disable():pa.enable({hour:9})).then(function(){return pa.status()}).then(function(d){PUSH.st=d||{};PUSH.msg=on0?'Reminders are off.':'Reminders are on. You will get a message at the chosen time on the day something is due.'}).catch(function(er){PUSH.msg=pushErr(er)}).then(function(){PUSH.busy=false;renderSet()});
+    return;
+  }
+  if(k==='pushtest'){var pb=pushApi();if(pb)pb.test().then(function(){PUSH.msg='Test sent. If you did not see it, check the phone notification settings for this app.';renderSet()}).catch(function(){PUSH.msg='Could not show a test message here.';renderSet()});return}
+  if(k==='go'){setView=b.dataset.v;if(setView==='notif')pushLoad();renderSet();setEl.scrollTop=0;
     if(!setEl._sub){setEl._sub=1;try{if(HB){HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=S.tab;history.pushState({i:HB.i,t:S.tab},'')}}catch(er){}}}
   else if(k==='close'){if(setView!=='main'){setView='main';renderSet();setEl.scrollTop=0;
     if(setEl._sub){setEl._sub=0;try{if(HB){HB.skip++;HB.i--;history.go(-1)}}catch(er){}}}else setEl.hidden=true}
@@ -3360,12 +3390,15 @@ setEl.addEventListener('click',function(e){
   else if(k==='reopen'){setChange({type:'reopenAccount',name:a},function(){SET.closed=SET.closed.filter(function(x){return x!==a})},afterAcc,function(msg){toast(msg)})}
 });
 setEl.addEventListener('change',function(e){
+  if(e.target.dataset.s==='pushhour'||e.target.dataset.s==='pushamt'){
+    var pu=pushApi();if(!pu)return;var f=e.target.dataset.s==='pushhour'?{hour:+e.target.value}:{amounts:e.target.checked};
+    pu.update(f).then(function(){PUSH.st=Object.assign({},PUSH.st,f);PUSH.msg='Saved.';renderSet()}).catch(function(){PUSH.msg='Could not save. Check your internet and try again.';renderSet()});return}
   if(e.target.dataset.s==='showclosed'){var sc=e.target.checked;setChange({type:'showClosed',value:sc},function(){SET.showClosed=sc},afterAcc,function(msg){toast(msg);renderSet()})}});
 document.getElementById('igMoreBtn').addEventListener('click',function(e){e.stopPropagation();igMenu.hidden=true;moreEl.hidden=!moreEl.hidden});
 moreEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-m]');if(!b)return;moreEl.hidden=true;
   if(b.dataset.m==='out'){if(window.__cloud)window.__cloud.signOut();return}
-  setView='main';renderSet();setEl.hidden=false;setEl.scrollTop=0;
+  setView='main';renderSet();setEl.hidden=false;setEl.scrollTop=0;pushLoad();
 });
 document.addEventListener('click',function(e){if(!moreEl.hidden&&!e.target.closest('#igMore'))moreEl.hidden=true});
 /* ---------- v10: custom themes (create, edit, delete inside Settings) ---------- */
