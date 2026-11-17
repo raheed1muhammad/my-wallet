@@ -556,6 +556,11 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 #igDiary .dic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #igDiary .dfoot{border-top:1px solid var(--line);padding-top:10px}
 #igDiary .btn2{min-height:46px;border-radius:999px;padding:12px;background:var(--accent);color:var(--surface);border:0;font-weight:700;font-size:15px}
+#igSet input.swc[type=checkbox]{-webkit-appearance:none;appearance:none;flex:none;width:50px;height:30px;min-height:30px;border-radius:99px;background:var(--line);position:relative;margin:0;padding:0;border:0;cursor:pointer;transition:background .2s;box-shadow:none}
+#igSet input.swc::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--ink);opacity:.55;transition:left .2s,opacity .2s,background .2s}
+#igSet input.swc:checked{background:var(--ink)}
+#igSet input.swc:checked::after{left:23px;background:var(--surface);opacity:1}
+#igSet input.swc:focus-visible{outline:2px solid var(--ink);outline-offset:2px;box-shadow:none}
 #igDiary .dtag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
 #igMore button{display:block;width:100%;padding:12px;border:0;background:none;color:inherit;text-align:left;cursor:pointer;border-radius:12px;font-weight:600}
 #igMore button:hover{background:var(--hover)}
@@ -3477,8 +3482,8 @@ function renderSet(){
    chpass:['Reset password',function(){return accPage('p')}],
    notif:['Notifications',function(){return pushPage()}],
    diary:['Diary',function(){return '<div class="card" id="sDiary"><div class="chead"><h2>Diary</h2></div><p class="fine">A short look at each day: what came in, what went out and where most of it went. No amounts are ever shown in the phone message.</p>'+
-    '<label class="srow" style="cursor:pointer"><span>Diary notification<small>A message every morning at your reminder time. It also shows when you open the app.</small></span><input type="checkbox" style="flex:none;width:22px;height:22px" data-s="diarynt"'+(DRY?' checked':'')+'></label>'+
-    '<label class="srow" style="cursor:pointer"><span>Hide diary from the top bar<small>You can always open it from here.</small></span><input type="checkbox" style="flex:none;width:22px;height:22px" data-s="diaryhide"'+(DRHIDE?' checked':'')+'></label>'+
+    '<label class="srow" style="cursor:pointer"><span>Diary notification<small>A message every morning at your reminder time. It also shows when you open the app.</small></span><input type="checkbox" class="swc" role="switch" data-s="diarynt"'+(DRY?' checked':'')+'></label>'+
+    '<label class="srow" style="cursor:pointer"><span>Hide diary from the top bar<small>You can always open it from here.</small></span><input type="checkbox" class="swc" role="switch" data-s="diaryhide"'+(DRHIDE?' checked':'')+'></label>'+
     '<div class="srow"><span>See your diary<small>Today so far</small></span><button type="button" class="btn2" data-s="diaryshow">Open</button></div>'+
     (DMSG?'<p class="fine" role="status">'+esc(DMSG)+'</p>':'')+'</div>'}],
    ver:['Version',function(){return '<div class="card" id="sVersion"><div class="chead"><h2>Version</h2></div><div class="vsw"><button type="button" class="'+(!NEP?'on':'')+'" data-s="version" data-v="indian">Indian<small data-nofx="1">OMR + INR</small></button><button type="button" class="'+(NEP?'on':'')+'" data-s="version" data-v="nepali">Nepali<small>OMR + NPR</small></button></div><p class="fine">Each version keeps its own separate entries, accounts and plans. Nothing is deleted when you switch.</p></div>'}],
