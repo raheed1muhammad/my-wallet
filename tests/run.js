@@ -218,6 +218,52 @@ async function testSignOut() {
   check('outside link has noreferrer', /rel="noopener noreferrer">Exchange Rate API/.test(ix));
 }
 
+/* ---------- 7b. open at once, check the login afterwards ---------- */
+async function testOptimistic() {
+  section('opening at once: login is checked afterwards');
+  const src = between(cj, 'var started=false,INVK=', '/* ---------- backup');
+  function make(o) {
+    const log = [], store = Object.assign({}, o.store), sess = Object.assign({}, o.sess);
+    let auth;
+    const env = {
+      log, UIDK: 'mywallet.uid', SETK: 'mywallet.settings.v1', PM: () => { }, auth: {},
+      begin: () => log.push('begin'), showAuth: v => log.push('showAuth:' + v), getDoc: () => Promise.resolve({ exists: () => true }), doc: () => 'd', fs: {},
+      timeout: p => p, window: { __cloud: { email: '' } },
+      localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } },
+      sessionStorage: { getItem: k => (k in sess ? sess[k] : null), setItem: (k, v) => { sess[k] = v; }, removeItem: k => { delete sess[k]; } },
+      location: { reload: () => log.push('reload') },
+      onAuthStateChanged: (a, f) => { auth = f; }
+    };
+    const names = Object.keys(env);
+    const wrap = new Function(...names, 'var UID=null,EMAIL="";\n' + src + '\nreturn {uid:()=>UID,email:()=>EMAIL,started:()=>started};')(...names.map(k => env[k]));
+    return { log, sess, store, win: env.window, state: wrap, auth: u => auth(u) };
+  }
+  const known = { 'mywallet.uid': 'U1', 'mywallet.invok': 'U1', 'mywallet.settings.v1': '{}' };
+  let t = make({ store: known });
+  eq('known account: opens before the login answers', t.log, ['begin']);
+  eq('known account: uses the remembered account', t.state.uid(), 'U1');
+  t.auth({ uid: 'U1', email: 'a@b.c' });
+  eq('same account confirmed: nothing else happens', t.log, ['begin']);
+  eq('same account confirmed: email filled in', t.win.__cloud.email, 'a@b.c');
+  t = make({ store: known }); t.auth(null);
+  eq('login says signed out: reload once into the normal login', t.log, ['begin', 'reload']);
+  eq('signed out: next start skips the quick open (no loop)', t.sess['mywallet.noopt'], '1');
+  t = make({ store: known }); t.auth({ uid: 'U2', email: 'x@y.z' });
+  eq('a different account: reload once, nothing of the first account is used', t.log, ['begin', 'reload']);
+  t = make({ store: known, sess: { 'mywallet.noopt': '1' } });
+  eq('after such a reload: normal start, no quick open', t.log, []);
+  t.auth(null); eq('after such a reload: signed out shows the login', t.log, ['showAuth:login']);
+  t = make({ store: { 'mywallet.uid': 'U1', 'mywallet.invok': 'U1' } });
+  eq('no settings on this phone (new phone): normal start', t.log, []);
+  t = make({ store: { 'mywallet.uid': 'U1', 'mywallet.settings.v1': '{}' } });
+  eq('invite not confirmed: normal start', t.log, []);
+  t = make({ store: {} });
+  eq('nothing remembered: normal start', t.log, []);
+  t = make({ store: known }); t.auth({ uid: 'U1', email: 'a@b.c' });
+  t.auth({ uid: 'U1', email: 'a@b.c' });
+  eq('login answers again later: still no second start', t.log, ['begin']);
+}
+
 /* ---------- 7. fast start: open now when this phone already has its settings ---------- */
 async function testStartup() {
   section('startup: app opens without waiting for the cloud settings');
@@ -434,7 +480,7 @@ async function testTrading() {
 }
 
 (async () => {
-  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testStartup, testVersionData, testSip, testTrading];
+  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testOptimistic, testStartup, testVersionData, testSip, testTrading];
   for (const p of parts) { try { await p(); } catch (e) { fail++; console.log('FAIL: ' + p.name + ' could not run: ' + e.message); } }
   console.log('\n' + pass + ' checks passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

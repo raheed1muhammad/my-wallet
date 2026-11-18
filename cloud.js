@@ -253,6 +253,7 @@ var ACCT={
 function ready(){
   PM('ready_open_app');
   el.hidden=true;
+  try{sessionStorage.removeItem('mywallet.noopt')}catch(e){}
   window.__cloudSet=function(json){if(UID)track(setDoc(uref('settings/app'),{set:json,t:Date.now()})).catch(function(){})};
   window.__cloud={email:EMAIL,signOut:doSignOut,exportData:exportData,importData:importData,switchVersion:switchVersion};
   window.__push=PUSH;
@@ -314,8 +315,21 @@ var PUSH={
 };
 var started=false,INVK='mywallet.invok';
 function timeout(p,ms){return Promise.race([p,new Promise(function(_,j){setTimeout(function(){j(new Error('timeout'))},ms)})])}
+/* Opening at once. If this phone already knows who is signed in (remembered account, invite already confirmed, settings saved here),
+   the app opens straight away from the data on the phone and the login is checked in the background. The server rules still decide what
+   may be read or written, so a wrong guess can never show or change another account's data. If the check says otherwise, the page reloads once into the normal login. */
+var OPT=false,NOOPT='mywallet.noopt';
+try{
+  var hu=localStorage.getItem(UIDK),skip=sessionStorage.getItem(NOOPT)==='1';
+  if(!skip&&hu&&localStorage.getItem(INVK)===hu&&localStorage.getItem(SETK)!==null){UID=hu;OPT=true;started=true;PM('open_before_login_check');begin()}
+}catch(e){OPT=false}
+function backToNormal(){OPT=false;started=false;UID=null;try{sessionStorage.setItem(NOOPT,'1')}catch(e){}location.reload()}
 onAuthStateChanged(auth,function(user){
   PM('login_state_known:'+(user?'signed_in':'signed_out'),true);
+  if(OPT){
+    if(user&&user.uid===UID){OPT=false;EMAIL=user.email||'';if(window.__cloud)window.__cloud.email=EMAIL;return}
+    backToNormal();return;
+  }
   if(!user){UID=null;EMAIL='';started=false;showAuth('login');return}
   UID=user.uid;EMAIL=user.email||'';
   if(started)return;
