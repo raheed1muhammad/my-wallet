@@ -1,13 +1,24 @@
-const C='mywallet-v36',A=['./','index.html','cloud.js','trading.js','manifest.json','icons/icon-192.png','icons/icon-512.png','icons/logo-mark.png','icons/apple-touch-icon.png','icons/favicon-64.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>Promise.all(A.map(u=>fetch(u,{cache:'reload'}).then(r=>c.put(u,r))))).then(()=>self.skipWaiting()))});
+const C='mywallet-v37',A=['./','index.html','cloud.js','trading.js','manifest.json','icons/icon-192.png','icons/icon-512.png','icons/logo-mark.png','icons/apple-touch-icon.png','icons/favicon-64.png'];
+const FB=['app','auth','firestore'].map(n=>'https://www.gstatic.com/firebasejs/10.14.1/firebase-'+n+'.js');
+self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>Promise.all(A.map(u=>fetch(u,{cache:'reload'}).then(r=>c.put(u,r)))).then(()=>Promise.allSettled(FB.map(u=>c.match(u).then(h=>h||fetch(u).then(r=>c.put(u,r))))))).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
-/* Cache only this site's files and the Firebase SDK modules. Database and login traffic is never touched. */
+/* Fast opening: the app files are served from the phone first and refreshed quietly in the background, so a slow network does not delay opening.
+   A new release is used from the next opening. The Firebase files have a version in their address, so they never change. Database and login traffic is never touched. */
 self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET')return;
   const u=new URL(e.request.url);
-  const ok=u.origin===location.origin||u.hostname==='www.gstatic.com'&&u.pathname.startsWith('/firebasejs/')||u.hostname==='fonts.googleapis.com'||u.hostname==='fonts.gstatic.com';
-  if(!ok)return;
-  e.respondWith(fetch(u.origin===location.origin?new Request(e.request.url,{cache:'no-cache'}):e.request).then(r=>{if(r.ok){const c=r.clone();caches.open(C).then(x=>x.put(e.request,c))}return r}).catch(()=>caches.match(e.request).then(m=>m||caches.match('index.html'))))});
+  const mine=u.origin===location.origin,fb=u.hostname==='www.gstatic.com'&&u.pathname.startsWith('/firebasejs/'),fonts=u.hostname==='fonts.googleapis.com'||u.hostname==='fonts.gstatic.com';
+  if(!mine&&!fb&&!fonts)return;
+  if(mine){
+    e.respondWith(caches.open(C).then(c=>c.match(e.request,{ignoreSearch:true}).then(hit=>{
+      const net=fetch(new Request(e.request.url,{cache:'no-cache'})).then(r=>{if(r.ok){const k=e.request.mode==='navigate'?'./':e.request;c.put(k,r.clone())}return r});
+      if(hit){net.catch(()=>{});return hit}
+      return net.catch(()=>c.match('./',{ignoreSearch:true}));
+    })));
+    return;
+  }
+  e.respondWith(caches.open(C).then(c=>c.match(e.request).then(hit=>hit||fetch(e.request).then(r=>{if(r.ok||r.type==='opaque')c.put(e.request,r.clone());return r}))));
+});
 /* Reminders sent from the server arrive here. A message is always shown (the phone requires it). Only a title and a short text are used. */
 self.addEventListener('push',e=>{
   let d={};try{d=e.data?e.data.json():{}}catch(_){}

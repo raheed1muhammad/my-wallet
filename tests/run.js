@@ -168,7 +168,7 @@ async function testSave() {
   const fire = (p, f) => listeners.walletsave({ detail: { pending: p, failed: f } });
   fire(0, 0); eq('idle: line hidden', [el.textContent, !!el.a['data-st']], ['', false]);
   fire(1, 0); eq('quick save: no flicker', el.textContent, '');
-  await sleep(1700); check('slow save: shows Saving', el.textContent.indexOf('Saving 1 change') === 0, el.textContent);
+  await sleep(1700); eq('slow save: stays quiet (saves in the background)', el.textContent, '');
   fire(0, 0); eq('saved: hidden again', el.textContent, '');
   fire(0, 1); check('refused: warning line', el.textContent.indexOf('1 change not saved') > -1 && el.a['data-st'] === 'fail', el.textContent);
   fire(0, 1); eq('same failure: only one toast', toasts.length, 1);
