@@ -684,6 +684,8 @@ body{font-family:var(--font-body)}button,input,select,textarea{font-family:inher
 #lallq{width:100%;margin:6px 0 10px}
 body.ent .lfab{display:none}
 .lfab{transition:transform .45s cubic-bezier(.4,0,.2,1),opacity .35s ease}
+.lfab.up{transform:translateY(-68px)}
+body.ent .afab{display:none}
 .lfab.away{transform:translateY(160px);opacity:0;visibility:hidden;pointer-events:none;transition:transform .45s ease,opacity .45s ease,visibility 0s linear .45s}
 .lfab{position:fixed;right:18px;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:55;width:56px;height:56px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--accent);color:var(--surface);box-shadow:0 8px 24px color-mix(in srgb,var(--ink) 30%,transparent);cursor:pointer}
 [data-chat]{cursor:pointer}
@@ -1416,6 +1418,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
 
 <div id="bc" aria-live="polite"></div>
 <div id="tip" role="tooltip"></div>
+<button type="button" class="lfab afab away" id="afab" aria-label="New entry"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
 <button type="button" class="lfab" id="lfab" aria-label="Open chat list: people, categories and accounts"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M2.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16 7h6M16 12h6M16 17h6"/></svg></button>
 <div id="igDiary" role="dialog" aria-modal="true" aria-label="Daily diary" hidden></div>
 <div id="igChats" hidden><div class="sbar"><button type="button" id="chatsBack" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>Transaction chats</b><small id="lallsub"></small></div></div><div class="cw"><input id="lallq" type="search" placeholder="Search a name, category or account" autocomplete="off"><div id="lflt"></div><div id="lallList"></div></div></div>
@@ -3523,7 +3526,7 @@ function renderSet(){
    timer:['Chat tab Timer',function(){return '<div class="card" id="sChatTimer"><div class="chead"><h2>Chat tab Timer</h2></div><div class="pills">'+
     [['3','3s'],['5','5s'],['10','10s'],['always','Always']].map(function(o){var on=o[0]==='always'?CHT===0:+o[0]===CHT;return '<button type="button" class="pill'+(on?' on':'')+'" data-s="chattimer" data-v="'+o[0]+'">'+o[1]+'</button>'}).join('')+
     '</div><p class="fine">How long the chat button stays on screen after you change page (Home, Analysis, Ledger, Balance). Then it floats down and hides. Always keeps it on screen.</p></div>'}],
-   addtimer:['Add entry button Timer',function(){return '<div class="card" id="sAddTimer"><div class="chead"><h2>Add entry button Timer</h2></div><div class="pills">'+
+   addtimer:['Add entry button Timer',function(){return '<div class="card" id="sAddTimer"><div class="chead"><h2>Add entry button</h2></div><label class="srow" style="cursor:pointer"><span>Floating + button on Analysis, Ledger and Balance<small>Sits under the chat button. Off = the + stays in the bottom bar.</small></span><input type="checkbox" class="swc" role="switch" data-s="afab"'+(AFB?' checked':'')+'></label><h3 class="sgrp" style="margin-top:14px">Timer</h3><div class="pills" style="'+(AFB?'':'opacity:.4;pointer-events:none')+'" aria-disabled="'+(AFB?'false':'true')+'">'+
     [['5','5s'],['10','10s'],['25','25s'],['always','Always']].map(function(o){var on=o[0]==='always'?ADT===0:+o[0]===ADT;return '<button type="button" class="pill'+(on?' on':'')+'" data-s="addtimer" data-v="'+o[0]+'">'+o[1]+'</button>'}).join('')+
     '</div><p class="fine">How long the + button stays on screen after you change page (Home, Analysis, Ledger, Balance). Then it floats down and hides. Change page to bring it back. Always keeps it on screen.</p></div>'}],
    acc:['Accounts',function(){return '<div class="card"><div class="chead"><h2>Accounts</h2></div>'+
@@ -3611,6 +3614,7 @@ setEl.addEventListener('change',function(e){
   if(e.target.dataset.s==='pushhour'||e.target.dataset.s==='pushamt'){
     var pu=pushApi();if(!pu)return;var f=e.target.dataset.s==='pushhour'?{hour:+e.target.value}:{amounts:e.target.checked};
     pu.update(f).then(function(){PUSH.st=Object.assign({},PUSH.st,f);PUSH.msg='Saved.';renderSet()}).catch(function(){PUSH.msg='Could not save. Check your internet and try again.';renderSet()});return}
+  if(e.target.dataset.s==='afab'){AFB=e.target.checked;try{localStorage.setItem(AFK,AFB?'1':'0')}catch(er){}addBtnShow();pfSave();renderSet();return}
   if(e.target.dataset.s==='nbblock'){NBB=e.target.checked;try{localStorage.setItem(NBK,NBB?'1':'0')}catch(er){}pfSave();renderSet();return}
   if(e.target.dataset.s==='diarynt'){diarySetNt(e.target.checked);return}
   if(e.target.dataset.s==='diaryhide'){DRHIDE=e.target.checked;diaryStore();diaryBtnPaint();pfSave();renderSet();return}
@@ -4098,7 +4102,7 @@ function xKeyStore(k){ /* signed in: private doc in your own account, outside ba
 /* ---------- synced preferences: theme, timers, family & friends names (one private cloud doc per version) ---------- */
 var PFD='settings/prefs',pfOn=false,pfT=null,pfSig='',pfFirst=true;
 function pfGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200),sp:SIPL.slice(0,50),dy:[DRY?1:0,DRHIDE?1:0],nb:NBB?1:0}}
+function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200),sp:SIPL.slice(0,50),dy:[DRY?1:0,DRHIDE?1:0],nb:NBB?1:0,af:AFB?1:0}}
 function pfSave(){
   if(!S.db||!pfOn)return;
   clearTimeout(pfT);pfT=setTimeout(function(){
@@ -4129,6 +4133,7 @@ function pfApply(d){
     if(pfFirst)PT.forEach(function(o){if(!pc.some(function(c){return pkey(c.n)===pkey(o.n)}))pc.push(o)});
     PT=pc.slice(0,200);try{localStorage.setItem(PTK,JSON.stringify(PT))}catch(e){}
   }
+  if(d.af===0||d.af===1){var afv=d.af===1;if(afv!==AFB){AFB=afv;try{localStorage.setItem(AFK,afv?'1':'0')}catch(e){}addBtnShow()}}
   if(d.nb===0||d.nb===1){var nbv=d.nb===1;if(nbv!==NBB){NBB=nbv;try{localStorage.setItem(NBK,nbv?'1':'0')}catch(e){}}}
   if(Array.isArray(d.dy)&&d.dy.length===2){var dn=d.dy[0]===1,dh=d.dy[1]===1;if(dn!==DRY||dh!==DRHIDE){DRY=dn;DRHIDE=dh;diaryStore();diaryBtnPaint()}}
   if(Array.isArray(d.sp)){
@@ -4305,13 +4310,23 @@ function chatFabShow(){
 }
 setTimeout(chatFabShow,1200);
 /* Add entry (+) button timer (Settings): same idea as the chat button. 0 = always */
-var ADDK='mywallet.addtimer',ADT=0,adtT=null,adtT2=null;
+var ADDK='mywallet.addtimer',ADT=0,adtT=null,adtT2=null,AFK='mywallet.afab',AFB=true;
+try{AFB=localStorage.getItem(AFK)!=='0'}catch(e){}
 try{var _ad=localStorage.getItem(ADDK);if(_ad==='5'||_ad==='10'||_ad==='25')ADT=+_ad}catch(e){}
 function addBtnShow(noTimer){
-  var f=document.querySelector('#tabs .tab[data-tab="entry"]'),tb=document.getElementById('tabs');if(!f)return;clearTimeout(adtT);clearTimeout(adtT2);if((arguments[1]||S.tab)==='home'){f.classList.add('away');if(tb)tb.classList.add('noadd');return}
+  var g=arguments[1]||S.tab,f=document.querySelector('#tabs .tab[data-tab="entry"]'),tb=document.getElementById('tabs'),a=document.getElementById('afab'),c=document.getElementById('lfab');if(!f)return;clearTimeout(adtT);clearTimeout(adtT2);
+  if(AFB){ /* floating + below the chat button on Analysis, Ledger and Balance; the bar keeps 4 tabs */
+    f.classList.add('away');if(tb)tb.classList.add('noadd');
+    var fl=(g==='analysis'||g==='ledger'||g==='balance');
+    if(a){a.classList.toggle('away',!fl);if(c)c.classList.toggle('up',fl)}
+    if(fl&&ADT>0&&!noTimer)adtT=setTimeout(function(){if(a)a.classList.add('away');if(c)c.classList.remove('up')},ADT*1000);
+    return}
+  if(a)a.classList.add('away');if(c)c.classList.remove('up');
+  if(g==='home'){f.classList.add('away');if(tb)tb.classList.add('noadd');return}
   if(tb)tb.classList.remove('noadd');f.classList.remove('away');
   if(ADT>0&&!noTimer)adtT=setTimeout(function(){if(S.tab!=='entry'){f.classList.add('away');if(tb)tb.classList.add('noadd')}},ADT*1000);
 }
+document.getElementById('afab').addEventListener('click',function(){var t=document.querySelector('#tabs .tab[data-tab="entry"]');if(t)t.click();window.scrollTo(0,0)});
 /* first paint: put the + button in its right state at once with no animation (before, it showed on open and slid away 1.2 s later) */
 (function(){var h=document.documentElement;h.classList.add('nofx');addBtnShow();requestAnimationFrame(function(){requestAnimationFrame(function(){h.classList.remove('nofx')})})})();
 setTimeout(addBtnShow,1200);
