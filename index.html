@@ -416,6 +416,44 @@ details.why ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px}
 #tip{position:fixed;z-index:50;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 8px 28px rgba(0,0,0,.2);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5;opacity:0;transition:opacity .08s;max-width:250px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:calc(100vw - 32px)}
 #toast.show{opacity:1}
+/* CHANGE 1: entry saved pop-up (wallet animation) */
+#savedpop{position:fixed;left:50%;top:50%;z-index:70;display:flex;flex-direction:column;align-items:center;gap:12px;min-width:190px;max-width:calc(100vw - 48px);padding:26px 28px 20px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow,0 10px 40px rgba(0,0,0,.25));text-align:center;font-weight:700;opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.85);transition:opacity .22s ease,transform .22s ease}
+#savedpop.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#savedpop .spw{position:relative;width:64px;height:64px}
+#savedpop .spwal{position:absolute;left:9px;top:9px;width:46px;height:46px;fill:none;stroke:var(--ink-2);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+#savedpop .spcoin{position:absolute;left:50%;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9a0,#f4b81f 55%,#c98a0b);box-shadow:inset 0 0 0 2px #fff3c4,inset 0 0 0 3px #b8790a,0 1px 3px rgba(0,0,0,.35);color:#6b4200;font-size:14px;font-weight:800;line-height:24px;text-align:center;opacity:0}
+#savedpop .spc{position:absolute;left:2px;top:2px;width:60px;height:60px;border-radius:50%;background:var(--pos,var(--accent));display:flex;align-items:center;justify-content:center;transform:scale(0)}
+#savedpop .spc svg{width:30px;height:30px;fill:none;stroke:var(--surface);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+#savedpop .spc path{stroke-dasharray:26;stroke-dashoffset:26}
+#savedpop #savedtxt{opacity:0}
+#savedpop.show .spwal{animation:spWal 1s ease forwards}
+#savedpop.show.in .spcoin{animation:spCoinIn .8s .2s ease-in forwards}
+#savedpop.show.out .spcoin{animation:spCoinOut .8s .2s ease-out forwards}
+#savedpop.show .spc{animation:spRing .4s .85s cubic-bezier(.2,1.4,.4,1) forwards}
+#savedpop.show .spc path{animation:spTick .35s 1.15s ease-out forwards}
+#savedpop.show #savedtxt{animation:spTxt .3s .3s ease forwards}
+@keyframes spWal{0%{opacity:0;transform:scale(.7)}15%{opacity:1;transform:scale(1)}55%{transform:scale(1)}68%{opacity:1;transform:scale(1.12)}100%{opacity:0;transform:scale(.4)}}
+@keyframes spCoinIn{0%{opacity:0;transform:translateY(-46px) rotateY(0) scale(.8)}20%{opacity:1}75%{opacity:1;transform:translateY(0) rotateY(540deg) scale(.95)}100%{opacity:0;transform:translateY(0) rotateY(720deg) scale(.3)}}
+@keyframes spCoinOut{0%{opacity:0;transform:translateY(0) rotateY(0) scale(.3)}25%{opacity:1;transform:translateY(-8px) rotateY(180deg) scale(.95)}100%{opacity:0;transform:translateY(-50px) rotateY(720deg) scale(.8)}}
+@keyframes spRing{0%{transform:scale(0)}100%{transform:scale(1)}}
+@keyframes spTick{to{stroke-dashoffset:0}}
+@keyframes spTxt{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){#savedpop,#savedpop.show,#savedpop .spwal,#savedpop .spcoin,#savedpop .spc,#savedpop #savedtxt,#savedpop.show .spwal,#savedpop.show .spc,#savedpop.show .spc path,#savedpop.show #savedtxt{animation:none!important;transition:none!important}#savedpop .spwal,#savedpop .spcoin{display:none}#savedpop .spc{transform:none}#savedpop .spc path{stroke-dashoffset:0}#savedpop #savedtxt{opacity:1}}
+/* END CHANGE 1 */
+/* CHANGE 2: not enough balance pop-up */
+#nbov{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5)}
+#nbov[hidden]{display:none}
+#nbov .nbcard{width:100%;max-width:340px;max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow,0 10px 40px rgba(0,0,0,.25));padding:22px 18px 16px;text-align:center;animation:nbIn .22s ease}
+#nbov .nbic{width:52px;height:52px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;background:var(--neg)}
+#nbov .nbic svg{width:28px;height:28px;fill:none;stroke:var(--surface);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+#nbov h3{margin:0 0 6px;font-size:17px;font-weight:700}
+#nbov p{margin:0 0 4px;font-size:14px;color:var(--ink-2);line-height:1.45}
+#nbov .nbbtns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+#nbov .nbbtns .btn2{width:100%;min-height:44px;font-size:14px}
+@keyframes nbIn{0%{opacity:0;transform:scale(.9)}100%{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){#nbov .nbcard{animation:none}}
+/* END CHANGE 2 */
+#savedpop .spcoin.sm{font-size:8px;letter-spacing:-.3px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}.bc-bar i{animation:none}}
 @media (max-width:520px){.plabel2{min-width:0;flex:1}.nav2{width:100%}.seg2.wrapm{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%}}
 
@@ -1381,6 +1419,12 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
 <div id="igDiary" role="dialog" aria-modal="true" aria-label="Daily diary" hidden></div>
 <div id="igChats" hidden><div class="sbar"><button type="button" id="chatsBack" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>Transaction chats</b><small id="lallsub"></small></div></div><div class="cw"><input id="lallq" type="search" placeholder="Search a name, category or account" autocomplete="off"><div id="lflt"></div><div id="lallList"></div></div></div>
 <div id="toast" role="status"></div>
+<!-- CHANGE 1: entry saved pop-up (wallet animation) -->
+<div id="savedpop" role="status" aria-live="polite"><div class="spw"><svg class="spwal" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 8l11-3v3M16 14h2.5"/></svg><div class="spcoin" aria-hidden="true">₹</div><div class="spc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div></div><div id="savedtxt"></div></div>
+<!-- END CHANGE 1 -->
+<!-- CHANGE 2: not enough balance pop-up -->
+<div id="nbov" hidden role="alertdialog" aria-modal="true" aria-labelledby="nbtitle"><div class="nbcard"><div class="nbic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v8M12 18v.5"/></svg></div><h3 id="nbtitle">Not enough balance</h3><p id="nbmsg"></p><p>This entry can't be processed, because the balance would go below zero.</p><div class="nbbtns"><button type="button" class="btn2 danger" id="nbcancel">Cancel entry</button><button type="button" class="btn2" id="nbother">Use another account</button><button type="button" class="btn2" id="nbcredit">Added new credit</button></div></div></div>
+<!-- END CHANGE 2 -->
 
 <script>
 (function(){
@@ -2236,6 +2280,7 @@ function updateSubmit(){
   $('#cancel').hidden=!S.editId;
 }
 function resetForm(keepDate){
+  /* CHANGE 2: forget a waiting entry */S.nbDraft=null;/* END CHANGE 2 */
   S.editId=null;S.estep=1;$('#amt').value='';$('#note').value='';$('#igTagIn').value='';$('#err').textContent='';
   $('#person').value='';$('#oldloan').checked=false;$('#wooff').checked=false;$('#woamt').value='';$('#ixon').checked=false;$('#ixamt').value='';$('#fee').value='';$('#trate').value='';$('#tstatus').textContent='';S.trateTouched=false;S.feeOn='from';
   S.fperson='';S.party='';S.sipn='';S.sfull=false;$('#sipvalin').value='';
@@ -3313,9 +3358,10 @@ var moreEl=document.createElement('div');moreEl.id='igMore';moreEl.hidden=true;
 moreEl.innerHTML='<button type="button" data-m="set"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37 1 .608 2.296.07 2.572-1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></svg>Settings</button><button type="button" data-m="out"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/><path d="M9 12h12l-3-3"/><path d="M18 15l3-3"/></svg>Sign out</button>';document.body.appendChild(moreEl);
 function setBal(a){return curs(a).map(function(c){return money(balanceOf(a,c,todayStr()),c)}).join(' + ')}
 var setView='main';
-var SETIC={book:'<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h6"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
+var SETIC={wallet:'<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 8l11-3v3M16 14h2.5"/>',book:'<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h6"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
 function setSvg(n){return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+SETIC[n]+'</svg>'}
 /* ---------- Diary: a rough look at one day, shown as a popup ---------- */
+var NBK='mywallet.nbblock',NBB=false;try{NBB=localStorage.getItem(NBK)==='1'}catch(e){}
 var DRK='mywallet.diary',DRH='mywallet.diary.hide',DRL='mywallet.diary.last',DRY=false,DRHIDE=false,DMSG='';
 try{DRY=localStorage.getItem(DRK)==='1';DRHIDE=localStorage.getItem(DRH)==='1'}catch(e){}
 var dEl=document.getElementById('igDiary');
@@ -3489,6 +3535,8 @@ function renderSet(){
    chemail:['Change email',function(){return accPage('e')}],
    chpass:['Reset password',function(){return accPage('p')}],
    notif:['Notifications',function(){return pushPage()}],
+   bal:['Balance check',function(){return '<div class="card" id="sBal"><div class="chead"><h2>Balance check</h2></div><p class="fine">When this is on, an entry that would take an account below zero is not saved. You can then cancel it, pick another account, or add the missing money as a new credit. Automatic (recurring) entries are not checked.</p>'+
+    '<label class="srow" style="cursor:pointer"><span>Block entries that make a balance negative<small>Off by default</small></span><input type="checkbox" class="swc" role="switch" data-s="nbblock"'+(NBB?' checked':'')+'></label></div>'}],
    diary:['Diary',function(){return '<div class="card" id="sDiary"><div class="chead"><h2>Diary</h2></div><p class="fine">A short look at each day: what came in, what went out and where most of it went. No amounts are ever shown in the phone message.</p>'+
     '<label class="srow" style="cursor:pointer"><span>Diary notification<small>A message every morning at your reminder time. It also shows when you open the app.</small></span><input type="checkbox" class="swc" role="switch" data-s="diarynt"'+(DRY?' checked':'')+'></label>'+
     '<label class="srow" style="cursor:pointer"><span>Hide diary from the top bar<small>You can always open it from here.</small></span><input type="checkbox" class="swc" role="switch" data-s="diaryhide"'+(DRHIDE?' checked':'')+'></label>'+
@@ -3502,7 +3550,7 @@ function renderSet(){
   if(main){
     var cth=allThemes().filter(function(t){return t.id===igCur()})[0];
     body='<h3 class="sgrp">Data settings</h3><div class="card sgl">'+setRow('user','Personal details',p.name||'Not set','pd')+setRow('bank','Accounts',(act.length+1)+' open','acc')+setRow('coin','Currencies','OMR, INR','cur')+'</div>'+
-     '<h3 class="sgrp">App settings</h3><div class="card sgl">'+setRow('palette','Themes',cth?cth.name:'','theme')+setRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer')+setRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer')+setRow('bell','Notifications',PUSH.st&&PUSH.st.on?'On':'Off','notif')+setRow('book','Diary',DRY?'On':'Off','diary')+setRow('globe','Version',NEP?'Nepali':'Indian','ver')+'</div>';
+     '<h3 class="sgrp">App settings</h3><div class="card sgl">'+setRow('palette','Themes',cth?cth.name:'','theme')+setRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer')+setRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer')+setRow('bell','Notifications',PUSH.st&&PUSH.st.on?'On':'Off','notif')+setRow('book','Diary',DRY?'On':'Off','diary')+setRow('wallet','Balance check',NBB?'On':'Off','bal')+setRow('globe','Version',NEP?'Nepali':'Indian','ver')+'</div>';
   }else body=T[setView][1]();
   setEl.classList.toggle('sub',!main);
   setEl.innerHTML='<div class="sbar"><button type="button" data-s="close" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>'+(main?'Settings':T[setView][0])+'</b></div><div class="sw">'+body+'</div>';
@@ -3562,6 +3610,7 @@ setEl.addEventListener('change',function(e){
   if(e.target.dataset.s==='pushhour'||e.target.dataset.s==='pushamt'){
     var pu=pushApi();if(!pu)return;var f=e.target.dataset.s==='pushhour'?{hour:+e.target.value}:{amounts:e.target.checked};
     pu.update(f).then(function(){PUSH.st=Object.assign({},PUSH.st,f);PUSH.msg='Saved.';renderSet()}).catch(function(){PUSH.msg='Could not save. Check your internet and try again.';renderSet()});return}
+  if(e.target.dataset.s==='nbblock'){NBB=e.target.checked;try{localStorage.setItem(NBK,NBB?'1':'0')}catch(er){}pfSave();renderSet();return}
   if(e.target.dataset.s==='diarynt'){diarySetNt(e.target.checked);return}
   if(e.target.dataset.s==='diaryhide'){DRHIDE=e.target.checked;diaryStore();diaryBtnPaint();pfSave();renderSet();return}
   if(e.target.dataset.s==='showclosed'){var sc=e.target.checked;setChange({type:'showClosed',value:sc},function(){SET.showClosed=sc},afterAcc,function(msg){toast(msg);renderSet()})}});
@@ -3720,6 +3769,55 @@ document.addEventListener('pointerdown',showTip);
 document.addEventListener('scroll',function(){tip.style.opacity=0},{passive:true});
 var toastT;
 function toast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},2800)}
+// CHANGE 1: entry saved pop-up function (dir: 'in' = money comes in, 'out' = money goes out, '' = no money moves)
+var savedT;
+function savedPop(msg,dir,cur){var p=$('#savedpop');if(!p){toast(msg);return}$('#savedtxt').textContent=msg;var cn=$('#savedpop .spcoin');if(cn){cn.textContent=cur==='OMR'?'OMR':(NEP?'Rs':'\u20b9');cn.classList.toggle('sm',cur==='OMR')}p.classList.remove('show','in','out');void p.offsetWidth;if(dir)p.classList.add(dir);p.classList.add('show');clearTimeout(savedT);savedT=setTimeout(function(){p.classList.remove('show')},2700)}
+// END CHANGE 1
+// CHANGE 2: not enough balance check, pop-up and credit (loan) round trip
+var nbEl=document.getElementById('nbov');
+function nbCheck(e,old){
+  var seen={},bad=null;
+  legsOf(e).forEach(function(l){
+    var k=l.a+'|'+l.c;if(bad||seen[k])return;seen[k]=1;
+    var d=effectCur(e,l.a,l.c);if(!(d<-0.0004))return;
+    var bal=balanceOf(l.a,l.c,e.date);if(old&&old.date<=e.date)bal-=effectCur(old,l.a,l.c);
+    if(bal+d<-0.0004)bad={acc:l.a,cur:l.c,have:Math.max(bal,0),need:-d,miss:-(bal+d)};
+  });
+  return bad;
+}
+function nbShow(entry,old,bad){
+  S.nbPend={entry:entry,editId:old?old.id:null,bad:bad};
+  $('#nbmsg').innerHTML='<b>'+esc(bad.acc)+'</b> has '+esc(money(bad.have,bad.cur))+'. This entry needs '+esc(money(bad.need,bad.cur))+'.';
+  nbEl.hidden=false;$('#err').textContent='';
+  try{$('#nbcancel').focus({preventScroll:true})}catch(er){}
+}
+function nbRestore(){
+  var d=S.nbDraft;if(!d)return false;S.nbDraft=null;
+  var e=d.entry,i=S.entries.findIndex(function(x){return x.id===e.id}),had=i>-1,keep=had?S.entries[i]:null;
+  if(had)S.entries[i]=e;else S.entries.push(e);
+  try{startEdit(e.id)}finally{var j=S.entries.findIndex(function(x){return x.id===e.id});if(had){if(j>-1)S.entries[j]=keep}else if(j>-1)S.entries.splice(j,1)}
+  S.editId=d.editId||null;estepApply();updateSubmit();render();return true;
+}
+function nbBack(){return !!S.nbDraft&&S.ftype==='loan'&&nbRestore()}
+function nbAfterSave(entry){return !!S.nbDraft&&entry.type==='loan'&&nbRestore()}
+$('#nbcancel').addEventListener('click',function(){nbEl.hidden=true;S.nbPend=null;S.nbDraft=null;resetForm(false);S.editId=null;setTab(S.back&&S.back!=='entry'?S.back:'home')});
+$('#nbother').addEventListener('click',function(){
+  nbEl.hidden=true;S.nbPend=null;
+  var el=$('#accchips');if(!(el&&el.offsetParent))el=$('#accblock');if(!(el&&el.offsetParent))el=$('#from');
+  if(el&&el.offsetParent)el.scrollIntoView({behavior:'auto',block:'center'});
+});
+$('#nbcredit').addEventListener('click',function(){
+  var pd=S.nbPend;if(!pd)return;nbEl.hidden=true;S.nbPend=null;
+  resetForm(false);
+  S.nbDraft={entry:pd.entry,editId:pd.editId};
+  S.lkind='borrow';
+  S.fgroup=pd.bad.acc==='Cash'?'Cash':'Bank';if(pd.bad.acc!=='Cash')S.fbank=pd.bad.acc;
+  S.fcur=pd.bad.cur;
+  setTab('entry',true);setType('loan');paintAccount();
+  $('#amt').value=String(rnd(pd.bad.miss,pd.bad.cur));
+  paintLoan();render();window.scrollTo(0,0);
+});
+// END CHANGE 2
 function askOkP(msg){return new Promise(function(res){
   var o=document.createElement('div');o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');
   o.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.5)';
@@ -3881,9 +3979,15 @@ $('#f').addEventListener('submit',function(ev){
     if(!allowsCur(entry.account,entry.currency)){err.textContent=entry.account+' holds '+curs(entry.account)[0]+' only.';return}}
   }
   var tg=igTags();if(tg)entry.tags=tg;
+  // CHANGE 2: stop the entry when the balance is not enough (only when the switch in Settings > Balance check is on)
+  var nbBad=NBB?nbCheck(entry,old):null;if(nbBad){nbShow(entry,old,nbBad);return}
+  // END CHANGE 2
   var wasEdit=!!old,btn=$('#submit');btn.disabled=true;
   saveEntry(entry).then(function(){
-    toast(wasEdit?'Changes saved':(entry.type==='expense'?'Expense added':entry.type==='income'?'Income added':entry.type==='loan'?'Loan entry added':entry.type==='sip'?'SIP entry added':'Transfer added'));
+    // CHANGE 1: show the new pop-up instead of the small toast
+    savedPop(wasEdit?'Changes saved':(entry.type==='expense'?'Expense added':entry.type==='income'?'Income added':entry.type==='loan'?'Loan entry added':entry.type==='sip'?'SIP entry added':'Transfer added'),entry.type==='income'?'in':entry.type==='expense'?'out':entry.type==='loan'?(entry.noBal?'':loanIn(entry)?'in':'out'):entry.type==='fam'?(entry.kind==='got'?'in':'out'):entry.type==='sip'?(entry.kind==='draw'?'in':'out'):'',entry.currency);
+    // END CHANGE 1
+    /* CHANGE 2: after a new credit, go back to the saved expense */if(nbAfterSave(entry))return;/* END CHANGE 2 */
     resetForm(true);S.editId=null;setTab(S.back&&S.back!=='entry'?S.back:'home');
   }).catch(function(e){err.textContent=failMsg(e)}).then(function(){btn.disabled=false});
 });
@@ -3993,7 +4097,7 @@ function xKeyStore(k){ /* signed in: private doc in your own account, outside ba
 /* ---------- synced preferences: theme, timers, family & friends names (one private cloud doc per version) ---------- */
 var PFD='settings/prefs',pfOn=false,pfT=null,pfSig='',pfFirst=true;
 function pfGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200),sp:SIPL.slice(0,50),dy:[DRY?1:0,DRHIDE?1:0]}}
+function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200),sp:SIPL.slice(0,50),dy:[DRY?1:0,DRHIDE?1:0],nb:NBB?1:0}}
 function pfSave(){
   if(!S.db||!pfOn)return;
   clearTimeout(pfT);pfT=setTimeout(function(){
@@ -4024,6 +4128,7 @@ function pfApply(d){
     if(pfFirst)PT.forEach(function(o){if(!pc.some(function(c){return pkey(c.n)===pkey(o.n)}))pc.push(o)});
     PT=pc.slice(0,200);try{localStorage.setItem(PTK,JSON.stringify(PT))}catch(e){}
   }
+  if(d.nb===0||d.nb===1){var nbv=d.nb===1;if(nbv!==NBB){NBB=nbv;try{localStorage.setItem(NBK,nbv?'1':'0')}catch(e){}}}
   if(Array.isArray(d.dy)&&d.dy.length===2){var dn=d.dy[0]===1,dh=d.dy[1]===1;if(dn!==DRY||dh!==DRHIDE){DRY=dn;DRHIDE=dh;diaryStore();diaryBtnPaint()}}
   if(Array.isArray(d.sp)){
     var sc=d.sp.filter(sipNmOk).map(function(x){return x.replace(/\s+/g,' ').trim()}).slice(0,50);
@@ -5213,7 +5318,7 @@ document.getElementById('home').addEventListener('click',function(ev){
     else{var i=v.indexOf('.');if(i>-1&&v.length-i-1>=dec)return;if(v.length>=12)return;v=(v==='0'?'':v)+k}
     amt.value=v;amt.dispatchEvent(new Event('input',{bubbles:true}));
   });
-  document.getElementById('xclose').addEventListener('click',function(){if(twoStep()&&S.estep===2&&!S.editId){S.estep=1;estepApply();return}resetForm(false);S.editId=null;setTab(S.back&&S.back!=='entry'?S.back:'home')});
+  document.getElementById('xclose').addEventListener('click',function(){/* CHANGE 2: back from the credit form to the entry */if(nbBack())return;/* END CHANGE 2 */if(twoStep()&&S.estep===2&&!S.editId){S.estep=1;estepApply();return}resetForm(false);S.editId=null;setTab(S.back&&S.back!=='entry'?S.back:'home')});
   var f=document.getElementById('f');
   f.addEventListener('focusin',function(e){f.classList.toggle('kpoff',e.target.id!=='amt'&&/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName))});
   f.addEventListener('focusout',function(e){if(!e.relatedTarget)f.classList.remove('kpoff')});
@@ -5232,6 +5337,7 @@ try{
     if(HB.skip>0){HB.skip--;return}
     var st=e.state,i=st&&typeof st.i==='number'?st.i:0,t=(st&&st.t)||'home';
     var prevI=HB.i;HB.i=i;
+    /* CHANGE 2: phone Back closes the not enough balance pop-up only */if(i<prevI&&!nbEl.hidden){nbEl.hidden=true;HB.i=prevI;HB.skip++;history.go(1);return}/* END CHANGE 2 */
     if(!dEl.hidden){HB.ovPop=1;dEl.hidden=true;return} /* diary popup: back closes it */
     if(!afan.hidden){HB.ovPop=1;afan.hidden=true;return}
     if(!setEl.hidden&&setEl._sub){setEl._sub=0;setView='main';renderSet();setEl.scrollTop=0;return} /* inside a settings page: back returns to the settings list only */
