@@ -264,6 +264,50 @@ async function testOptimistic() {
   eq('login answers again later: still no second start', t.log, ['begin']);
 }
 
+/* ---------- 7c. first screen from the copy on the phone ---------- */
+async function testCacheFirst() {
+  section('first screen comes from the phone, the live answer follows');
+  const src = between(cj, 'function dsnap(d)', '/* ---------- change one setting safely');
+  function make(o) {
+    const calls = []; let liveCb = null, unsub = 0;
+    const mk = (id, v) => ({ id, data: () => v });
+    const env = {
+      plain: x => x, mine: id => id.indexOf('np_') !== 0, clean: v => JSON.parse(JSON.stringify(v)), soft: p => p, setDoc: () => 0, deleteDoc: () => 0,
+      cref: n => 'c:' + n, uref: p => 'r:' + p,
+      onSnapshot: (ref, f) => { liveCb = f; return () => { unsub++; }; },
+      getDocsFromCache: () => o.cacheFail ? Promise.reject(new Error('x')) : Promise.resolve({ docs: (o.docs || []).map(d => mk(d, { v: d })) }),
+      getDocFromCache: () => o.cacheFail ? Promise.reject(new Error('x')) : Promise.resolve({ id: 'a', exists: () => !!o.docOk, data: () => ({ v: 1 }) }),
+      SAVE: { pending: 0, failed: 0 }, saveNote: () => { }, track: p => p
+    };
+    const names = Object.keys(env);
+    const db = new Function(...names, src + '\nreturn dbObj();')(...names.map(k => env[k]));
+    return { db, calls, live: s => liveCb(s), unsub: () => unsub };
+  }
+  let t = make({ docs: ['e1', 'e2', 'np_x'] }); const got = [];
+  const off = t.db.collection('entries').onSnapshot(s => got.push(s.docs.map(d => d.id)));
+  await sleep(10);
+  eq('saved copy shown at once (only this version\'s items)', got, [['e1', 'e2']]);
+  t.live({ docs: [{ id: 'e1', data: () => ({}) }, { id: 'e2', data: () => ({}) }, { id: 'e3', data: () => ({}) }] }); 
+  eq('live answer follows and replaces it', got.length, 2);
+  off(); eq('stopping the listener stops the live one', t.unsub(), 1);
+  t = make({ docs: ['e1'] }); const g2 = [];
+  t.db.collection('entries').onSnapshot(s => g2.push(s.docs.length));
+  t.live({ docs: [{ id: 'e1', data: () => ({}) }, { id: 'e2', data: () => ({}) }] }); await sleep(10);
+  eq('live answer first: the older saved copy is not shown after it', g2, [2]);
+  t = make({ docs: [] }); const g3 = [];
+  t.db.collection('entries').onSnapshot(s => g3.push(s.docs.length)); await sleep(10);
+  eq('nothing saved on the phone: waits for the live answer', g3, []);
+  t = make({ cacheFail: true }); const g4 = [];
+  t.db.collection('entries').onSnapshot(s => g4.push(1)); await sleep(10);
+  eq('saved copy unreadable: no error, waits for the live answer', g4, []);
+  t = make({ docOk: true }); const g5 = [];
+  t.db.doc('settings/opening').onSnapshot(s => g5.push(s.exists)); await sleep(10);
+  eq('single document: saved copy shown at once', g5, [true]);
+  t = make({ docOk: false }); const g6 = [];
+  t.db.doc('settings/opening').onSnapshot(s => g6.push(s.exists)); await sleep(10);
+  eq('single document not saved on the phone: nothing shown early', g6, []);
+}
+
 /* ---------- 7. fast start: open now when this phone already has its settings ---------- */
 async function testStartup() {
   section('startup: app opens without waiting for the cloud settings');
@@ -480,7 +524,7 @@ async function testTrading() {
 }
 
 (async () => {
-  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testOptimistic, testStartup, testVersionData, testSip, testTrading];
+  const parts = [testEscAndCsv, testMoney, testRestore, testPatch, testSave, testSignOut, testOptimistic, testCacheFirst, testStartup, testVersionData, testSip, testTrading];
   for (const p of parts) { try { await p(); } catch (e) { fail++; console.log('FAIL: ' + p.name + ' could not run: ' + e.message); } }
   console.log('\n' + pass + ' checks passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

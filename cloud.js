@@ -2,7 +2,7 @@
    and the same db API the app already uses. No personal data lives in this file or the repo. */
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,verifyBeforeUpdateEmail} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,collection,onSnapshot,setDoc,deleteDoc,getDoc,getDocs,writeBatch,runTransaction,terminate,clearIndexedDbPersistence} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,collection,onSnapshot,setDoc,deleteDoc,getDoc,getDocs,getDocFromCache,getDocsFromCache,writeBatch,runTransaction,terminate,clearIndexedDbPersistence} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 var firebaseConfig={
   apiKey:"AIzaSyCpYoEfq_hz65dpzG6HOH7N72RyUMFhs_A",
@@ -137,11 +137,20 @@ function dbObj(){
   function docRef(r){return{
     set:function(v){return soft(setDoc(r,clean(v)))},
     delete:function(){return soft(deleteDoc(r))},
-    onSnapshot:function(cb,err){return onSnapshot(r,function(s){cb({id:plain(s.id),exists:s.exists(),data:function(){return s.exists()?clean(s.data()):undefined}})},err||function(){})}}}
+    onSnapshot:function(cb,err){
+      var live=false,off=false,un=onSnapshot(r,function(s){live=true;cb({id:plain(s.id),exists:s.exists(),data:function(){return s.exists()?clean(s.data()):undefined}})},err||function(){});
+      /* first screen from the copy on this phone: no waiting for the login check or the server (the live answer follows and replaces it) */
+      getDocFromCache(r).then(function(s){if(live||off||!s.exists())return;cb({id:plain(s.id),exists:true,data:function(){return clean(s.data())}})}).catch(function(){});
+      return function(){off=true;un()};
+    }}}
   return{
     collection:function(n){return{
       doc:function(id){return docRef(uref(n+'/'+id))},
-      onSnapshot:function(cb,err){return onSnapshot(cref(n),function(s){cb({docs:s.docs.filter(function(d){return mine(d.id)}).map(dsnap)})},err||function(){})}}},
+      onSnapshot:function(cb,err){
+        var c=cref(n),live=false,off=false,un=onSnapshot(c,function(s){live=true;cb({docs:s.docs.filter(function(d){return mine(d.id)}).map(dsnap)})},err||function(){});
+        getDocsFromCache(c).then(function(s){if(live||off)return;var l=s.docs.filter(function(d){return mine(d.id)}).map(dsnap);if(l.length)cb({docs:l})}).catch(function(){});
+        return function(){off=true;un()};
+      }}},
     doc:function(p){return docRef(uref(p))}};
 }
 
