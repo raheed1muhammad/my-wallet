@@ -11,6 +11,18 @@ on:
         description: 'Send ONE test message to the account whose email is in the TEST_EMAIL secret (leave off for the normal run)'
         type: boolean
         default: false
+      announce_id:
+        description: 'New-feature message: a short unique id (for example feat-balance-check). Leave empty for the normal run. The title and message below are public, so write no private details.'
+        type: string
+        default: ''
+      announce_title:
+        description: 'New-feature message title'
+        type: string
+        default: ''
+      announce_body:
+        description: 'New-feature message text'
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -36,4 +48,7 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           ONLY_EMAIL: ${{ secrets.TEST_EMAIL }}
+          ANNOUNCE_ID: ${{ github.event.inputs.announce_id }}
+          ANNOUNCE_TITLE: ${{ github.event.inputs.announce_title }}
+          ANNOUNCE_BODY: ${{ github.event.inputs.announce_body }}
           SEND_TEST: ${{ github.event.inputs.send_test == 'true' && '1' || '0' }}

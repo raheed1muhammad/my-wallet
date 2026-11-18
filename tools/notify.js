@@ -109,6 +109,14 @@ async function run(deps, env, nowMs) {
       const jobs = []; /* each job: one message and the log keys to remember once it was delivered */
       let logRef = null, prev = {};
       if (test) jobs.push({ msg: { title: 'My Wallet · test', body: 'The reminder server can reach this phone.', tag: 'server-test' }, keys: [] });
+      else if (env.ANNOUNCE_ID && env.ANNOUNCE_TITLE) {
+        /* one-time announcement to everyone who has notifications on; the id is remembered so it is never sent twice to the same person */
+        logRef = db.doc('users/' + uid + '/private/pushlog');
+        const ls = await logRef.get(); prev = (ls.exists && ls.data().sent) || {};
+        const nk = hash('news:' + env.ANNOUNCE_ID);
+        if (prev[nk]) continue;
+        jobs.push({ msg: { title: String(env.ANNOUNCE_TITLE).slice(0, 60), body: String(env.ANNOUNCE_BODY || '').slice(0, 140), tag: 'news' }, keys: [nk] });
+      }
       else {
         const hour = pd.hour >= 0 && pd.hour <= 23 ? Math.floor(pd.hour) : 9, now = localNow(pd.tz || 'UTC', nowMs);
         if (now.hour < hour) continue;

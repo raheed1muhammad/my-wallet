@@ -104,6 +104,16 @@ const base = () => ({
   f = fake(base()); f.db.collection = () => { throw new Error('db down'); }; ms = msgSvc();
   out = await N.run({ db: f.db, messaging: ms, auth: f.auth }, {}, after9).catch(e => ({ crashed: true }));
   check('a database error does not crash the run', out && !out.crashed || out.crashed === true);
+  /* new-feature announcement: once, to everyone who has notifications on, even before their reminder hour */
+  const an = { ANNOUNCE_ID: 'feat-x', ANNOUNCE_TITLE: 'New in My Wallet', ANNOUNCE_BODY: 'Balance check added' };
+  const ad = base(); ad['users/B/private/push'] = { on: true, hour: 9, tz: 'UTC', tokens: [TOK('b')] }; ad['users/C/private/push'] = { on: false, tokens: [TOK('c')] };
+  f = fake(ad); ms = msgSvc(); out = await N.run({ db: f.db, messaging: ms, auth: f.auth }, an, before9);
+  eq('announce: sent to the two users who have notifications on', ms.calls.filter(c => c.data.tag === 'news').length, 2);
+  eq('announce: only the announcement, no reminders', ms.calls.length, 2);
+  await N.run({ db: f.db, messaging: ms, auth: f.auth }, an, after9);
+  eq('announce: same id is never sent twice', ms.calls.length, 2);
+  await N.run({ db: f.db, messaging: ms, auth: f.auth }, Object.assign({}, an, { ANNOUNCE_ID: 'feat-y' }), after9);
+  eq('announce: a new id is sent again', ms.calls.filter(c => c.data.tag === 'news').length, 4);
   /* daily diary: its own message, once a day, no amounts, only for the user who turned it on */
   const dd = base(); dd['users/A/private/push'].diary = true; dd['users/B/private/push'] = { on: true, hour: 9, tz: 'UTC', tokens: [TOK('b')] };
   f = fake(dd); ms = msgSvc(); await N.run({ db: f.db, messaging: ms, auth: f.auth }, {}, before9);
