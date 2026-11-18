@@ -694,6 +694,7 @@ html body nav.tabs.noadd{grid-template-columns:1fr 1fr 0fr 1fr 1fr;transition-de
 html body .tabs .tab[data-tab=entry]{min-width:0;transition:transform .45s cubic-bezier(.4,0,.2,1),opacity .35s ease,width .55s cubic-bezier(.4,0,.2,1)}
 html body nav.tabs.noadd .tab[data-tab=entry]{width:0;transition-delay:0s,0s,.12s}
 html body .tabs .tab[data-tab=entry].away{transform:translateY(160px);opacity:0;visibility:hidden;pointer-events:none;transition:transform .45s ease,opacity .45s ease,visibility 0s linear .45s}
+html.nofx body .tabs .tab[data-tab=entry],html.nofx body nav.tabs,html.nofx .lfab{transition:none!important}
 #igChat .cempty{text-align:center;color:var(--muted);padding:30px 0}
 #igSet .sbar b{font-size:18px}#igSet .sbar button{background:none;border:0;color:inherit;font-size:22px;cursor:pointer}
 #igSet .sw{max-width:720px;margin:0 auto;padding:14px}
@@ -4311,6 +4312,8 @@ function addBtnShow(noTimer){
   if(tb)tb.classList.remove('noadd');f.classList.remove('away');
   if(ADT>0&&!noTimer)adtT=setTimeout(function(){if(S.tab!=='entry'){f.classList.add('away');if(tb)tb.classList.add('noadd')}},ADT*1000);
 }
+/* first paint: put the + button in its right state at once with no animation (before, it showed on open and slid away 1.2 s later) */
+(function(){var h=document.documentElement;h.classList.add('nofx');addBtnShow();requestAnimationFrame(function(){requestAnimationFrame(function(){h.classList.remove('nofx')})})})();
 setTimeout(addBtnShow,1200);
 $('#lviewseg').addEventListener('click',function(ev){
   var b=ev.target.closest('button');if(!b)return;S.lview=b.dataset.lview;
