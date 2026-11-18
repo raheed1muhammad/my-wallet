@@ -264,48 +264,62 @@ async function testOptimistic() {
   eq('login answers again later: still no second start', t.log, ['begin']);
 }
 
-/* ---------- 7c. first screen from the copy on the phone ---------- */
+/* ---------- 7c. first screen from the copy kept on the phone ---------- */
 async function testCacheFirst() {
-  section('first screen comes from the phone, the live answer follows');
+  section('first screen comes from the copy kept on the phone, the live answer follows');
   const src = between(cj, 'function dsnap(d)', '/* ---------- change one setting safely');
   function make(o) {
-    const calls = []; let liveCb = null, unsub = 0;
-    const mk = (id, v) => ({ id, data: () => v });
+    let liveCb = null, unsub = 0; const store = Object.assign({}, o.store), timers = [], log = [];
     const env = {
       plain: x => x, mine: id => id.indexOf('np_') !== 0, clean: v => JSON.parse(JSON.stringify(v)), soft: p => p, setDoc: () => 0, deleteDoc: () => 0,
-      cref: n => 'c:' + n, uref: p => 'r:' + p,
+      cref: n => 'c:' + n, uref: p => 'r:' + p, PM: n => log.push(n),
       onSnapshot: (ref, f) => { liveCb = f; return () => { unsub++; }; },
-      getDocsFromCache: () => o.cacheFail ? Promise.reject(new Error('x')) : Promise.resolve({ docs: (o.docs || []).map(d => mk(d, { v: d })) }),
-      getDocFromCache: () => o.cacheFail ? Promise.reject(new Error('x')) : Promise.resolve({ id: 'a', exists: () => !!o.docOk, data: () => ({ v: 1 }) }),
-      SAVE: { pending: 0, failed: 0 }, saveNote: () => { }, track: p => p
+      SAVE: { pending: 0, failed: 0 }, saveNote: () => { }, track: p => p,
+      OPT: o.opt !== false, UID: 'U1', VER: o.ver || 'indian', CK: 'mywallet.cache.', CT: {},
+      localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; }, removeItem: k => { delete store[k]; } },
+      setTimeout: (f, ms) => { if (ms > 0) { timers.push(f); return timers.length; } setTimeout(f, 0); return 0; }, clearTimeout: () => { }
     };
     const names = Object.keys(env);
     const db = new Function(...names, src + '\nreturn dbObj();')(...names.map(k => env[k]));
-    return { db, calls, live: s => liveCb(s), unsub: () => unsub };
+    return { db, store, log, live: s => liveCb(s), unsub: () => unsub, flush: () => timers.splice(0).forEach(f => f()) };
   }
-  let t = make({ docs: ['e1', 'e2', 'np_x'] }); const got = [];
-  const off = t.db.collection('entries').onSnapshot(s => got.push(s.docs.map(d => d.id)));
+  const KEY = 'mywallet.cache.U1.indian.entries', saved = JSON.stringify([{ id: 'e1', d: { a: 1 } }, { id: 'e2', d: { a: 2 } }]);
+  let t = make({ store: { [KEY]: saved } }); const got = [];
+  const off = t.db.collection('entries').onSnapshot(s => got.push(s.docs.map(d => d.id + ':' + d.data().a)));
+  eq('nothing is shown inside the call itself', got, []);
   await sleep(10);
-  eq('saved copy shown at once (only this version\'s items)', got, [['e1', 'e2']]);
-  t.live({ docs: [{ id: 'e1', data: () => ({}) }, { id: 'e2', data: () => ({}) }, { id: 'e3', data: () => ({}) }] }); 
-  eq('live answer follows and replaces it', got.length, 2);
+  eq('saved copy shown at once', got, [['e1:1', 'e2:2']]);
+  t.live({ docs: [{ id: 'e1', data: () => ({ a: 5 }) }, { id: 'np_x', data: () => ({}) }] });
+  eq('live answer follows and replaces it (other version\'s items left out)', got[1], ['e1:5']);
+  t.flush(); eq('live answer is saved for next time', JSON.parse(t.store[KEY]), [{ id: 'e1', d: { a: 5 } }]);
   off(); eq('stopping the listener stops the live one', t.unsub(), 1);
-  t = make({ docs: ['e1'] }); const g2 = [];
-  t.db.collection('entries').onSnapshot(s => g2.push(s.docs.length));
-  t.live({ docs: [{ id: 'e1', data: () => ({}) }, { id: 'e2', data: () => ({}) }] }); await sleep(10);
-  eq('live answer first: the older saved copy is not shown after it', g2, [2]);
-  t = make({ docs: [] }); const g3 = [];
-  t.db.collection('entries').onSnapshot(s => g3.push(s.docs.length)); await sleep(10);
-  eq('nothing saved on the phone: waits for the live answer', g3, []);
-  t = make({ cacheFail: true }); const g4 = [];
+  t = make({ store: { [KEY]: saved } }); const g2 = [];
+  t.db.collection('entries').onSnapshot(s => g2.push(s.docs.length)); t.live({ docs: [] }); await sleep(10);
+  eq('live answer first: the saved copy is not shown after it', g2, [0]);
+  t = make({ store: { [KEY]: saved }, opt: false }); const g3 = [];
+  t.db.collection('entries').onSnapshot(s => g3.push(1)); await sleep(10);
+  eq('app did not open on the remembered account: saved copy not used', g3, []);
+  t = make({ store: { 'mywallet.cache.U2.indian.entries': saved } }); const g4 = [];
   t.db.collection('entries').onSnapshot(s => g4.push(1)); await sleep(10);
-  eq('saved copy unreadable: no error, waits for the live answer', g4, []);
-  t = make({ docOk: true }); const g5 = [];
-  t.db.doc('settings/opening').onSnapshot(s => g5.push(s.exists)); await sleep(10);
-  eq('single document: saved copy shown at once', g5, [true]);
-  t = make({ docOk: false }); const g6 = [];
-  t.db.doc('settings/opening').onSnapshot(s => g6.push(s.exists)); await sleep(10);
-  eq('single document not saved on the phone: nothing shown early', g6, []);
+  eq('another account\'s copy is never used', g4, []);
+  t = make({ store: { 'mywallet.cache.U1.nepali.entries': saved } }); const g5 = [];
+  t.db.collection('entries').onSnapshot(s => g5.push(1)); await sleep(10);
+  eq('the other version\'s copy is never used', g5, []);
+  t = make({ store: { [KEY]: '{broken' } }); const g6 = [];
+  t.db.collection('entries').onSnapshot(s => g6.push(1)); await sleep(10);
+  eq('damaged copy: ignored, waits for the live answer', g6, []);
+  t = make({ store: { 'mywallet.cache.U1.indian.settings/opening': JSON.stringify({ e: true, d: { x: 1 } }) } }); const g7 = [];
+  t.db.doc('settings/opening').onSnapshot(s => g7.push(s.exists + ':' + s.data().x)); await sleep(10);
+  eq('single document: saved copy shown at once', g7, ['true:1']);
+  t = make({}); t.db.collection('entries').onSnapshot(() => { });
+  t.live({ docs: [{ id: 'big', data: () => ({ s: 'x'.repeat(1600000) }) }] }); t.flush();
+  check('too big to keep: not saved', !(KEY in t.store));
+  {
+    const wl = one(cj, /function wipeLocal\(\)\{[\s\S]*?\n\}/, 'wipeLocal'), st = { [KEY]: saved, 'mywallet.igtheme': 'x', other: 'keep' };
+    const ls = { removeItem: k => { delete st[k]; } }; Object.defineProperty(ls, 'keys', { value: () => Object.keys(st) });
+    new Function('localStorage', 'Object', wl + '\nwipeLocal();')(ls, { keys: () => Object.keys(st) });
+    check('sign-out erases the saved copy (theme and other sites\' keys untouched)', !(KEY in st) && st['mywallet.igtheme'] === 'x' && st.other === 'keep');
+  }
 }
 
 /* ---------- 7. fast start: open now when this phone already has its settings ---------- */

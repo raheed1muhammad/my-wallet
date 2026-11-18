@@ -2,7 +2,7 @@
    and the same db API the app already uses. No personal data lives in this file or the repo. */
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,verifyBeforeUpdateEmail} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,collection,onSnapshot,setDoc,deleteDoc,getDoc,getDocs,getDocFromCache,getDocsFromCache,writeBatch,runTransaction,terminate,clearIndexedDbPersistence} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,collection,onSnapshot,setDoc,deleteDoc,getDoc,getDocs,writeBatch,runTransaction,terminate,clearIndexedDbPersistence} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 var firebaseConfig={
   apiKey:"AIzaSyCpYoEfq_hz65dpzG6HOH7N72RyUMFhs_A",
@@ -133,25 +133,35 @@ window.__saveClear=function(){SAVE.failed=0;saveNote()};
 function soft(p){track(p);if(navigator.onLine===false){p.catch(function(){});return Promise.resolve()}
   return new Promise(function(res,rej){var t=setTimeout(res,4000);p.then(function(){clearTimeout(t);res()},function(e){clearTimeout(t);rej(e)})})}
 function dsnap(d){return{id:plain(d.id),exists:true,data:function(){return clean(d.data())}}}
+/* A copy of each list is kept on this phone so the first screen does not have to wait. (The database can only answer after the login check, which is the slow part.)
+   It is used only when the app opened on the remembered account, it belongs to that one account and version, it is replaced by the live answer, and it is erased at sign-out. */
+var CK='mywallet.cache.',CT={};
+function ckey(k){return CK+UID+'.'+VER+'.'+k}
+function cacheGet(k){if(!OPT||!UID)return null;try{var t=localStorage.getItem(ckey(k));return t?JSON.parse(t):null}catch(e){return null}}
+function cachePut(k,v){
+  if(!UID)return;var key=ckey(k);clearTimeout(CT[key]);
+  CT[key]=setTimeout(function(){try{var t=JSON.stringify(v);if(t.length<1500000)localStorage.setItem(key,t);else localStorage.removeItem(key)}catch(e){}},2000);
+}
 function dbObj(){
-  function docRef(r){return{
+  function docRef(r,k){return{
     set:function(v){return soft(setDoc(r,clean(v)))},
     delete:function(){return soft(deleteDoc(r))},
     onSnapshot:function(cb,err){
-      var live=false,off=false,un=onSnapshot(r,function(s){live=true;cb({id:plain(s.id),exists:s.exists(),data:function(){return s.exists()?clean(s.data()):undefined}})},err||function(){});
-      /* first screen from the copy on this phone: no waiting for the login check or the server (the live answer follows and replaces it) */
-      getDocFromCache(r).then(function(s){if(live||off||!s.exists())return;cb({id:plain(s.id),exists:true,data:function(){return clean(s.data())}})}).catch(function(){});
+      var live=false,off=false,mk=function(e,d){return{id:plain(r.id),exists:e,data:function(){return e?clean(d):undefined}}};
+      var c=cacheGet(k);if(c&&c.e===true)setTimeout(function(){if(!live&&!off){PM('cache_shown:'+k,true);cb(mk(true,c.d))}},0);
+      var un=onSnapshot(r,function(s){live=true;var e=s.exists(),d=e?clean(s.data()):undefined;cachePut(k,{e:e,d:d});cb(mk(e,d))},err||function(){});
       return function(){off=true;un()};
     }}}
   return{
     collection:function(n){return{
-      doc:function(id){return docRef(uref(n+'/'+id))},
+      doc:function(id){return docRef(uref(n+'/'+id),n+'/'+id)},
       onSnapshot:function(cb,err){
-        var c=cref(n),live=false,off=false,un=onSnapshot(c,function(s){live=true;cb({docs:s.docs.filter(function(d){return mine(d.id)}).map(dsnap)})},err||function(){});
-        getDocsFromCache(c).then(function(s){if(live||off)return;var l=s.docs.filter(function(d){return mine(d.id)}).map(dsnap);if(l.length)cb({docs:l})}).catch(function(){});
+        var live=false,off=false,c=cacheGet(n);
+        if(c&&c.length)setTimeout(function(){if(!live&&!off){PM('cache_shown:'+n,true);cb({docs:c.map(function(x){return{id:x.id,exists:true,data:function(){return clean(x.d)}}})})}},0);
+        var un=onSnapshot(cref(n),function(s){live=true;var l=s.docs.filter(function(d){return mine(d.id)}).map(dsnap);cachePut(n,l.map(function(x){return{id:x.id,d:x.data()}}));cb({docs:l})},err||function(){});
         return function(){off=true;un()};
       }}},
-    doc:function(p){return docRef(uref(p))}};
+    doc:function(p){return docRef(uref(p),p)}};
 }
 
 /* ---------- change one setting safely ----------
