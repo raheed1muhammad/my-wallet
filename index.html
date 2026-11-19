@@ -1147,23 +1147,14 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
       </div>
     </div>
 
-    <section class="card" id="ratepanel" hidden>
-      <div class="chead"><h2>Conversion rate</h2><div class="sub" id="rateasof"></div></div>
-      <div class="bigrate" id="rateline"></div>
-      <p class="fine" id="ratewhy" style="margin-top:6px"></p>
-      <div class="tw" style="margin-top:8px"><div id="ratetable"></div></div>
-      <div class="toolrow">
-        <button class="btn2" id="refresh" type="button">Refresh rate</button>
-        <span class="sub" id="rstatus" role="status"></span>
-      </div>
-      <form id="rateform" class="toolrow" novalidate autocomplete="off">
-        <label for="mrate" class="sub" style="white-space:nowrap">1 OMR = ₹</label>
-        <input id="mrate" inputmode="decimal" aria-label="Rupees per rial" style="width:120px" placeholder="0.00">
-        <button class="btn2" type="submit" id="msave">Save rate</button>
-      </form>
-    </section>
 
     <div id="abody"></div>
+    <section class="card">
+      <div class="chead"><h2>Month analysis</h2>
+        <div class="toolrow" style="margin:0"><input id="sa-month" type="month" aria-label="Analysis month" style="width:11rem">
+          <div class="seg2" id="sacurseg" role="group" aria-label="Analysis currency"><button type="button" data-ac="OMR">All in OMR</button><button type="button" data-ac="INR">All in ₹</button></div></div></div>
+      <div id="sanalysis"></div>
+    </section>
   </section>
 
   <!-- PAGE 4: LOANS -->
@@ -1263,12 +1254,6 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
       <div class="chead"><h2>SIP record</h2><div class="sub">Every month: guidance, what you invested, what you drew out</div></div>
       <div id="srecord"></div>
     </section>
-    <section class="card">
-      <div class="chead"><h2>Month analysis</h2>
-        <div class="toolrow" style="margin:0"><input id="sa-month" type="month" aria-label="Analysis month" style="width:11rem">
-          <div class="seg2" id="sacurseg" role="group" aria-label="Analysis currency"><button type="button" data-ac="OMR">All in OMR</button><button type="button" data-ac="INR">All in ₹</button></div></div></div>
-      <div id="sanalysis"></div>
-    </section>
   </section>
 
   <!-- PAGE: PLAN -->
@@ -1282,19 +1267,8 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
   <!-- PAGE: BALANCE -->
 
   <!-- PAGE: TOOLS -->
-  <section class="page" id="p-tools" aria-label="Wallet tools" hidden>
-    <div class="blocks">
-      <section class="card">
-        <div class="chead"><h2>Monthly health check</h2><span class="sub" id="tool-month"></span></div>
-        <div class="trio" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-          <div class="tile"><div class="tl">Income</div><div class="tv" id="tool-income">—</div></div>
-          <div class="tile"><div class="tl">Expenses</div><div class="tv" id="tool-expense">—</div></div>
-          <div class="tile"><div class="tl">Net cash flow</div><div class="tv" id="tool-net">—</div></div>
-          <div class="tile"><div class="tl">Savings rate</div><div class="tv" id="tool-save">—</div></div>
-        </div>
-        <div class="sub" id="tool-insight">Add transactions to see your monthly health check.</div>
-      </section>
-      <section class="card">
+  <div id="bkHold" hidden>
+      <section class="card" id="bkCard">
         <div class="chead"><h2>Data backup & restore</h2></div>
         <p class="sub">Create a complete JSON backup of your wallet data. Keep a copy somewhere safe before changing devices or clearing browser data.</p>
         <div class="prow">
@@ -1310,6 +1284,34 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
           <input id="restore-file" type="file" accept=".json,application/json">
         </div>
         <div class="notice">Restore merges transaction IDs with your current wallet; matching IDs are replaced. Review your data before importing. Cloud mode writes restored entries to your synced wallet.</div>
+      </section>
+</div>
+  <section class="page" id="p-tools" aria-label="Wallet tools" hidden>
+    <div class="blocks">
+      <section class="card">
+        <div class="chead"><h2>Monthly health check</h2><span class="sub" id="tool-month"></span></div>
+        <div class="trio" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+          <div class="tile"><div class="tl">Income</div><div class="tv" id="tool-income">—</div></div>
+          <div class="tile"><div class="tl">Expenses</div><div class="tv" id="tool-expense">—</div></div>
+          <div class="tile"><div class="tl">Net cash flow</div><div class="tv" id="tool-net">—</div></div>
+          <div class="tile"><div class="tl">Savings rate</div><div class="tv" id="tool-save">—</div></div>
+        </div>
+        <div class="sub" id="tool-insight">Add transactions to see your monthly health check.</div>
+      </section>
+      <section class="card" id="ratepanel">
+        <div class="chead"><h2>Conversion rate</h2><div class="sub" id="rateasof"></div></div>
+        <div class="bigrate" id="rateline"></div>
+        <p class="fine" id="ratewhy" style="margin-top:6px"></p>
+        <div class="tw" style="margin-top:8px"><div id="ratetable"></div></div>
+        <div class="toolrow">
+          <button class="btn2" id="refresh" type="button">Refresh rate</button>
+          <span class="sub" id="rstatus" role="status"></span>
+        </div>
+        <form id="rateform" class="toolrow" novalidate autocomplete="off">
+          <label for="mrate" class="sub" style="white-space:nowrap">1 OMR = ₹</label>
+          <input id="mrate" inputmode="decimal" aria-label="Rupees per rial" style="width:120px" placeholder="0.00">
+          <button class="btn2" type="submit" id="msave">Save rate</button>
+        </form>
       </section>
     </div>
   </section>
@@ -1796,7 +1798,6 @@ function renderAnalysis(){
   $$('#alensseg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.lens===S.alens))});
   $$('#akindseg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.kind===S.akind))});
   $('#alensseg').hidden=S.amode!=='whatif';
-  $('#ratepanel').hidden=S.amode!=='whatif';
   var inP=S.entries.filter(function(e){return inRange(e,P.start,P.end)});
   var cur=itemsOf(inP);
   charts=[];var h='';
@@ -1970,14 +1971,21 @@ function fillAccountSelects(){
   $('#from').innerHTML=o;$('#to').innerHTML=o;
   $('#lacc').innerHTML='<option value="all">All accounts</option>'+listAccs(true).map(function(a){return '<option>'+esc(a)+'</option>'}).join('');
   $('#lacc').value=S.lacc;
-  $('#bankchips').innerHTML=BANKS.filter(function(b){return accUsed(b)&&SET.closed.indexOf(b)<0}).map(function(b){return '<button type="button" class="chipbtn" data-bank="'+esc(b)+'" aria-pressed="false">'+esc(b)+'</button>'}).join('');
+  bankChipsFill();
 }
-function hasBank(){return BANKS.some(function(b){return accUsed(b)&&SET.closed.indexOf(b)<0})}
-function bankOrDefault(){var A=BANKS.filter(function(b){return accUsed(b)&&SET.closed.indexOf(b)<0});return A.indexOf(S.fbank)>-1?S.fbank:(A.indexOf('Federal Bank')>-1?'Federal Bank':(A[0]||'Cash'))}
+/* a bank is offered when it is open and in use; in the Loan form only the banks that hold the chosen currency */
+function bankOk(b){return accUsed(b)&&SET.closed.indexOf(b)<0&&(S.ftype!=='loan'||noBalForm()||allowsCur(b,S.fcur))}
+function bankChipsFill(){$('#bankchips').innerHTML=BANKS.filter(bankOk).map(function(b){return '<button type="button" class="chipbtn" data-bank="'+esc(b)+'" aria-pressed="false">'+esc(b)+'</button>'}).join('')}
+/* the list of used banks depends on entries and opening balances that arrive after the first screen: repaint when it changes */
+var _accSig='';
+function accUseRefresh(){var g=LEGACY.filter(accUsed).join(',');if(g===_accSig)return;_accSig=g;fillAccountSelects();paintAccount()}
+function hasBank(){return BANKS.some(bankOk)}
+function bankOrDefault(){var A=BANKS.filter(bankOk);return A.indexOf(S.fbank)>-1?S.fbank:(A.indexOf('Federal Bank')>-1?'Federal Bank':(A[0]||'Cash'))}
 function entryAccount(){return S.fgroup==='Cash'?'Cash':bankOrDefault()}
 function sendAccount(){return S.ftype==='transfer'&&S.tmode!=='person'?$('#from').value:entryAccount()}
 function num(id){return parseFloat(($(id).value||'').replace(/,/g,''))||0}
 function paintAccount(){
+  bankChipsFill();
   if(S.fgroup==='Bank'&&!hasBank())S.fgroup='Cash';
   $$('#gseg button').forEach(function(b){if(b.dataset.g==='Bank')b.hidden=!hasBank()});
   $$('#gseg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.g===S.fgroup))});
@@ -2277,7 +2285,7 @@ function applyPersonCur(){
   var k=S.lkind,c=(k==='repay'||k==='collect')?(dirCurs(o,k)[0]||o.cur):k==='recall'?(woCurs(o)[0]||o.cur):o.cur;
   setCurSafe(c);
 }
-function setFcur(c){S.fcur=c;applyCurLock();if(S.ftype==='loan')paintLoan()}
+function setFcur(c){S.fcur=c;applyCurLock();if(S.ftype==='loan'){paintAccount();paintLoan()}}
 function updateSubmit(){
   $('#submit').textContent=S.editId?'Save changes':(twoStep()&&S.estep!==2?'Next':S.ftype==='expense'?'Add expense':S.ftype==='income'?'Add income':S.ftype==='loan'?'Add loan entry':S.ftype==='sip'?(S.skind==='draw'?'Record SIP withdrawal':'Record SIP investment'):'Add transfer');
   $('#formtitle').textContent=S.editId?'Edit entry':'New entry';
@@ -3362,7 +3370,7 @@ var moreEl=document.createElement('div');moreEl.id='igMore';moreEl.hidden=true;
 moreEl.innerHTML='<button type="button" data-m="set"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37 1 .608 2.296.07 2.572-1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></svg>Settings</button><button type="button" data-m="out"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/><path d="M9 12h12l-3-3"/><path d="M18 15l3-3"/></svg>Sign out</button>';document.body.appendChild(moreEl);
 function setBal(a){return curs(a).map(function(c){return money(balanceOf(a,c,todayStr()),c)}).join(' + ')}
 var setView='main';
-var SETIC={wallet:'<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 8l11-3v3M16 14h2.5"/>',book:'<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h6"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
+var SETIC={disk:'<path d="M12 4v10M8 10l4 4 4-4M5 19h14"/>',wallet:'<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 8l11-3v3M16 14h2.5"/>',book:'<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h6"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
 function setSvg(n){return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+SETIC[n]+'</svg>'}
 /* ---------- Diary: a rough look at one day, shown as a popup ---------- */
 var NBK='mywallet.nbblock',NBB=false;try{NBB=localStorage.getItem(NBK)==='1'}catch(e){}
@@ -3521,6 +3529,7 @@ function setRow(ic,t,val,v){return '<button type="button" class="setgo" data-s="
 function renderSet(){
   var p=SET.profile||{},act=actAccs().filter(function(a){return a!=='Cash'}),cl=ACCS.filter(function(a){return accUsed(a)&&SET.closed.indexOf(a)>-1});
   var T={
+   bk:['Data backup & restore',function(){return '<div id="bkSlot"></div>'}],
    pd:['Personal details',function(){return '<div class="card"><div class="chead"><h2>Personal details</h2></div><div class="sform"><label class="fl">Name<input id="spName" placeholder="Your name" maxlength="40" value="'+esc(p.name||'')+'"></label><label class="fl">Country<input id="spCountry" placeholder="Country you live in" maxlength="40" value="'+esc(p.country||'')+'"></label></div><div style="margin-top:10px"><button class="btn2" type="button" data-s="saveprof">Save</button> <span class="fine" id="spMsg"></span></div></div>'+signinCard()}],
    theme:['Themes',function(){return themesHtml()}],
    timer:['Chat tab Timer',function(){return '<div class="card" id="sChatTimer"><div class="chead"><h2>Chat tab Timer</h2></div><div class="pills">'+
@@ -3553,11 +3562,13 @@ function renderSet(){
   var main=setView==='main',body;
   if(main){
     var cth=allThemes().filter(function(t){return t.id===igCur()})[0];
-    body='<h3 class="sgrp">Data settings</h3><div class="card sgl">'+setRow('user','Personal details',p.name||'Not set','pd')+setRow('bank','Accounts',(act.length+1)+' open','acc')+setRow('coin','Currencies','OMR, INR','cur')+'</div>'+
+    body='<h3 class="sgrp">Data settings</h3><div class="card sgl">'+setRow('user','Personal details',p.name||'Not set','pd')+setRow('bank','Accounts',(act.length+1)+' open','acc')+setRow('disk','Data backup & restore','','bk')+setRow('coin','Currencies','OMR, INR','cur')+'</div>'+
      '<h3 class="sgrp">App settings</h3><div class="card sgl">'+setRow('palette','Themes',cth?cth.name:'','theme')+setRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer')+setRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer')+setRow('bell','Notifications',PUSH.st&&PUSH.st.on?'On':'Off','notif')+setRow('book','Diary',DRY?'On':'Off','diary')+setRow('wallet','Balance check',NBB?'On':'Off','bal')+setRow('globe','Version',NEP?'Nepali':'Indian','ver')+'</div>';
   }else body=T[setView][1]();
   setEl.classList.toggle('sub',!main);
+  var _bk=document.getElementById('bkCard'),_hold=document.getElementById('bkHold');if(_bk&&_hold&&_bk.parentNode!==_hold)_hold.appendChild(_bk); /* keep the backup card (and its buttons) alive while the page is redrawn */
   setEl.innerHTML='<div class="sbar"><button type="button" data-s="close" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b>'+(main?'Settings':T[setView][0])+'</b></div><div class="sw">'+body+'</div>';
+  var _sl=document.getElementById('bkSlot');if(_sl&&_bk)_sl.appendChild(_bk);
 }
 function afterAcc(cloudSaved){
   if(!cloudSaved)setSave();fillAccountSelects();buildObRows();paintAccount();
@@ -3717,6 +3728,7 @@ function render(){
   if(S.tab==='plan')renderPlan(true);
   if(S.tab==='balance')renderBalance();
   if(S.tab==='tools')renderTools();
+  if(S.tab==='analysis')renderSipAnalysis();
   if(S.tab==='recurring')renderRecurring();
   if(S.tab==='trading')renderTrading();
   recWarn();recAuto();paintDue();
@@ -4853,6 +4865,7 @@ function paintRecPreview(){
   el.innerHTML=txt;
 }
 function renderTools(){
+  renderRatePanel(period(S.p.analysis.v,S.p.analysis.a));
   var mk=toolMonth(),inc=0,exp=0,cats={};
   S.entries.forEach(function(e){
     if(e.date.slice(0,7)!==mk||e.currency!=='OMR')return;
@@ -5413,14 +5426,14 @@ render();
     db.collection('recurring').onSnapshot(function(snap){REC=snap.docs.map(function(d){var x=Object.assign({},d.data()||{});x.id=d.id;return x}).filter(function(x){return x.name&&x.amount>0});S.recReady=true;recMigrate();render()},function(){S.recReady=true;render()});
     db.collection('entries').onSnapshot(function(snap){
       S.entries=snap.docs.map(function(d){var x=Object.assign({},d.data()||{});x.id=d.id;return x}).filter(validEntry);
-      S.mode='cloud';S.entReady=true;render();try{window.__pm('entries_first_snapshot',true)}catch(e){}
+      S.mode='cloud';S.entReady=true;accUseRefresh();render();try{window.__pm('entries_first_snapshot',true)}catch(e){}
     },function(){toast('Live sync stopped. Reload the page to reconnect.')});
     db.collection('rates').onSnapshot(function(snap){
       S.rates=snap.docs.map(function(d){var x=d.data()||{};return {d:d.id,r:Number(x.rate)}}).filter(function(x){return x.r>0&&/^\d{4}-\d{2}-\d{2}$/.test(x.d)}).sort(function(a,b){return a.d<b.d?-1:1});
       render();
     },function(){});
     db.doc('settings/opening').onSnapshot(function(s){
-      var d=s.exists?(s.data()||{}):{};S.opening=(d&&d.b&&typeof d.b==='object')?d.b:{};render();
+      var d=s.exists?(s.data()||{}):{};S.opening=(d&&d.b&&typeof d.b==='object')?d.b:{};accUseRefresh();render();
     },function(){});
     xKeySub(db);pfSub(db);
   }else{
