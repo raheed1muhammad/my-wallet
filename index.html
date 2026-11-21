@@ -416,6 +416,26 @@ details.why ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px}
 #tip{position:fixed;z-index:50;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 8px 28px rgba(0,0,0,.2);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.5;opacity:0;transition:opacity .08s;max-width:250px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:calc(100vw - 32px)}
 #toast.show{opacity:1}
+/* ring status: Saving (theme colour) / Saved (green) / Not saved (red), also used for loading */
+.rs{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;opacity:0;transform:translateX(6px);transition:opacity .25s,transform .25s;white-space:nowrap;min-height:20px;margin-left:auto;margin-right:10px}
+.rs.on{opacity:1;transform:none}
+.rs[data-st=saving]{color:var(--accent)}.rs[data-st=saved]{color:#2fb67c}.rs[data-st=fail]{color:var(--neg,#e5484d);cursor:pointer;animation:rsShake .45s}
+.rg{width:20px;height:20px;position:relative;flex:none;display:inline-block}
+.rg svg{position:absolute;inset:0;width:20px;height:20px}
+.rg circle{fill:none;stroke-width:3}.rg .t{stroke:currentColor;opacity:.18}.rg .p{stroke:currentColor;stroke-linecap:round;stroke-dasharray:50;stroke-dashoffset:50;transform:rotate(-90deg);transform-origin:50% 50%}
+.rg .tk,.rg .xx{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:14;stroke-dashoffset:14;opacity:0}
+.rs[data-st=saving] .p,.ld .p{animation:rsRing 1s linear infinite}
+.rs[data-st=saved] .p,.rs[data-st=fail] .p{stroke-dashoffset:0;transition:stroke-dashoffset .35s ease}
+.rs[data-st=saved] .rg{animation:rsPop .4s cubic-bezier(.2,1.6,.4,1)}
+.rs[data-st=saved] .tk{opacity:1;animation:rsMk .3s .25s ease forwards}.rs[data-st=fail] .xx{opacity:1;animation:rsMk .3s .25s ease forwards}
+@keyframes rsMk{to{stroke-dashoffset:0}}@keyframes rsPop{0%{transform:scale(.6)}100%{transform:scale(1)}}
+@keyframes rsRing{0%{stroke-dashoffset:50;transform:rotate(-90deg)}50%{stroke-dashoffset:13;transform:rotate(90deg)}100%{stroke-dashoffset:50;transform:rotate(270deg)}}
+@keyframes rsShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+/* loading: the same ring, theme colour, in the empty-state text */
+.ld{display:inline-flex;align-items:center;gap:8px;color:var(--accent)}
+#rtoast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,16px);z-index:70;padding:10px 16px 10px 12px;border-radius:999px;background:var(--surface,#fff);border:1px solid var(--line,#ddd);box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+#rtoast.on{opacity:1;transform:translate(-50%,0)}#rtoast .rs{opacity:1;transform:none;margin:0}
+
 /* CHANGE 1: entry saved pop-up (wallet animation) */
 #savedpop{position:fixed;left:50%;top:50%;z-index:70;display:flex;flex-direction:column;align-items:center;gap:12px;min-width:190px;max-width:calc(100vw - 48px);padding:26px 28px 20px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow,0 10px 40px rgba(0,0,0,.25));text-align:center;font-weight:700;opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.85);transition:opacity .22s ease,transform .22s ease}
 #savedpop.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
@@ -1425,6 +1445,7 @@ html body .tab[aria-current=page]:not([data-tab=entry])::after{display:none}
 <div id="igDiary" role="dialog" aria-modal="true" aria-label="Daily diary" hidden></div>
 <div id="igChats" hidden><div class="sbar"><button type="button" id="chatsBack" aria-label="Back"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ct"><b>Transaction chats</b><small id="lallsub"></small></div></div><div class="cw"><input id="lallq" type="search" placeholder="Search a name, category or account" autocomplete="off"><div id="lflt"></div><div id="lallList"></div></div></div>
 <div id="toast" role="status"></div>
+<div id="rtoast" role="status" aria-live="polite"></div>
 <!-- CHANGE 1: entry saved pop-up (wallet animation) -->
 <div id="savedpop" role="status" aria-live="polite"><div class="spw"><svg class="spwal" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 8l11-3v3M16 14h2.5"/></svg><div class="spcoin" aria-hidden="true">₹</div><div class="spc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div></div><div id="savedtxt"></div></div>
 <!-- END CHANGE 1 -->
@@ -1885,7 +1906,7 @@ function renderFilteredLedger(P){
   var rc=0,pm=0;
   var h='<table class="ledger"><thead><tr><th>Date</th><th>Narration</th><th>Account</th><th class="r">Receipts</th><th class="r">Payments</th><th class="r">'+(isP?'Outstanding':'Running total')+'</th><th></th></tr></thead><tbody>';
   if(isP)h+='<tr class="sum"><td colspan="5">'+(P.all?'Opening':'Balance brought forward')+'</td><td class="r">'+amtHtml(F.opening,cur)+'</td><td></td></tr>';
-  if(S.mode==='loading')h+='<tr><td colspan="7"><div class="empty">Loading your wallet…</div></td></tr>';
+  if(S.mode==='loading')h+='<tr><td colspan="7"><div class="empty">'+LD('Loading your wallet…')+'</div></td></tr>';
   else if(!F.rows.length)h+='<tr><td colspan="7"><div class="empty"><b>Nothing here</b>No '+(cur==='INR'?'₹ INR':'OMR')+' entries for this '+(isP?'person':'category')+' in this period.</div></td></tr>';
   F.rows.forEach(function(r){
     rc+=r.rec;pm+=r.pay;
@@ -1914,7 +1935,7 @@ function renderLedger(){
   var bal=opening,rc=0,pm=0;
   var h='<table class="ledger"><thead><tr><th>Date</th><th>Narration</th><th>Account</th><th class="r">Receipts</th><th class="r">Payments</th><th class="r">Balance</th><th></th></tr></thead><tbody>';
   h+='<tr class="sum"><td colspan="5">'+(P.all?'Opening balance':'Balance brought forward')+'</td><td class="r">'+amtHtml(opening,cur)+'</td><td></td></tr>';
-  if(S.mode==='loading')h+='<tr><td colspan="7"><div class="empty">Loading your wallet…</div></td></tr>';
+  if(S.mode==='loading')h+='<tr><td colspan="7"><div class="empty">'+LD('Loading your wallet…')+'</div></td></tr>';
   else if(!rows.length)h+='<tr><td colspan="7"><div class="empty"><b>No '+(cur==='INR'?'₹ INR':'OMR')+' entries here</b>Entries for this account and period will appear with a running balance.</div></td></tr>';
   rows.forEach(function(e){
     var ef=effectCur(e,acc,cur);bal+=ef;
@@ -2328,7 +2349,7 @@ function startEdit(id){
 }
 function renderRecent(){
   var list=S.entries.slice().sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.ts||0)-(a.ts||0)}).slice(0,8);
-  if(S.mode==='loading'){setRecent('<div class="empty">Loading your wallet…</div>');return}
+  if(S.mode==='loading'){setRecent('<div class="empty">'+LD('Loading your wallet…')+'</div>');return}
   if(!list.length){setRecent('<div class="empty"><b>No entries yet</b>Add your first expense, income, self transfer or loan with the form.</div>');return}
   setRecent('<div class="rl">'+list.map(function(e){
     var nb=e.type==='loan'&&e.noBal,inn=!nb&&(e.type==='income'||(e.type==='loan'&&loanIn(e))||(e.type==='sip'&&e.kind==='draw')||(e.type==='fam'&&e.kind==='got')),sign=nb||e.type==='transfer'?'':inn?'+':'−',cls=inn?'pos':'';
@@ -2424,7 +2445,7 @@ function renderLoans(){
   var parts=function(o){var r=['OMR','INR'].filter(function(c){return rnd(o[c],c)>0}).map(function(c){return money(o[c],c)});return r.length?r.join(' · '):'Nothing'};
   $('#lsum').innerHTML='<div class="sumrow"><div class="tile"><div class="tl"><span class="dot" style="background:var(--neg)"></span>You owe</div><div class="tv '+(parts(T.owe)==='Nothing'?'':'neg')+'">'+parts(T.owe)+'</div><div class="sub" style="margin-top:4px">'+(parts(T.owe)==='Nothing'?'You are debt free.':'Pay this back; it is not your own money.')+'</div></div>'+
     '<div class="tile"><div class="tl"><span class="dot" style="background:var(--pos)"></span>Owed to you</div><div class="tv '+(parts(T.owed)==='Nothing'?'':'pos')+'">'+parts(T.owed)+'</div><div class="sub" style="margin-top:4px">'+(parts(T.owed)==='Nothing'?'Nobody owes you.':'Money still to come back to you.')+'</div></div></div>';
-  if(S.mode==='loading'){$('#lpeople').innerHTML='<div class="empty">Loading your wallet…</div>';return}
+  if(S.mode==='loading'){$('#lpeople').innerHTML='<div class="empty">'+LD('Loading your wallet…')+'</div>';return}
   if(!ppl.length){$('#lpeople').innerHTML='<div class="empty"><b>No loans yet</b>When you borrow from or lend to someone, add it with "+ New loan entry". Borrowed money is added to your balance as a debt; lent money is taken from it as money to receive.</div>';return}
   var open=ppl.filter(function(o){return !settled(o)}),done=ppl.filter(settled);
   var card=function(o){
@@ -2537,7 +2558,7 @@ function renderGraph(){
   $$('#glensseg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.gl===S.glens))});
   $$('#gmonseg button').forEach(function(b){b.setAttribute('aria-pressed',String(+b.dataset.gm===S.gmon))});
   $$('#ailang button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.al===S.ailang))});
-  if(S.mode==='loading'){$('#gbody').innerHTML='<div class="card"><div class="empty">Loading your wallet…</div></div>';return}
+  if(S.mode==='loading'){$('#gbody').innerHTML='<div class="card"><div class="empty">'+LD('Loading your wallet…')+'</div></div>';return}
   var G=graphData(),C=G.C,h='';
   $('#gsub').textContent=GL[S.glens].all?'All amounts converted to '+C:C+' only';
   var checks=graphChecks(G);
@@ -2757,7 +2778,7 @@ function planStatus(p){
 }
 function renderGuide(){
   var host=$('#sguide');
-  if(S.mode==='loading'){host.innerHTML='<div class="empty">Loading your wallet…</div>';return}
+  if(S.mode==='loading'){host.innerHTML='<div class="empty">'+LD('Loading your wallet…')+'</div>';return}
   var mk=curMk(),p=S.plans[mk];
   if(!p){host.innerHTML='<div class="empty"><b>No guidance yet for '+esc(monthLabel(mk))+'</b>Add this month\'s income, or last month\'s, and the amount to invest appears here.</div>';return}
   var st=planStatus(p),s=st.s,c=p.cur,m=function(v){return money(v,c)},h;
@@ -2786,7 +2807,7 @@ function renderGuide(){
 }
 function renderRecord(){
   var host=$('#srecord'),months={},cur=S.sip.cur;
-  if(S.mode==='loading'){host.innerHTML='<div class="empty">Loading your wallet…</div>';return}
+  if(S.mode==='loading'){host.innerHTML='<div class="empty">'+LD('Loading your wallet…')+'</div>';return}
   Object.keys(S.plans).forEach(function(k){months[k]=1});
   S.entries.forEach(function(e){if(e.type==='sip')months[e.date.slice(0,7)]=1});
   var keys=Object.keys(months).sort().reverse().slice(0,12);
@@ -2847,7 +2868,7 @@ function renderCalc(){
 }
 function renderSipAnalysis(){
   var host=$('#sanalysis'),mk=S.amonth||curMk(),C=S.acur;
-  if(S.mode==='loading'){host.innerHTML='<div class="empty">Loading your wallet…</div>';return}
+  if(S.mode==='loading'){host.innerHTML='<div class="empty">'+LD('Loading your wallet…')+'</div>';return}
   var a=sipMonth(mk,C),f=function(v,sg){return money(v,C,sg)};
   if(!a.n){host.innerHTML='<div class="empty"><b>No entries in '+esc(monthLabel(mk))+'</b>Add income, expenses and SIP entries and the analysis fills in.</div>';return}
   var inc=a.inc,exp=a.exp,notSpent=inc-exp,left=notSpent-a.inv+a.draw;
@@ -3022,7 +3043,7 @@ function renderPlan(keepVals){
   var L=S.plcur,kept={};
   if(keepVals)$$('#plBody input[id],#plBody select[id]').forEach(function(e){kept[e.id]=e.value});
   $$('#plcurseg button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.pc===L))});
-  if(S.mode==='loading'){$('#plBody').innerHTML='<div class="card"><div class="empty">Loading your wallet…</div></div>';return}
+  if(S.mode==='loading'){$('#plBody').innerHTML='<div class="card"><div class="empty">'+LD('Loading your wallet…')+'</div></div>';return}
   var mk=curMk(),A=sipMonth(mk,'OMR'),now=new Date(),day=now.getDate(),dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate(),dleft=dim-day+1;
   var inc=0,budT=0,byCat={},goalM=0;
   PL.inc.forEach(function(x){inc+=pOMR(x.amount,x.cur)});
@@ -3169,7 +3190,7 @@ $('#plBody').addEventListener('click',function(ev){
 function balTile(l,html){return '<div class="htl"><span class="lab">'+l+'</span><div class="v s">'+html+'</div></div>'}
 function renderBalance(){
   var host=$('#bal'),sub=S.bsub,B=allBalances();
-  if(S.mode==='loading'){host.innerHTML='<div class="card"><div class="empty">Loading your wallet…</div></div>';return}
+  if(S.mode==='loading'){host.innerHTML='<div class="card"><div class="empty">'+LD('Loading your wallet…')+'</div></div>';return}
   var h='';
   if(sub==='acc'){
     var sumBank=function(c){return BANKS.reduce(function(s,a){return allowsCur(a,c)?s+B[a][c]:s},0)};
@@ -3434,7 +3455,7 @@ function diaryFromPush(n){
 try{if(/[?&]diary=1(&|$)/.test(location.search)){history.replaceState(history.state,'',location.pathname);diaryFromPush(0)}}catch(e){}
 try{navigator.serviceWorker.addEventListener('message',function(e){if(e.data&&e.data.diary)diaryFromPush(0)})}catch(e){}
 function diarySetNt(on){
-  DRY=on;DMSG='';diaryStore();pfSave();
+  DRY=on;DMSG='';diaryStore();pfSave('diarynt');
   var a=pushApi();
   if(!a||!a.supported()||!a.configured()){DMSG=on?'This phone cannot show notifications. The diary will show when you open the app.':'';renderSet();return}
   var st=PUSH.st||{};
@@ -3515,8 +3536,8 @@ function pushPage(){
   var hr=st.hour>=0&&st.hour<=23?st.hour:9,opts='';
   for(var i=5;i<=22;i++)opts+='<option value="'+i+'"'+(i===hr?' selected':'')+'>'+(i%12||12)+':00 '+(i<12?'AM':'PM')+'</option>';
   h+='<div class="srow"><span>Reminders<span class="tag">'+(on?'On':'Off')+'</span><small>Permission: '+esc(a.permission())+'</small></span><button type="button" class="btn2" data-s="pushtoggle"'+(PUSH.busy?' disabled':'')+'>'+(on?'Turn off':'Turn on')+'</button></div>';
-  if(on)h+='<label class="srow"><span>Time of the reminder<small>Your phone\u2019s time zone</small></span><select data-s="pushhour" aria-label="Reminder time">'+opts+'</select></label>'+
-   '<label class="srow" style="cursor:pointer"><span>Show the amount in the message<small>Off by default: anyone can read the lock screen</small></span><input type="checkbox" class="swc" role="switch" data-s="pushamt"'+(st.amounts?' checked':'')+'></label>'+
+  if(on)h+='<label class="srow"><span>Time of the reminder<small>Your phone\u2019s time zone</small></span>'+rsHtml('pushhour')+'<select data-s="pushhour" aria-label="Reminder time">'+opts+'</select></label>'+
+   '<label class="srow" style="cursor:pointer"><span>Show the amount in the message<small>Off by default: anyone can read the lock screen</small></span>'+rsHtml('pushamt')+'<input type="checkbox" class="swc" role="switch" data-s="pushamt"'+(st.amounts?' checked':'')+'></label>'+
    '<div class="srow"><span>Check this phone<small>Shows a test message here</small></span><button type="button" class="btn2" data-s="pushtest">Show test</button></div>';
   if(PUSH.msg)h+='<p class="fine" role="status">'+esc(PUSH.msg)+'</p>';
   return h+'</div>';
@@ -3532,10 +3553,10 @@ function renderSet(){
    bk:['Data backup & restore',function(){return '<div id="bkSlot"></div>'}],
    pd:['Personal details',function(){return '<div class="card"><div class="chead"><h2>Personal details</h2></div><div class="sform"><label class="fl">Name<input id="spName" placeholder="Your name" maxlength="40" value="'+esc(p.name||'')+'"></label><label class="fl">Country<input id="spCountry" placeholder="Country you live in" maxlength="40" value="'+esc(p.country||'')+'"></label></div><div style="margin-top:10px"><button class="btn2" type="button" data-s="saveprof">Save</button> <span class="fine" id="spMsg"></span></div></div>'+signinCard()}],
    theme:['Themes',function(){return themesHtml()}],
-   timer:['Chat tab Timer',function(){return '<div class="card" id="sChatTimer"><div class="chead"><h2>Chat tab Timer</h2></div><div class="pills">'+
+   timer:['Chat tab Timer',function(){return '<div class="card" id="sChatTimer"><div class="chead"><h2>Chat tab Timer</h2>'+rsHtml('chattimer')+'</div><div class="pills">'+
     [['3','3s'],['5','5s'],['10','10s'],['always','Always']].map(function(o){var on=o[0]==='always'?CHT===0:+o[0]===CHT;return '<button type="button" class="pill'+(on?' on':'')+'" data-s="chattimer" data-v="'+o[0]+'">'+o[1]+'</button>'}).join('')+
     '</div><p class="fine">How long the chat button stays on screen after you change page (Home, Analysis, Ledger, Balance). Then it floats down and hides. Always keeps it on screen.</p></div>'}],
-   addtimer:['Add entry button Timer',function(){return '<div class="card" id="sAddTimer"><div class="chead"><h2>Add entry button</h2></div><label class="srow" style="cursor:pointer"><span>Floating + button on Analysis, Ledger and Balance<small>Sits under the chat button. Off = the + stays in the bottom bar.</small></span><input type="checkbox" class="swc" role="switch" data-s="afab"'+(AFB?' checked':'')+'></label><h3 class="sgrp" style="margin-top:14px">Timer</h3><div class="pills" style="'+(AFB?'':'opacity:.4;pointer-events:none')+'" aria-disabled="'+(AFB?'false':'true')+'">'+
+   addtimer:['Add entry button Timer',function(){return '<div class="card" id="sAddTimer"><div class="chead"><h2>Add entry button</h2>'+rsHtml('afab')+rsHtml('addtimer')+'</div><label class="srow" style="cursor:pointer"><span>Floating + button on Analysis, Ledger and Balance<small>Sits under the chat button. Off = the + stays in the bottom bar.</small></span><input type="checkbox" class="swc" role="switch" data-s="afab"'+(AFB?' checked':'')+'></label><h3 class="sgrp" style="margin-top:14px">Timer</h3><div class="pills" style="'+(AFB?'':'opacity:.4;pointer-events:none')+'" aria-disabled="'+(AFB?'false':'true')+'">'+
     [['5','5s'],['10','10s'],['25','25s'],['always','Always']].map(function(o){var on=o[0]==='always'?ADT===0:+o[0]===ADT;return '<button type="button" class="pill'+(on?' on':'')+'" data-s="addtimer" data-v="'+o[0]+'">'+o[1]+'</button>'}).join('')+
     '</div><p class="fine">How long the + button stays on screen after you change page (Home, Analysis, Ledger, Balance). Then it floats down and hides. Change page to bring it back. Always keeps it on screen.</p></div>'}],
    acc:['Accounts',function(){return '<div class="card"><div class="chead"><h2>Accounts</h2></div>'+
@@ -3549,10 +3570,10 @@ function renderSet(){
    chpass:['Reset password',function(){return accPage('p')}],
    notif:['Notifications',function(){return pushPage()}],
    bal:['Balance check',function(){return '<div class="card" id="sBal"><div class="chead"><h2>Balance check</h2></div><p class="fine">When this is on, an entry that would take an account below zero is not saved. You can then cancel it, pick another account, or add the missing money as a new credit. Automatic (recurring) entries are not checked.</p>'+
-    '<label class="srow" style="cursor:pointer"><span>Block entries that make a balance negative<small>Off by default</small></span><input type="checkbox" class="swc" role="switch" data-s="nbblock"'+(NBB?' checked':'')+'></label></div>'}],
+    '<label class="srow" style="cursor:pointer"><span>Block entries that make a balance negative<small>Off by default</small></span>'+rsHtml('nbblock')+'<input type="checkbox" class="swc" role="switch" data-s="nbblock"'+(NBB?' checked':'')+'></label></div>'}],
    diary:['Diary',function(){return '<div class="card" id="sDiary"><div class="chead"><h2>Diary</h2></div><p class="fine">A short look at each day: what came in, what went out and where most of it went. No amounts are ever shown in the phone message.</p>'+
-    '<label class="srow" style="cursor:pointer"><span>Diary notification<small>A message every morning at your reminder time. It also shows when you open the app.</small></span><input type="checkbox" class="swc" role="switch" data-s="diarynt"'+(DRY?' checked':'')+'></label>'+
-    '<label class="srow" style="cursor:pointer"><span>Hide diary from the top bar<small>You can always open it from here.</small></span><input type="checkbox" class="swc" role="switch" data-s="diaryhide"'+(DRHIDE?' checked':'')+'></label>'+
+    '<label class="srow" style="cursor:pointer"><span>Diary notification<small>A message every morning at your reminder time. It also shows when you open the app.</small></span>'+rsHtml('diarynt')+'<input type="checkbox" class="swc" role="switch" data-s="diarynt"'+(DRY?' checked':'')+'></label>'+
+    '<label class="srow" style="cursor:pointer"><span>Hide diary from the top bar<small>You can always open it from here.</small></span>'+rsHtml('diaryhide')+'<input type="checkbox" class="swc" role="switch" data-s="diaryhide"'+(DRHIDE?' checked':'')+'></label>'+
     '<div class="srow"><span>See your diary<small>Today so far</small></span><button type="button" class="btn2" data-s="diaryshow">Open</button></div>'+
     (DMSG?'<p class="fine" role="status">'+esc(DMSG)+'</p>':'')+'</div>'}],
    ver:['Version',function(){return '<div class="card" id="sVersion"><div class="chead"><h2>Version</h2></div><div class="vsw"><button type="button" class="'+(!NEP?'on':'')+'" data-s="version" data-v="indian">Indian<small data-nofx="1">OMR + INR</small></button><button type="button" class="'+(NEP?'on':'')+'" data-s="version" data-v="nepali">Nepali<small>OMR + NPR</small></button></div><p class="fine">Each version keeps its own separate entries, accounts and plans. Nothing is deleted when you switch.</p></div>'}],
@@ -3579,6 +3600,7 @@ function afterAcc(cloudSaved){
   render();renderSet();
 }
 setEl.addEventListener('click',function(e){
+  var rr=e.target.closest('.rs');if(rr&&rr.dataset.st==='fail'){e.preventDefault();var rf=RSR[rr.dataset.rk];if(rf)rf();return}
   var b=e.target.closest('[data-s]');if(!b)return;var k=b.dataset.s,a=b.dataset.a;
   if(k==='diaryshow'){showDiary(todayStr());return}
   if(k==='out'){if(window.__cloud)window.__cloud.signOut();return}
@@ -3594,8 +3616,8 @@ setEl.addEventListener('click',function(e){
     if(!setEl._sub){setEl._sub=1;try{if(HB){HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=S.tab;history.pushState({i:HB.i,t:S.tab},'')}}catch(er){}}}
   else if(k==='close'){if(setView!=='main'){setView='main';renderSet();setEl.scrollTop=0;
     if(setEl._sub){setEl._sub=0;try{if(HB){HB.skip++;HB.i--;history.go(-1)}}catch(er){}}}else setEl.hidden=true}
-  else if(k==='addtimer'){var av=b.dataset.v;ADT=av==='always'?0:+av;try{localStorage.setItem(ADDK,ADT?String(ADT):'always')}catch(er){}addBtnShow();pfSave();renderSet()}
-  else if(k==='chattimer'){var tv=b.dataset.v;CHT=tv==='always'?0:+tv;try{localStorage.setItem(CHTK,CHT?String(CHT):'always')}catch(er){}chatFabShow();pfSave();renderSet()}
+  else if(k==='addtimer'){var av=b.dataset.v;ADT=av==='always'?0:+av;try{localStorage.setItem(ADDK,ADT?String(ADT):'always')}catch(er){}addBtnShow();pfSave('addtimer');renderSet()}
+  else if(k==='chattimer'){var tv=b.dataset.v;CHT=tv==='always'?0:+tv;try{localStorage.setItem(CHTK,CHT?String(CHT):'always')}catch(er){}chatFabShow();pfSave('chattimer');renderSet()}
   else if(k==='version'){var vv=b.dataset.v==='nepali'?'nepali':'indian';
     if(vv===VER)return;
     askOk('Switch to the '+(vv==='nepali'?'Nepali':'Indian')+' version? The app reloads and shows that version\'s own data. Nothing is deleted.',function(){
@@ -3627,11 +3649,11 @@ setEl.addEventListener('click',function(e){
 setEl.addEventListener('change',function(e){
   if(e.target.dataset.s==='pushhour'||e.target.dataset.s==='pushamt'){
     var pu=pushApi();if(!pu)return;var f=e.target.dataset.s==='pushhour'?{hour:+e.target.value}:{amounts:e.target.checked};
-    pu.update(f).then(function(){PUSH.st=Object.assign({},PUSH.st,f);PUSH.msg='Saved.';renderSet()}).catch(function(){PUSH.msg='Could not save. Check your internet and try again.';renderSet()});return}
-  if(e.target.dataset.s==='afab'){AFB=e.target.checked;try{localStorage.setItem(AFK,AFB?'1':'0')}catch(er){}addBtnShow();pfSave();renderSet();return}
-  if(e.target.dataset.s==='nbblock'){NBB=e.target.checked;try{localStorage.setItem(NBK,NBB?'1':'0')}catch(er){}pfSave();renderSet();return}
+    var pk=e.target.dataset.s;var doSave=function(){rsSet(pk,'saving',doSave);pu.update(f).then(function(){PUSH.st=Object.assign({},PUSH.st,f);rsSet(pk,'saved')}).catch(function(){rsSet(pk,navigator.onLine===false?'off':'fail',doSave)})};doSave();return}
+  if(e.target.dataset.s==='afab'){AFB=e.target.checked;try{localStorage.setItem(AFK,AFB?'1':'0')}catch(er){}addBtnShow();pfSave('afab');renderSet();return}
+  if(e.target.dataset.s==='nbblock'){NBB=e.target.checked;try{localStorage.setItem(NBK,NBB?'1':'0')}catch(er){}pfSave('nbblock');renderSet();return}
   if(e.target.dataset.s==='diarynt'){diarySetNt(e.target.checked);return}
-  if(e.target.dataset.s==='diaryhide'){DRHIDE=e.target.checked;diaryStore();diaryBtnPaint();pfSave();renderSet();return}
+  if(e.target.dataset.s==='diaryhide'){DRHIDE=e.target.checked;diaryStore();diaryBtnPaint();pfSave('diaryhide');renderSet();return}
   if(e.target.dataset.s==='showclosed'){var sc=e.target.checked;setChange({type:'showClosed',value:sc},function(){SET.showClosed=sc},afterAcc,function(msg){toast(msg);renderSet()})}});
 document.getElementById('igMoreBtn').addEventListener('click',function(e){e.stopPropagation();igMenu.hidden=true;moreEl.hidden=!moreEl.hidden});
 moreEl.addEventListener('click',function(e){
@@ -3788,7 +3810,24 @@ document.addEventListener('pointermove',showTip);
 document.addEventListener('pointerdown',showTip);
 document.addEventListener('scroll',function(){tip.style.opacity=0},{passive:true});
 var toastT;
-function toast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},2800)}
+/* ---- ring status (A) ---- */
+var RS={},RST={},RSR={};
+var RSVG='<span class="rg"><svg viewBox="0 0 20 20" aria-hidden="true"><circle class="t" cx="10" cy="10" r="8"/><circle class="p" cx="10" cy="10" r="8"/><path class="tk" d="M6.2 10.4l2.6 2.6 5-5.4"/><path class="xx" d="M7 7l6 6M13 7l-6 6"/></svg></span>';
+var RSTX={saving:'Saving\u2026',saved:'Saved',off:'Saved on this device',fail:'Not saved \u00b7 Tap to retry'};
+function rsInner(st){return RSVG+'<span>'+RSTX[st]+'</span>'}
+function rsAttr(st){return st==='off'?'saved':st}
+function rsHtml(key){var st=RS[key];return '<span class="rs'+(st?' on':'')+'" data-rk="'+key+'"'+(st?' data-st="'+rsAttr(st)+'"':'')+' role="status" aria-live="polite">'+(st?rsInner(st):'')+'</span>'}
+function rsSet(key,st,retry){clearTimeout(RST[key]);RS[key]=st;if(retry)RSR[key]=retry;
+  [].forEach.call(document.querySelectorAll('[data-rk="'+key+'"]'),function(el){el.dataset.st=rsAttr(st);el.innerHTML=rsInner(st);el.classList.remove('on');void el.offsetWidth;el.classList.add('on')});
+  if(st==='saved'||st==='off')RST[key]=setTimeout(function(){RS[key]=null;[].forEach.call(document.querySelectorAll('[data-rk="'+key+'"]'),function(el){el.classList.remove('on')})},2200)}
+/* loading ring with a text, in the theme colour */
+function LD(txt){return '<span class="ld">'+RSVG+'<span>'+txt+'</span></span>'}
+/* a ring chip at the bottom for saves that have no row of their own */
+var rtT;
+function ringToast(msg,st){var t=document.getElementById('rtoast');t.innerHTML='<span class="rs on" data-st="'+st+'">'+RSVG+'<span>'+esc(msg)+'</span></span>';t.classList.add('on');clearTimeout(rtT);rtT=setTimeout(function(){t.classList.remove('on')},st==='fail'?4200:2400)}
+/* saved / failed messages become a ring chip; other messages stay as the old toast */
+var RT_OK=/^(Recurring saved|Recurring deleted|SIP schedule saved|Rate saved|Opening balances saved|Key saved|Key removed|JSON backup saved|CSV saved|File saved|Backup restored|Entry deleted|Imported|Exported)/,RT_NO=/^(Could not (save|remove|export|download|read)|Restore failed|A change was not accepted)/;
+function toast(msg){msg=String(msg);if(RT_OK.test(msg)){ringToast(msg,'saved');return}if(RT_NO.test(msg)){ringToast(msg,'fail');return}var t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},2800)}
 // CHANGE 1: entry saved pop-up function (dir: 'in' = money comes in, 'out' = money goes out, '' = no money moves)
 var savedT;
 function savedPop(msg,dir,cur){var p=$('#savedpop');if(!p){toast(msg);return}$('#savedtxt').textContent=msg;var cn=$('#savedpop .spcoin');if(cn){cn.textContent=cur==='OMR'?'OMR':(NEP?'Rs':'\u20b9');cn.classList.toggle('sm',cur==='OMR')}p.classList.remove('show','in','out');void p.offsetWidth;if(dir)p.classList.add(dir);p.classList.add('show');clearTimeout(savedT);savedT=setTimeout(function(){p.classList.remove('show')},2700)}
@@ -3931,7 +3970,7 @@ $('#woamt').addEventListener('input',function(){this.value=this.value.replace(/[
 $('#cancel').addEventListener('click',function(){resetForm(false)});
 $('#trefresh').addEventListener('click',async function(){
   var btn=this,today=todayStr(),date=$('#date').value||today;if(date>today)date=today;
-  btn.disabled=true;$('#tstatus').textContent='Fetching rate…';
+  btn.disabled=true;$('#tstatus').innerHTML=LD('Fetching rate…');
   try{
     var r=await fetchRate(date);
     await saveRate(date,r,'twelvedata');
@@ -4118,11 +4157,15 @@ function xKeyStore(k){ /* signed in: private doc in your own account, outside ba
 var PFD='settings/prefs',pfOn=false,pfT=null,pfSig='',pfFirst=true;
 function pfGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200),sp:SIPL.slice(0,50),dy:[DRY?1:0,DRHIDE?1:0],nb:NBB?1:0,af:AFB?1:0}}
-function pfSave(){
-  if(!S.db||!pfOn)return;
+var PFK={};
+function pfFinish(st){Object.keys(PFK).forEach(function(k){if(st==='fail')rsSet(k,'fail',function(){pfSig='';pfSave(k)});else rsSet(k,st)});if(st!=='saving')PFK={}}
+function pfSave(key){
+  if(key){PFK[key]=1;rsSet(key,'saving')}
+  if(!S.db||!pfOn){if(key)pfFinish('off');return}
   clearTimeout(pfT);pfT=setTimeout(function(){
-    var d=pfCollect(),sig=JSON.stringify(d);if(sig===pfSig)return;pfSig=sig;
-    S.db.doc(PFD).set(d).catch(function(){pfSig=''});
+    var d=pfCollect(),sig=JSON.stringify(d);if(sig===pfSig){pfFinish('saved');return}pfSig=sig;
+    var done=false,tm=setTimeout(function(){if(!done)pfFinish('off')},8000);
+    S.db.doc(PFD).set(d).then(function(){done=true;clearTimeout(tm);pfFinish('saved')}).catch(function(){done=true;clearTimeout(tm);pfSig='';pfFinish(navigator.onLine===false?'off':'fail')});
   },600);
 }
 function pfApply(d){
@@ -4797,7 +4840,7 @@ function renderTrading(){
   }
   if(window.MWTrading){go();return}
   if(S.trLoading)return;S.trLoading=true;
-  host.innerHTML='<div class="empty">Loading…</div>';
+  host.innerHTML='<div class="empty">'+LD('Loading…')+'</div>';
   var s=document.createElement('script');s.src='trading.js';
   s.onload=function(){S.trLoading=false;go()};
   s.onerror=function(){S.trLoading=false;host.innerHTML='<div class="empty">Could not load the trading page. Check your connection and reopen it.</div>'};
@@ -5240,7 +5283,7 @@ function renderChatList(){
   var q=($('#lallq').value||'').trim().toLowerCase(),all=chatAccounts();
   var list=all.filter(function(o){return !q||(o.title+' '+((o.kind==='person'||o.kind==='fp')&&isCo(o.title)?'company':o.kind==='person'?'person':o.kind==='acct'?'account':o.kind==='fp'?'family friends':o.ct)+' '+o.cur).toLowerCase().indexOf(q)>-1});
   $('#lallsub').textContent=all.length+' account'+(all.length===1?'':'s');
-  if(S.mode==='loading'){$('#lallList').innerHTML='<div class="empty">Loading your wallet…</div>';return}
+  if(S.mode==='loading'){$('#lallList').innerHTML='<div class="empty">'+LD('Loading your wallet…')+'</div>';return}
   if(!list.length){$('#lallList').innerHTML='<div class="empty"><b>'+(q?'Nothing found':'No names or categories yet')+'</b>'+(q?'Try another word.':'They appear here as soon as you record entries.')+'</div>';return}
   paintChatList(list,all);
 }
