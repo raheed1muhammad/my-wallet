@@ -1,4 +1,4 @@
-const C='mywallet-v44',A=['./','index.html','cloud.js','trading.js','manifest.json','icons/icon-192.png','icons/icon-512.png','icons/logo-mark.png','icons/apple-touch-icon.png','icons/favicon-64.png'];
+const C='mywallet-v45',A=['./','index.html','cloud.js','trading.js','manifest.json','icons/icon-192.png','icons/icon-512.png','icons/logo-mark.png','icons/apple-touch-icon.png','icons/favicon-64.png'];
 const FB=['app','auth','firestore'].map(n=>'https://www.gstatic.com/firebasejs/10.14.1/firebase-'+n+'.js');
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>Promise.all(A.map(u=>fetch(u,{cache:'reload'}).then(r=>c.put(u,r)))).then(()=>Promise.allSettled(FB.map(u=>c.match(u).then(h=>h||fetch(u).then(r=>c.put(u,r))))))).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
