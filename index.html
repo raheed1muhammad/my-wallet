@@ -419,7 +419,7 @@ details.why ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px}
 /* Settings menu: accordion drawer opened by the 3-line button */
 #igDrSc{position:fixed;inset:0;z-index:94;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .3s}
 #igDrSc.on{opacity:1;pointer-events:auto}
-#igDr{position:fixed;top:0;bottom:0;left:0;width:min(300px,86vw);z-index:95;background:var(--surface,#fff);color:var(--ink);border-right:1px solid var(--line);padding:calc(14px + env(safe-area-inset-top,0px)) 10px 24px;overflow:auto;transform:translateX(-104%);transition:transform .32s ease;box-shadow:12px 0 40px rgba(0,0,0,.25)}
+#igDr{position:fixed;top:0;bottom:0;right:0;width:min(300px,86vw);z-index:95;background:var(--surface,#fff);color:var(--ink);border-left:1px solid var(--line);padding:calc(14px + env(safe-area-inset-top,0px)) 10px 24px;overflow:auto;transform:translateX(104%);transition:transform .32s ease;box-shadow:-12px 0 40px rgba(0,0,0,.25)}
 #igDr.on{transform:none}
 #igDr .drt{font-weight:800;font-size:18px;padding:6px 12px 10px}
 #igDr .dra{border:1px solid var(--line);border-radius:14px;margin:8px 0;overflow:hidden}
@@ -3631,6 +3631,8 @@ setEl.addEventListener('click',function(e){
   if(k==='pushtest'){var pb=pushApi();if(pb)pb.test().then(function(){PUSH.msg='Test sent. If you did not see it, check the phone notification settings for this app.';renderSet()}).catch(function(){PUSH.msg='Could not show a test message here.';renderSet()});return}
   if(k==='go'){setView=b.dataset.v;if(setView==='chemail'||setView==='chpass'||setView==='pd')accReset();if(setView==='notif'||setView==='diary')pushLoad();renderSet();setEl.scrollTop=0;
     if(!setEl._sub){setEl._sub=1;try{if(HB){HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=S.tab;history.pushState({i:HB.i,t:S.tab},'')}}catch(er){}}}
+  else if(k==='close'&&setEl._direct&&(setView==='chemail'||setView==='chpass')){setView='pd';accReset();renderSet();setEl.scrollTop=0;if(setEl._sub){setEl._sub=0;try{HB.skip++;HB.i--;history.go(-1)}catch(er){}}}
+  else if(k==='close'&&setEl._direct&&setEl._o){history.back()} /* back from a page opened from the menu: the popstate step below reopens the menu */
   else if(k==='close'){if(setView!=='main'&&!setEl._direct){setView='main';renderSet();setEl.scrollTop=0;
     if(setEl._sub){setEl._sub=0;try{if(HB){HB.skip++;HB.i--;history.go(-1)}}catch(er){}}}else setEl.hidden=true}
   else if(k==='addtimer'){var av=b.dataset.v;ADT=av==='always'?0:+av;try{localStorage.setItem(ADDK,ADT?String(ADT):'always')}catch(er){}addBtnShow();pfSave('addtimer');renderSet()}
@@ -5463,6 +5465,8 @@ try{
     /* CHANGE 2: phone Back closes the not enough balance pop-up only */if(i<prevI&&!nbEl.hidden){nbEl.hidden=true;HB.i=prevI;HB.skip++;history.go(1);return}/* END CHANGE 2 */
     if(!dEl.hidden){HB.ovPop=1;dEl.hidden=true;return} /* diary popup: back closes it */
     if(!afan.hidden){HB.ovPop=1;afan.hidden=true;return}
+    if(!setEl.hidden&&setEl._sub&&setEl._direct){setEl._sub=0;setView='pd';renderSet();setEl.scrollTop=0;return} /* inside Change email / Change password: back to Personal details */
+    if(!setEl.hidden&&setEl._direct){HB.ovPop=1;setEl._direct=0;setEl.hidden=true;drShow(true);return} /* page opened from the menu: back shows the menu again */
     if(!setEl.hidden&&setEl._sub&&!setEl._direct){setEl._sub=0;setView='main';renderSet();setEl.scrollTop=0;return} /* inside a settings page: back returns to the settings list only */
     if(!setEl.hidden){HB.ovPop=1;setEl.hidden=true;return} /* settings screen: back closes it first */
     if(!chatEl.hidden){HB.ovPop=1;closeChat();return} /* detail screen: back closes it first */
