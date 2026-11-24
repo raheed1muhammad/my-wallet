@@ -432,6 +432,9 @@ details.why ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px}
 #igDr .dri svg{width:20px;height:20px;flex:none}
 #igDr .dro{color:var(--neg,#e5484d);margin-top:10px;border-top:1px solid var(--line);padding-top:14px;border-radius:0 0 12px 12px}
 @media(prefers-reduced-motion:reduce){#igDr,#igDrSc,#igDr .drp{transition:none}}
+#hpq{width:100%;margin:6px 0 8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface,#fff);color:inherit;font-size:16px;box-sizing:border-box}
+#hpl{max-height:46vh;overflow:auto}
+#hpl .hprow{width:100%;border-top:1px solid var(--line)}
 #delov{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);animation:delin .25s ease}
 #delov .delpop{width:min(320px,100%);padding:22px 20px 16px;border-radius:18px;background:var(--surface,#fff);color:var(--text,inherit);border:1px solid var(--line,#ddd);box-shadow:0 18px 50px rgba(0,0,0,.35);text-align:center;animation:delpop .3s cubic-bezier(.2,.9,.3,1.2)}
 #delov .delt{font-size:17px;font-weight:600;margin-bottom:14px}
@@ -2044,6 +2047,12 @@ function paintAccount(){
 var FPK='mywallet.fpeople.'+VER,FP=[];
 try{var _fp=JSON.parse(localStorage.getItem(FPK)||'[]');if(Array.isArray(_fp))FP=_fp.filter(function(x){return typeof x==='string'&&x.trim()})}catch(e){}
 function fpSave(){try{localStorage.setItem(FPK,JSON.stringify(FP))}catch(e){}pfSave()}
+/* ---------- hidden persons (Settings > Hide persons). Only the names are kept here; no entry is changed or deleted. ---------- */
+var HPK='mywallet.hidden.'+VER,HP=[];
+function hpOk(x){return typeof x==='string'&&x.trim().length>0&&x.length<=40}
+try{var _hp=JSON.parse(localStorage.getItem(HPK)||'[]');if(Array.isArray(_hp))HP=_hp.filter(hpOk).slice(0,100)}catch(e){}
+function hpIs(n){var k=String(n||'').trim().toLowerCase();return !!k&&HP.some(function(h){return h.trim().toLowerCase()===k})}
+function hpSave(key){try{localStorage.setItem(HPK,JSON.stringify(HP))}catch(e){}pfSave(key)}
 /* ---------- parties: one list of people and companies (used by loans, transfers and income) ---------- */
 var PTK='mywallet.parties.'+VER,PT=[];
 function ptOk(x){return !!x&&typeof x.n==='string'&&x.n.trim().length>0&&x.n.length<=40&&(x.t==='p'||x.t==='c')}
@@ -3417,7 +3426,7 @@ var moreEl=document.createElement('div');moreEl.id='igMore';moreEl.hidden=true;
 moreEl.innerHTML='<button type="button" data-m="set"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37 1 .608 2.296.07 2.572-1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></svg>Settings</button>';document.body.appendChild(moreEl);
 function setBal(a){return curs(a).map(function(c){return money(balanceOf(a,c,todayStr()),c)}).join(' + ')}
 var setView='main';
-var SETIC={trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',out:'<path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M9 12h12l-3-3M18 15l3-3"/>',disk:'<path d="M12 4v10M8 10l4 4 4-4M5 19h14"/>',wallet:'<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 8l11-3v3M16 14h2.5"/>',book:'<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h6"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
+var SETIC={eyeoff:'<path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c6 0 10 6 10 6a17 17 0 0 1-3 3.6M6.6 6.7C4 8.4 2 12 2 12s4 6 10 6a9.7 9.7 0 0 0 4-.9M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',out:'<path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M9 12h12l-3-3M18 15l3-3"/>',disk:'<path d="M12 4v10M8 10l4 4 4-4M5 19h14"/>',wallet:'<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 8l11-3v3M16 14h2.5"/>',book:'<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h6"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
 function setSvg(n){return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+SETIC[n]+'</svg>'}
 /* ---------- Diary: a rough look at one day, shown as a popup ---------- */
 var NBK='mywallet.nbblock',NBB=false;try{NBB=localStorage.getItem(NBK)==='1'}catch(e){}
@@ -3550,6 +3559,25 @@ function accClick(k){
   }
   return false;
 }
+/* ---------- Settings > Hide persons ---------- */
+var HPG={sel:'',step:'list',msg:'',q:''};
+function hpReset(){HPG={sel:'',step:'list',msg:'',q:''}}
+function hpListHtml(){
+  var q=HPG.q.trim().toLowerCase(),all=ptAll().filter(function(o){return !hpIs(o.n)}),L=all.filter(function(o){return !q||o.n.toLowerCase().indexOf(q)>-1});
+  if(!all.length)return '<p class="fine">No names yet. Names you use in loans, transfers and income will show here.</p>';
+  if(!L.length)return '<p class="fine">No name matches.</p>';
+  return L.map(function(o){return '<button type="button" class="setgo hprow" data-s="hpsel" data-n="'+esc(o.n)+'"><span class="segrow">'+esc(o.n)+'</span><span class="seval">'+(o.t==='c'?'Company':'Person')+'</span><span class="sech"></span></button>'}).join('');
+}
+function hpPage(){
+  var h='<div class="card" id="sHp"><div class="chead"><h2>Hide persons</h2>'+rsHtml('hidep')+'</div>',msg=HPG.msg?'<p class="fine" role="status">'+esc(HPG.msg)+'</p>':'';
+  if(HPG.step==='pick')return h+'<p><b>'+esc(HPG.sel)+'</b></p><p class="fine">Hide this name from the ledger? Your entries stay safe. The name just shows as Unknown account until you unhide it.</p>'+
+    '<div style="margin-top:10px;display:flex;gap:10px"><button type="button" class="btn2" data-s="hpask">Hide from ledger</button><button type="button" class="btn2" data-s="hpno">Cancel</button></div></div>';
+  if(HPG.step==='sure')return h+'<p><b>Hide '+esc(HPG.sel)+' from the ledger?</b></p><p class="fine">You can unhide it here any time.</p>'+
+    '<div style="margin-top:10px;display:flex;gap:10px"><button type="button" class="btn2" data-s="hpyes">Yes</button><button type="button" class="btn2" data-s="hpno">No</button></div></div>';
+  return h+'<p class="fine">Pick a name to hide it from the ledger.</p>'+msg+'<input id="hpq" type="search" placeholder="Search names" maxlength="40" autocomplete="off" value="'+esc(HPG.q)+'" aria-label="Search names"><div id="hpl">'+hpListHtml()+'</div>'+
+    '<h3 class="sgrp" style="margin-top:16px">Hidden ('+HP.length+')</h3>'+
+    (HP.length?HP.map(function(n,i){return '<div class="srow"><span>'+esc(n)+'</span><button type="button" class="btn2" data-s="hpun" data-i="'+i+'">Unhide</button></div>'}).join(''):'<p class="fine">Nobody is hidden.</p>')+'</div>';
+}
 /* ---------- Settings > Delete your account ---------- */
 var DEL={msg:'',step:'form',busy:false};
 function delReset(){DEL={msg:'',step:'form',busy:false}}
@@ -3634,6 +3662,7 @@ function renderSet(){
      '<label class="srow" style="cursor:pointer"><span>Show closed accounts in Ledger</span><input type="checkbox" data-s="showclosed"'+(SET.showClosed?' checked':'')+'></label>':'')+
     '<div class="fine" style="margin-top:14px"><b>Add a new account</b> \u2014 its currency is fixed once created.</div>'+
     '<div class="sform"><input id="saName" placeholder="Account name" maxlength="30"><select id="saCur" aria-label="Currency"><option value="OMR">OMR</option><option value="INR">INR (\u20b9)</option><option value="both">OMR + INR</option></select><button class="btn2" type="button" data-s="addacc">Add account</button></div><p class="fine" id="saMsg"></p></div>'}],
+   hp:['Hide persons',function(){return hpPage()}],
    del:['Delete your account',function(){return delPage()}],
    chemail:['Change email',function(){return accPage('e')}],
    chpass:['Reset password',function(){return accPage('p')}],
@@ -3652,7 +3681,7 @@ function renderSet(){
   var main=setView==='main',body;
   if(main){
     var cth=allThemes().filter(function(t){return t.id===igCur()})[0];
-    body='<h3 class="sgrp">Data settings</h3><div class="card sgl">'+setRow('user','Personal details',p.name||'Not set','pd')+setRow('bank','Accounts',(act.length+1)+' open','acc')+setRow('disk','Data backup & restore','','bk')+setRow('coin','Currencies','OMR, INR','cur')+'</div>'+
+    body='<h3 class="sgrp">Data settings</h3><div class="card sgl">'+setRow('user','Personal details',p.name||'Not set','pd')+setRow('bank','Accounts',(act.length+1)+' open','acc')+setRow('disk','Data backup & restore','','bk')+setRow('coin','Currencies','OMR, INR','cur')+setRow('eyeoff','Hide persons',HP.length?HP.length+' hidden':'','hp')+'</div>'+
      '<h3 class="sgrp">App settings</h3><div class="card sgl">'+setRow('palette','Themes',cth?cth.name:'','theme')+setRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer')+setRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer')+setRow('bell','Notifications',PUSH.st&&PUSH.st.on?'On':'Off','notif')+setRow('book','Diary',DRY?'On':'Off','diary')+setRow('wallet','Balance check',NBB?'On':'Off','bal')+setRow('globe','Version',NEP?'Nepali':'Indian','ver')+'</div>'+
      /* Sign out: last item of Settings, outside both headings */
      '<div class="card sgl" style="margin-top:14px"><button type="button" class="setgo" data-s="out" style="color:var(--neg)"><span class="seic">'+setSvg('out')+'</span><span class="segrow">Sign out</span><span class="seval"></span><span class="sech"></span></button></div>'+
@@ -3675,6 +3704,11 @@ setEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-s]');if(!b)return;var k=b.dataset.s,a=b.dataset.a;
   if(k==='diaryshow'){showDiary(todayStr());return}
   if(k==='out'){if(window.__cloud)window.__cloud.signOut();return}
+  if(k==='hpsel'){HPG.sel=b.dataset.n||'';HPG.step='pick';HPG.msg='';renderSet();return}
+  if(k==='hpask'){HPG.step='sure';renderSet();return}
+  if(k==='hpno'){HPG.step='list';HPG.sel='';renderSet();return}
+  if(k==='hpyes'){var hn=HPG.sel;if(hn&&!hpIs(hn)&&HP.length<100){HP.push(hn);hpSave('hidep');HPG.msg=hn+' is hidden.'}else if(hn&&!hpIs(hn))HPG.msg='You can hide up to 100 names.';HPG.step='list';HPG.sel='';renderSet();return}
+  if(k==='hpun'){var hi=+b.dataset.i,hu=HP[hi];if(hu!==undefined){HP.splice(hi,1);hpSave('hidep');HPG.msg=hu+' is visible again.'}renderSet();return}
   if(k==='delnext'){
     var de=(($('#dlE')||{}).value||'').trim(),dp=($('#dlP')||{}).value||'',A0=acctApi();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(de))DEL.msg='Enter your email.';
@@ -3697,7 +3731,7 @@ setEl.addEventListener('click',function(e){
     return;
   }
   if(k==='pushtest'){var pb=pushApi();if(pb)pb.test().then(function(){PUSH.msg='Test sent. If you did not see it, check the phone notification settings for this app.';renderSet()}).catch(function(){PUSH.msg='Could not show a test message here.';renderSet()});return}
-  if(k==='go'){setView=b.dataset.v;if(setView==='chemail'||setView==='chpass'||setView==='pd')accReset();if(setView==='del')delReset();if(setView==='notif'||setView==='diary')pushLoad();renderSet();setEl.scrollTop=0;
+  if(k==='go'){setView=b.dataset.v;if(setView==='chemail'||setView==='chpass'||setView==='pd')accReset();if(setView==='del')delReset();if(setView==='hp')hpReset();if(setView==='notif'||setView==='diary')pushLoad();renderSet();setEl.scrollTop=0;
     if(!setEl._sub){setEl._sub=1;try{if(HB){HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=S.tab;history.pushState({i:HB.i,t:S.tab},'')}}catch(er){}}}
   else if(k==='close'&&setEl._direct&&(setView==='chemail'||setView==='chpass')){setView='pd';accReset();renderSet();setEl.scrollTop=0;if(setEl._sub){setEl._sub=0;try{HB.skip++;HB.i--;history.go(-1)}catch(er){}}}
   else if(k==='close'&&setEl._direct&&setEl._o){history.back()} /* back from a page opened from the menu: the popstate step below reopens the menu */
@@ -3733,6 +3767,9 @@ setEl.addEventListener('click',function(e){
   else if(k==='tsave'){ctSaveForm()}
   else if(k==='reopen'){setChange({type:'reopenAccount',name:a},function(){SET.closed=SET.closed.filter(function(x){return x!==a})},afterAcc,function(msg){toast(msg)})}
 });
+setEl.addEventListener('input',function(e){
+  if(e.target&&e.target.id==='hpq'){HPG.q=e.target.value;var l=document.getElementById('hpl');if(l)l.innerHTML=hpListHtml()}
+});
 setEl.addEventListener('change',function(e){
   if(e.target.dataset.s==='pushhour'||e.target.dataset.s==='pushamt'){
     var pu=pushApi();if(!pu)return;var f=e.target.dataset.s==='pushhour'?{hour:+e.target.value}:{amounts:e.target.checked};
@@ -3749,7 +3786,7 @@ var DRACC={0:true,1:true},drOpen=false,DR_CH='<svg viewBox="0 0 24 24" fill="non
 function drRow(ic,t,v,go){return '<button type="button" class="dri" data-do="'+go+'">'+setSvg(ic)+'<span>'+t+'</span>'+(v?'<span class="v">'+esc(v)+'</span>':'')+'</button>'}
 function drPaint(){
   var p=SET.profile||{},act=actAccs().filter(function(a){return a!=='Cash'}),cth=allThemes().filter(function(t){return t.id===igCur()})[0];
-  var G=[['Data settings',[drRow('user','Personal details',p.name||'Not set','pd'),drRow('bank','Accounts',(act.length+1)+' open','acc'),drRow('disk','Data backup & restore','','bk'),drRow('coin','Currencies','OMR, INR','cur')]],
+  var G=[['Data settings',[drRow('user','Personal details',p.name||'Not set','pd'),drRow('bank','Accounts',(act.length+1)+' open','acc'),drRow('disk','Data backup & restore','','bk'),drRow('coin','Currencies','OMR, INR','cur'),drRow('eyeoff','Hide persons',HP.length?HP.length+' hidden':'','hp')]],
    ['App settings',[drRow('palette','Themes',cth?cth.name:'','theme'),drRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer'),drRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer'),drRow('bell','Notifications',PUSH.st&&PUSH.st.on?'On':'Off','notif'),drRow('book','Diary',DRY?'On':'Off','diary'),drRow('wallet','Balance check',NBB?'On':'Off','bal'),drRow('globe','Version',NEP?'Nepali':'Indian','ver')]]];
   var h='<div class="drt">Settings</div>';
   G.forEach(function(g,k){h+='<div class="dra'+(DRACC[k]?' o':'')+'"><button type="button" class="drh" data-dg="'+k+'" aria-expanded="'+(DRACC[k]?'true':'false')+'">'+g[0]+DR_CH+'</button><div class="drp"><div>'+g[1].join('')+'</div></div></div>'});
@@ -3767,7 +3804,7 @@ drEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-do]');if(!b)return;var v=b.dataset.do;
   if(v==='out'){drShow(false);if(window.__cloud)window.__cloud.signOut();return}
   var hadStep=drPush;drShow(false,false,true);if(hadStep)setEl._o=1; /* Settings reuses the drawer's history step */
-  setView=v;if(v==='pd')accReset();if(v==='del')delReset();if(v==='notif'||v==='diary')pushLoad();
+  setView=v;if(v==='pd')accReset();if(v==='del')delReset();if(v==='hp')hpReset();if(v==='notif'||v==='diary')pushLoad();
   setEl._direct=1;renderSet();setEl.hidden=false;setEl.scrollTop=0;
 });
 document.getElementById('igMoreBtn').addEventListener('click',function(e){e.stopPropagation();drShow(!drOpen)});
@@ -4271,7 +4308,7 @@ function xKeyStore(k){ /* signed in: private doc in your own account, outside ba
 /* ---------- synced preferences: theme, timers, family & friends names (one private cloud doc per version) ---------- */
 var PFD='settings/prefs',pfOn=false,pfT=null,pfSig='',pfFirst=true;
 function pfGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
-function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),pt:PT.slice(0,200),sp:SIPL.slice(0,50),dy:[DRY?1:0,DRHIDE?1:0],nb:NBB?1:0,af:AFB?1:0}}
+function pfCollect(){return {th:pfGet('mywallet.igtheme')||'',ct:pfGet(CTK)||'',cc:pfGet(CCK)||'',chat:CHT||0,add:ADT||0,fp:FP.slice(0,100),hp:HP.slice(0,100),pt:PT.slice(0,200),sp:SIPL.slice(0,50),dy:[DRY?1:0,DRHIDE?1:0],nb:NBB?1:0,af:AFB?1:0}}
 var PFK={};
 function pfFinish(st){Object.keys(PFK).forEach(function(k){if(st==='fail')rsSet(k,'fail',function(){pfSig='';pfSave(k)});else rsSet(k,st)});if(st!=='saving')PFK={}}
 function pfSave(key){
@@ -4313,6 +4350,10 @@ function pfApply(d){
     var sc=d.sp.filter(sipNmOk).map(function(x){return x.replace(/\s+/g,' ').trim()}).slice(0,50);
     if(pfFirst)SIPL.forEach(function(n){if(!sc.some(function(c){return pkey(c)===pkey(n)}))sc.push(n)});
     SIPL=sc.slice(0,50);try{localStorage.setItem(SIPK,JSON.stringify(SIPL))}catch(e){}
+  }
+  if(Array.isArray(d.hp)){ /* the cloud copy is the truth, so an Unhide on one phone reaches the others */
+    HP=d.hp.filter(hpOk).map(function(x){return x.trim().replace(/\s+/g,' ')}).slice(0,100);
+    try{localStorage.setItem(HPK,JSON.stringify(HP))}catch(e){}
   }
   if(Array.isArray(d.fp)){
     var cl=d.fp.filter(function(x){return typeof x==='string'&&x.trim()&&x.length<=30}).map(function(x){return x.trim().replace(/\s+/g,' ')}).slice(0,100);
