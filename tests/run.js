@@ -275,7 +275,7 @@ async function testCacheFirst() {
       cref: n => 'c:' + n, uref: p => 'r:' + p, PM: n => log.push(n),
       onSnapshot: (ref, f) => { liveCb = f; return () => { unsub++; }; },
       SAVE: { pending: 0, failed: 0 }, saveNote: () => { }, track: p => p,
-      OPT: o.opt !== false, UID: 'U1', VER: o.ver || 'indian', CK: 'mywallet.cache.', CT: {},
+      OPT: o.opt !== false, UID: 'U1', VER: o.ver || 'indian', WIPING: false, CK: 'mywallet.cache.', CT: {},
       localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; }, removeItem: k => { delete store[k]; } },
       setTimeout: (f, ms) => { if (ms > 0) { timers.push(f); return timers.length; } setTimeout(f, 0); return 0; }, clearTimeout: () => { }
     };

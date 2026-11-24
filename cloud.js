@@ -1,7 +1,7 @@
 /* My Wallet cloud layer: Firebase email+password login, a per-user private Firestore space,
    and the same db API the app already uses. No personal data lives in this file or the repo. */
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,verifyBeforeUpdateEmail} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,verifyBeforeUpdateEmail,deleteUser} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,collection,onSnapshot,setDoc,deleteDoc,getDoc,getDocs,writeBatch,runTransaction,terminate,clearIndexedDbPersistence} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 var firebaseConfig={
@@ -20,7 +20,7 @@ catch(e){fs=initializeFirestore(app,{})}
 
 var SETK='mywallet.settings.v1',UIDK='mywallet.uid',RELOADK='mywallet.reloaded';
 var COLS=['entries','rates','plans','plan_income','plan_items','goals','recurring','settings','trading'];
-var UID=null,EMAIL='';
+var UID=null,EMAIL='',WIPING=false; /* WIPING: while the account is being erased, the app may not write anything new */
 /* Two versions, two separate sets of data in the same private space. The Indian version uses the names as they always were.
    The Nepali version stores every document with the name starting np_ and only ever sees those, so nothing mixes and no rules change. */
 var VERK='mywallet.ver',NP='np_',VER='indian';
@@ -139,13 +139,13 @@ var CK='mywallet.cache.',CT={};
 function ckey(k){return CK+UID+'.'+VER+'.'+k}
 function cacheGet(k){if(!OPT||!UID)return null;try{var t=localStorage.getItem(ckey(k));return t?JSON.parse(t):null}catch(e){return null}}
 function cachePut(k,v){
-  if(!UID)return;var key=ckey(k);clearTimeout(CT[key]);
+  if(!UID||WIPING)return;var key=ckey(k);clearTimeout(CT[key]);
   CT[key]=setTimeout(function(){try{var t=JSON.stringify(v);if(t.length<1500000)localStorage.setItem(key,t);else localStorage.removeItem(key)}catch(e){}},2000);
 }
 function dbObj(){
   function docRef(r,k){return{
-    set:function(v){return soft(setDoc(r,clean(v)))},
-    delete:function(){return soft(deleteDoc(r))},
+    set:function(v){if(WIPING)return Promise.resolve();return soft(setDoc(r,clean(v)))},
+    delete:function(){if(WIPING)return Promise.resolve();return soft(deleteDoc(r))},
     onSnapshot:function(cb,err){
       var live=false,off=false,mk=function(e,d){return{id:plain(r.id),exists:e,data:function(){return e?clean(d):undefined}}};
       var c=cacheGet(k);if(c&&c.e===true)setTimeout(function(){if(!live&&!off){PM('cache_shown:'+k,true);cb(mk(true,c.d))}},0);
@@ -189,6 +189,7 @@ function applyPatch(base,op){
   return s;
 }
 window.__cloudPatch=function(op,localJson){
+  if(WIPING)return Promise.reject(new Error('not signed in'));
   if(!UID)return Promise.reject(new Error('not signed in'));
   if(navigator.onLine===false)return Promise.reject(new Error('offline'));
   var ref=uref('settings/app');
@@ -246,7 +247,7 @@ function begin(){
 /* ---------- account changes: email and password. The password is only passed to Firebase, never saved or logged. ---------- */
 function acctErr(e){
   var c=String(e&&e.code||e&&e.message||e);
-  var m={'auth/invalid-email':'That email address is not valid.','auth/invalid-credential':'Wrong password.','auth/wrong-password':'Wrong password.','auth/too-many-requests':'Too many tries. Wait a few minutes and try again.','auth/network-request-failed':'No internet connection. Try again.','auth/weak-password':'New password is too weak. Use at least 8 characters.','auth/email-already-in-use':'That email cannot be used.','auth/requires-recent-login':'Please sign out, log in again and retry.','auth/operation-not-allowed':'That email cannot be used.','not-signed-in':'You are not signed in.'};
+  var m={'auth/invalid-email':'That email address is not valid.','auth/invalid-credential':'Wrong password.','auth/wrong-password':'Wrong password.','auth/too-many-requests':'Too many tries. Wait a few minutes and try again.','auth/network-request-failed':'No internet connection. Try again.','auth/weak-password':'New password is too weak. Use at least 8 characters.','auth/email-already-in-use':'That email cannot be used.','auth/requires-recent-login':'Please sign out, log in again and retry.','left-over':'Some data could not be erased. Check your internet and try again.','auth/operation-not-allowed':'That email cannot be used.','not-signed-in':'You are not signed in.'};
   return m[c]||'Something went wrong. Try again.';
 }
 function reauth(pw){
@@ -266,6 +267,37 @@ var ACCT={
     if(String(newPw||'').length<8)return Promise.reject(new Error('auth/weak-password'));
     return reauth(oldPw).then(function(){return updatePassword(auth.currentUser,newPw)});
   },
+  /* only checks the password again (needed before deleting the account); changes nothing */
+  verify:function(pw){return reauth(pw)},
+  /* Erases everything of this user for good, then the login itself. Call verify() first (recent password check).
+     Order: all data (both versions) -> check nothing is left -> login account -> this phone's copy. The login is removed LAST, so if
+     anything fails halfway the user can still sign in and try again. onProg gets a number 0..100. */
+  wipe:function(onProg){
+    var u=auth.currentUser;
+    if(!u||!UID)return Promise.reject(new Error('not-signed-in'));
+    if(navigator.onLine===false)return Promise.reject(new Error('auth/network-request-failed'));
+    var uid=UID,ALL=COLS.concat(['private']),total=0,done=0;
+    var P=function(n){try{onProg&&onProg(Math.min(100,Math.round(n)))}catch(e){}};
+    function list(){return Promise.all(ALL.map(function(c){return getDocs(collection(fs,'users',uid,c))})).then(function(r){var a=[];r.forEach(function(sn){sn.docs.forEach(function(d){a.push(d.ref)})});return a})}
+    function del(refs){
+      var i=0;
+      function next(){
+        if(i>=refs.length)return Promise.resolve();
+        var part=refs.slice(i,i+400),b=writeBatch(fs);i+=400;
+        part.forEach(function(r){b.delete(r)});
+        return b.commit().then(function(){done+=part.length;P(done/Math.max(total,1)*88);return next()});
+      }
+      return next();
+    }
+    WIPING=true;P(0);
+    return list().then(function(refs){total=refs.length;return del(refs)})
+      .then(list).then(function(left){total+=left.length;return left.length?del(left):0})
+      .then(list).then(function(left){if(left.length)throw new Error('left-over')})
+      .then(function(){P(92);return deleteUser(u)})
+      .then(function(){P(96);return wipeDb()})
+      .then(function(){Object.keys(CT).forEach(function(k){clearTimeout(CT[k])});wipeLocal();try{sessionStorage.removeItem(RELOADK)}catch(e){}P(100)})
+      .catch(function(e){WIPING=false;throw e});
+  },
   forgot:function(){var e=ACCT.email();if(!e)return Promise.reject(new Error('not-signed-in'));return sendPasswordResetEmail(auth,e)},
   err:acctErr
 };
@@ -273,7 +305,7 @@ function ready(){
   PM('ready_open_app');
   el.hidden=true;
   try{sessionStorage.removeItem('mywallet.noopt')}catch(e){}
-  window.__cloudSet=function(json){if(UID)track(setDoc(uref('settings/app'),{set:json,t:Date.now()})).catch(function(){})};
+  window.__cloudSet=function(json){if(UID&&!WIPING)track(setDoc(uref('settings/app'),{set:json,t:Date.now()})).catch(function(){})};
   window.__cloud={email:EMAIL,signOut:doSignOut,exportData:exportData,importData:importData,switchVersion:switchVersion};
   window.__push=PUSH;
   window.__acct=ACCT;

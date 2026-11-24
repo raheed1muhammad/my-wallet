@@ -432,6 +432,15 @@ details.why ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px}
 #igDr .dri svg{width:20px;height:20px;flex:none}
 #igDr .dro{color:var(--neg,#e5484d);margin-top:10px;border-top:1px solid var(--line);padding-top:14px;border-radius:0 0 12px 12px}
 @media(prefers-reduced-motion:reduce){#igDr,#igDrSc,#igDr .drp{transition:none}}
+#delov{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);animation:delin .25s ease}
+#delov .delpop{width:min(320px,100%);padding:22px 20px 16px;border-radius:18px;background:var(--surface,#fff);color:var(--text,inherit);border:1px solid var(--line,#ddd);box-shadow:0 18px 50px rgba(0,0,0,.35);text-align:center;animation:delpop .3s cubic-bezier(.2,.9,.3,1.2)}
+#delov .delt{font-size:17px;font-weight:600;margin-bottom:14px}
+#delov .delbar{position:relative;height:6px;border-radius:99px;background:var(--line,#ddd);overflow:hidden}
+#delov .delbar i{display:block;height:100%;width:0;border-radius:99px;background:var(--neg,#e5484d);transition:width .12s linear;position:relative;overflow:hidden}
+#delov .delbar i::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);animation:delsweep 1s linear infinite}
+#delov .delbar i.done{background:var(--pos,#2e9e5b)}#delov .delbar i.done::after{display:none}#delov #delact{margin-top:12px}
+@keyframes delsweep{to{left:100%}}@keyframes delin{from{opacity:0}}@keyframes delpop{from{opacity:0;transform:scale(.9)}}
+@media(prefers-reduced-motion:reduce){#delov,#delov .delpop,#delov .delbar i::after{animation:none}}
 
 /* ring status: Saving (theme colour) / Saved (green) / Not saved (red), also used for loading */
 .rs{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;opacity:0;transform:translateX(6px);transition:opacity .25s,transform .25s;white-space:nowrap;min-height:20px;margin-left:auto;margin-right:10px}
@@ -3408,7 +3417,7 @@ var moreEl=document.createElement('div');moreEl.id='igMore';moreEl.hidden=true;
 moreEl.innerHTML='<button type="button" data-m="set"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37 1 .608 2.296.07 2.572-1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></svg>Settings</button>';document.body.appendChild(moreEl);
 function setBal(a){return curs(a).map(function(c){return money(balanceOf(a,c,todayStr()),c)}).join(' + ')}
 var setView='main';
-var SETIC={out:'<path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M9 12h12l-3-3M18 15l3-3"/>',disk:'<path d="M12 4v10M8 10l4 4 4-4M5 19h14"/>',wallet:'<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 8l11-3v3M16 14h2.5"/>',book:'<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h6"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
+var SETIC={trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',out:'<path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2M9 12h12l-3-3M18 15l3-3"/>',disk:'<path d="M12 4v10M8 10l4 4 4-4M5 19h14"/>',wallet:'<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 8l11-3v3M16 14h2.5"/>',book:'<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h6"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',user:'<path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0-8 0"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',bank:'<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3l7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/>',coin:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M14.8 9a2 2 0 0 0-1.8-1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1-1.8-1"/><path d="M12 7v10"/>',palette:'<path d="M12 21a9 9 0 0 1 0-18c4.97 0 9 3.58 9 8 0 1.06-.47 2.08-1.32 2.83-.84.75-1.99 1.17-3.18 1.17h-2.5a2 2 0 0 0-1 3.75 1.3 1.3 0 0 1-.5 2.25"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="16.5" cy="10.5" r=".6" fill="currentColor"/>',clock:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/>',globe:'<path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/>',chev:'<path d="M9 6l6 6l-6 6"/>'};
 function setSvg(n){return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+SETIC[n]+'</svg>'}
 /* ---------- Diary: a rough look at one day, shown as a popup ---------- */
 var NBK='mywallet.nbblock',NBB=false;try{NBB=localStorage.getItem(NBK)==='1'}catch(e){}
@@ -3541,6 +3550,48 @@ function accClick(k){
   }
   return false;
 }
+/* ---------- Settings > Delete your account ---------- */
+var DEL={msg:'',step:'form',busy:false};
+function delReset(){DEL={msg:'',step:'form',busy:false}}
+function delPage(){
+  var h='<div class="card" id="sDel"><div class="chead"><h2 style="color:var(--neg)">Delete your account</h2></div>'+
+   '<p class="fine">This erases all your entries, accounts, plans and settings, in both versions, and then your login. It cannot be undone.</p>';
+  if(!acctApi())return h+'<p class="fine">Sign in to use this.</p></div>';
+  if(DEL.step==='sure')return h+'<p><b>Are you sure you want to delete your account?</b></p><p class="fine">Everything will be erased for good. You cannot get it back.</p>'+
+    '<div style="margin-top:10px;display:flex;gap:10px"><button type="button" class="btn2" data-s="delyes" style="color:var(--neg)">Yes, delete</button><button type="button" class="btn2" data-s="delno">No</button></div></div>';
+  return h+'<div class="sform" style="grid-template-columns:1fr"><label class="fl">Enter your email<input id="dlE" type="email" autocomplete="email" maxlength="254"></label>'+
+   '<label class="fl">Enter your password<input id="dlP" type="password" autocomplete="current-password" maxlength="128"></label></div>'+
+   (DEL.msg?'<p class="fine" role="status">'+esc(DEL.msg)+'</p>':'')+
+   '<div style="margin-top:10px"><button type="button" class="btn2" data-s="delnext" style="color:var(--neg)"'+(DEL.busy?' disabled':'')+'>'+(DEL.busy?'Checking…':'Confirm to delete')+'</button></div></div>';
+}
+/* the blurred "Erasing…" screen: a line fills up with the real progress while everything is erased */
+function delOverlay(on){
+  var o=document.getElementById('delov');
+  if(!on){if(o)o.remove();return}
+  if(o)return;
+  o=document.createElement('div');o.id='delov';o.setAttribute('role','alertdialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-labelledby','delovt');
+  o.innerHTML='<div class="delpop"><div id="delovt" class="delt">Erasing… <b id="delpct">0%</b></div><div class="delbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="delfill"></i></div><p class="fine" id="delnote">Please keep the app open.</p><div id="delact"></div></div>';
+  document.body.appendChild(o);
+}
+function delProg(n){var f=document.getElementById('delfill'),t=document.getElementById('delpct');if(!f)return;n=Math.max(0,Math.min(100,Math.round(n)));f.style.width=n+'%';t.textContent=n+'%';f.parentNode.setAttribute('aria-valuenow',n)}
+function delRun(){
+  var A=acctApi();if(!A||!A.wipe)return;
+  delOverlay(true);delProg(0);DEL.running=true;
+  A.wipe(delProg).then(function(){
+    DEL.running=false;DEL.gone=true;
+    var t=document.getElementById('delovt');if(t)t.textContent='Your account is deleted';
+    var f=document.getElementById('delfill');if(f)f.classList.add('done');
+    var no=document.getElementById('delnote');if(no)no.textContent='All your data was erased. You can create a new account any time.';
+    var ac=document.getElementById('delact');if(ac)ac.innerHTML='<button type="button" class="btn2" id="delgo">Back to sign in</button>';
+    var g=document.getElementById('delgo');if(g){g.addEventListener('click',function(){location.reload()});try{g.focus()}catch(e){}}
+  }).catch(function(er){
+    DEL.running=false;
+    var t=document.getElementById('delovt');if(t)t.textContent='Could not finish';
+    var no=document.getElementById('delnote');if(no)no.textContent=A.err(er)+' Nothing else is lost. You can try again.';
+    var ac=document.getElementById('delact');if(ac)ac.innerHTML='<button type="button" class="btn2" id="delclose">Close</button>';
+    var c=document.getElementById('delclose');if(c)c.addEventListener('click',function(){delOverlay(false);DEL.step='form';DEL.msg='Could not finish deleting. Try again.';if(setView==='del')renderSet()});
+  });
+}
 /* ---------- reminders for recurring items (Settings > Notifications) ---------- */
 var PUSH={st:null,busy:false,msg:''};
 function pushApi(){return window.__push||null}
@@ -3583,6 +3634,7 @@ function renderSet(){
      '<label class="srow" style="cursor:pointer"><span>Show closed accounts in Ledger</span><input type="checkbox" data-s="showclosed"'+(SET.showClosed?' checked':'')+'></label>':'')+
     '<div class="fine" style="margin-top:14px"><b>Add a new account</b> \u2014 its currency is fixed once created.</div>'+
     '<div class="sform"><input id="saName" placeholder="Account name" maxlength="30"><select id="saCur" aria-label="Currency"><option value="OMR">OMR</option><option value="INR">INR (\u20b9)</option><option value="both">OMR + INR</option></select><button class="btn2" type="button" data-s="addacc">Add account</button></div><p class="fine" id="saMsg"></p></div>'}],
+   del:['Delete your account',function(){return delPage()}],
    chemail:['Change email',function(){return accPage('e')}],
    chpass:['Reset password',function(){return accPage('p')}],
    notif:['Notifications',function(){return pushPage()}],
@@ -3603,7 +3655,9 @@ function renderSet(){
     body='<h3 class="sgrp">Data settings</h3><div class="card sgl">'+setRow('user','Personal details',p.name||'Not set','pd')+setRow('bank','Accounts',(act.length+1)+' open','acc')+setRow('disk','Data backup & restore','','bk')+setRow('coin','Currencies','OMR, INR','cur')+'</div>'+
      '<h3 class="sgrp">App settings</h3><div class="card sgl">'+setRow('palette','Themes',cth?cth.name:'','theme')+setRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer')+setRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer')+setRow('bell','Notifications',PUSH.st&&PUSH.st.on?'On':'Off','notif')+setRow('book','Diary',DRY?'On':'Off','diary')+setRow('wallet','Balance check',NBB?'On':'Off','bal')+setRow('globe','Version',NEP?'Nepali':'Indian','ver')+'</div>'+
      /* Sign out: last item of Settings, outside both headings */
-     '<div class="card sgl" style="margin-top:14px"><button type="button" class="setgo" data-s="out" style="color:var(--neg)"><span class="seic">'+setSvg('out')+'</span><span class="segrow">Sign out</span><span class="seval"></span><span class="sech"></span></button></div>';
+     '<div class="card sgl" style="margin-top:14px"><button type="button" class="setgo" data-s="out" style="color:var(--neg)"><span class="seic">'+setSvg('out')+'</span><span class="segrow">Sign out</span><span class="seval"></span><span class="sech"></span></button></div>'+
+     /* Delete your account: under Sign out */
+     '<div class="card sgl" style="margin-top:14px"><button type="button" class="setgo" data-s="go" data-v="del" style="color:var(--neg)"><span class="seic">'+setSvg('trash')+'</span><span class="segrow">Delete your account</span><span class="seval"></span><span class="sech"></span></button></div>';
   }else body=T[setView][1]();
   setEl.classList.toggle('sub',!main);
   var _bk=document.getElementById('bkCard'),_hold=document.getElementById('bkHold');if(_bk&&_hold&&_bk.parentNode!==_hold)_hold.appendChild(_bk); /* keep the backup card (and its buttons) alive while the page is redrawn */
@@ -3621,6 +3675,20 @@ setEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-s]');if(!b)return;var k=b.dataset.s,a=b.dataset.a;
   if(k==='diaryshow'){showDiary(todayStr());return}
   if(k==='out'){if(window.__cloud)window.__cloud.signOut();return}
+  if(k==='delnext'){
+    var de=(($('#dlE')||{}).value||'').trim(),dp=($('#dlP')||{}).value||'',A0=acctApi();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(de))DEL.msg='Enter your email.';
+    else if(A0&&de.toLowerCase()!==String(A0.email()).toLowerCase())DEL.msg='That is not the email of this account.';
+    else if(!dp)DEL.msg='Enter your password.';
+    else if(!A0||!A0.verify)DEL.msg='Cannot check the password right now.';
+    else{
+      if(DEL.busy)return;DEL.busy=true;DEL.msg='';
+      A0.verify(dp).then(function(){DEL.busy=false;DEL.step='sure';DEL.msg='';if(setView==='del')renderSet()}).catch(function(er){DEL.busy=false;DEL.msg=A0.err(er);if(setView==='del')renderSet()});
+    }
+    renderSet();return;
+  }
+  if(k==='delno'){DEL.step='form';DEL.msg='';renderSet();return}
+  if(k==='delyes'){DEL.step='form';DEL.msg='';renderSet();delRun();return}
   if(k.indexOf('ac')===0&&accClick(k))return;
   if(k==='pushtoggle'){
     var pa=pushApi();if(!pa||PUSH.busy)return;PUSH.busy=true;PUSH.msg='';renderSet();
@@ -3629,7 +3697,7 @@ setEl.addEventListener('click',function(e){
     return;
   }
   if(k==='pushtest'){var pb=pushApi();if(pb)pb.test().then(function(){PUSH.msg='Test sent. If you did not see it, check the phone notification settings for this app.';renderSet()}).catch(function(){PUSH.msg='Could not show a test message here.';renderSet()});return}
-  if(k==='go'){setView=b.dataset.v;if(setView==='chemail'||setView==='chpass'||setView==='pd')accReset();if(setView==='notif'||setView==='diary')pushLoad();renderSet();setEl.scrollTop=0;
+  if(k==='go'){setView=b.dataset.v;if(setView==='chemail'||setView==='chpass'||setView==='pd')accReset();if(setView==='del')delReset();if(setView==='notif'||setView==='diary')pushLoad();renderSet();setEl.scrollTop=0;
     if(!setEl._sub){setEl._sub=1;try{if(HB){HB.i++;HB.stack.length=HB.i;HB.stack[HB.i]=S.tab;history.pushState({i:HB.i,t:S.tab},'')}}catch(er){}}}
   else if(k==='close'&&setEl._direct&&(setView==='chemail'||setView==='chpass')){setView='pd';accReset();renderSet();setEl.scrollTop=0;if(setEl._sub){setEl._sub=0;try{HB.skip++;HB.i--;history.go(-1)}catch(er){}}}
   else if(k==='close'&&setEl._direct&&setEl._o){history.back()} /* back from a page opened from the menu: the popstate step below reopens the menu */
@@ -3685,7 +3753,7 @@ function drPaint(){
    ['App settings',[drRow('palette','Themes',cth?cth.name:'','theme'),drRow('clock','Chat tab Timer',CHT?CHT+' seconds':'Always','timer'),drRow('clock','Add entry button Timer',ADT?ADT+' seconds':'Always','addtimer'),drRow('bell','Notifications',PUSH.st&&PUSH.st.on?'On':'Off','notif'),drRow('book','Diary',DRY?'On':'Off','diary'),drRow('wallet','Balance check',NBB?'On':'Off','bal'),drRow('globe','Version',NEP?'Nepali':'Indian','ver')]]];
   var h='<div class="drt">Settings</div>';
   G.forEach(function(g,k){h+='<div class="dra'+(DRACC[k]?' o':'')+'"><button type="button" class="drh" data-dg="'+k+'" aria-expanded="'+(DRACC[k]?'true':'false')+'">'+g[0]+DR_CH+'</button><div class="drp"><div>'+g[1].join('')+'</div></div></div>'});
-  drEl.innerHTML=h+'<button type="button" class="dri dro" data-do="out">'+setSvg('out')+'<span>Sign out</span></button>';
+  drEl.innerHTML=h+'<button type="button" class="dri dro" data-do="out">'+setSvg('out')+'<span>Sign out</span></button><button type="button" class="dri" data-do="del" style="color:var(--neg,#e5484d)">'+setSvg('trash')+'<span>Delete your account</span></button>';
 }
 var drPush=0;
 /* the drawer takes one history step, so phone Back closes only the drawer. fromPop: Back already took the step. keep: the step is reused by the Settings page that opens next */
@@ -3699,7 +3767,7 @@ drEl.addEventListener('click',function(e){
   var b=e.target.closest('[data-do]');if(!b)return;var v=b.dataset.do;
   if(v==='out'){drShow(false);if(window.__cloud)window.__cloud.signOut();return}
   var hadStep=drPush;drShow(false,false,true);if(hadStep)setEl._o=1; /* Settings reuses the drawer's history step */
-  setView=v;if(v==='pd')accReset();if(v==='notif'||v==='diary')pushLoad();
+  setView=v;if(v==='pd')accReset();if(v==='del')delReset();if(v==='notif'||v==='diary')pushLoad();
   setEl._direct=1;renderSet();setEl.hidden=false;setEl.scrollTop=0;
 });
 document.getElementById('igMoreBtn').addEventListener('click',function(e){e.stopPropagation();drShow(!drOpen)});
