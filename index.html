@@ -1615,12 +1615,12 @@ function recvAmtOf(e){return typeof e.toAmount==='number'&&e.toAmount>0?e.toAmou
 function feeCurOf(e){if(e.feeCur==='OMR'||e.feeCur==='INR')return e.feeCur;return e.feeOn==='to'?recvCurOf(e):e.currency}
 /* every entry is a set of legs: which account moves, in which currency, by how much */
 function loanIn(e){return e.kind==='borrow'||e.kind==='collect'}
-function loanText(e){var p=e.person||'someone';return e.kind==='borrow'?'Borrowed from '+p:e.kind==='lend'?'Lent to '+p:e.kind==='repay'?'Repaid to '+p:e.kind==='recall'?'Recalled write-off for '+p:'Received from '+p}
+function loanText(e){var p=pnm(e.person)||'someone';return e.kind==='borrow'?'Borrowed from '+p:e.kind==='lend'?'Lent to '+p:e.kind==='repay'?'Repaid to '+p:e.kind==='recall'?'Recalled write-off for '+p:'Received from '+p}
 function loanDelta(e,v,valFn){return e.kind==='lend'?v:e.kind==='collect'?-loanFull(e,v,valFn):e.kind==='borrow'?-v:e.kind==='recall'?(e.dir==='owed'?v:-v):loanFull(e,v,valFn)}
 function loanFull(e,v,valFn){var w=e.writeOff||0;if(!(w>0))return v;return v+(valFn?(valFn(Object.assign({},e,{amount:w}))||0):w)}
 function woVal(e,valFn){var w=e.writeOff||0;return w>0?(valFn(Object.assign({},e,{amount:w}))||0):0}
 function loanLabel(e){if(e.kind==='recall')return 'Write-off recalled';if(e.noBal)return e.kind==='borrow'?'Existing debt':'Existing loan given';return e.kind==='borrow'?'Loan taken':e.kind==='lend'?'Loan given':e.kind==='repay'?'Loan repaid':'Loan recovered'}
-function famText(e){var p=e.person||'someone';return e.kind==='got'?'Received from '+p:'Sent to '+p}
+function famText(e){var p=pnm(e.person)||'someone';return e.kind==='got'?'Received from '+p:'Sent to '+p}
 function voucher(e){if(e.type==='fam')return e.kind==='got'?'Received':'Sent';return e.type==='income'?'Receipt':e.type==='expense'?'Payment':e.type==='loan'?loanLabel(e):e.type==='sip'?(e.kind==='draw'?'SIP withdrawal':'SIP'):'Transfer'}
 function vcClass(e){return e.type==='income'?'receipt':e.type==='expense'?'payment':e.type==='loan'?'loan':e.type==='sip'?'sip':'transfer'}
 function legsOf(e){
@@ -1895,7 +1895,7 @@ function paintLedgerCtl(){
   if(S.lview==='person'){
     var pp=loanPeople().sort(function(a,b){return a.name.toLowerCase()<b.name.toLowerCase()?-1:1});
     if(!pp.some(function(o){return o.key===S.lperson}))S.lperson=pp.length?pp[0].key:null;
-    f.innerHTML=pp.length?pp.map(function(o){return '<option value="'+esc(o.key)+'">'+esc(o.name)+'</option>'}).join(''):'<option value="">No people yet</option>';
+    f.innerHTML=pp.length?pp.map(function(o){return '<option value="'+esc(o.key)+'">'+esc(pnm(o.name))+'</option>'}).join(''):'<option value="">No people yet</option>';
     f.value=S.lperson||'';
   }else if(S.lview==='cat'){
     var cs=ledgerCats();if(cs.indexOf(S.lcat)<0)S.lcat=cs[0];
@@ -1928,7 +1928,7 @@ function renderFilteredLedger(P){
   var cur=S.lcur,isP=S.lview==='person';
   $$('#lcurseg button').forEach(function(b){b.disabled=false;b.setAttribute('aria-pressed',String(b.dataset.lc===cur))});
   var F=filteredRows(P,cur),pn=isP?loanPeople().filter(function(o){return o.key===S.lperson})[0]:null;
-  $('#ltitle').textContent=(isP?'Person ledger · '+(pn?pn.name:'—'):'Category ledger · '+(S.lcat||'—'));
+  $('#ltitle').textContent=(isP?'Person ledger · '+(pn?pnm(pn.name):'—'):'Category ledger · '+(S.lcat||'—'));
   var sub=P.label+' · '+(cur==='INR'?'₹ INR':'OMR')+' only';
   if(isP&&pn){var net=rnd(pn.net[cur],cur);sub+=' · '+(net>0?'Owes you '+money(net,cur):net<0?'You owe '+money(-net,cur):'Settled')}
   $('#lsub').textContent=sub;
@@ -1972,10 +1972,10 @@ function renderLedger(){
     if(ef>0){rec=money(ef,cur);rc+=ef}else if(ef<0){pay=money(-ef,cur);pm+=-ef}
     var vc,accCell,sub;
     if(e.type==='transfer'){vc='<span class="vc transfer">Transfer</span>';accCell=esc(e.from)+' → '+esc(e.to);sub=esc(transferNote(e,acc))}
-    else if(e.type==='loan'){vc='<span class="vc loan">'+esc(loanLabel(e))+'</span>';accCell=esc(accOf(e));sub='Loan · '+esc(e.person||'')+esc(woText(e))}
+    else if(e.type==='loan'){vc='<span class="vc loan">'+esc(loanLabel(e))+'</span>';accCell=esc(accOf(e));sub='Loan · '+esc(pnm(e.person)||'')+esc(woText(e))}
     else if(e.type==='income'){vc='<span class="vc receipt">Receipt</span>';accCell=esc(accOf(e));sub=esc(e.category)}
     else if(e.type==='sip'){vc='<span class="vc sip">'+esc(voucher(e))+'</span>';accCell=esc(accOf(e));sub='SIP \u00b7 '+esc(sipLabel(e))+(typeof e.sipGain==='number'?' \u00b7 <span class="sg '+(e.sipGain<0?'l':'g')+'">'+esc(sipGainTxt(e))+'</span>':'')}
-    else if(e.type==='fam'){vc='<span class="vc transfer">'+esc(voucher(e))+'</span>';accCell=esc(accOf(e));sub='Family &amp; friends · '+esc(e.person||'')}
+    else if(e.type==='fam'){vc='<span class="vc transfer">'+esc(voucher(e))+'</span>';accCell=esc(accOf(e));sub='Family &amp; friends · '+esc(pnm(e.person)||'')}
     else{vc='<span class="vc payment">Payment</span>';accCell=esc(accOf(e));sub=esc(e.category)}
     h+='<tr class="row"><td class="dt">'+F_LEDG.format(parse(e.date))+'</td><td><div class="nar">'+vc+esc(narration(e))+'</div><div class="nsub">'+sub+'</div></td><td>'+accCell+'</td><td class="r pos">'+rec+'</td><td class="r">'+pay+'</td><td class="r">'+amtHtml(bal,cur)+'</td><td class="acts">'+actionsHtml(e)+'</td></tr>';
   });
@@ -2051,6 +2051,7 @@ function fpSave(){try{localStorage.setItem(FPK,JSON.stringify(FP))}catch(e){}pfS
 var HPK='mywallet.hidden.'+VER,HP=[];
 function hpOk(x){return typeof x==='string'&&x.trim().length>0&&x.length<=40}
 try{var _hp=JSON.parse(localStorage.getItem(HPK)||'[]');if(Array.isArray(_hp))HP=_hp.filter(hpOk).slice(0,100)}catch(e){}
+function pnm(n){return hpIs(n)?'Unknown account':n} /* the name to SHOW: a hidden person is shown as Unknown account everywhere (the data keeps the real name) */
 function hpIs(n){var k=String(n||'').trim().toLowerCase();return !!k&&HP.some(function(h){return h.trim().toLowerCase()===k})}
 function hpSave(key){try{localStorage.setItem(HPK,JSON.stringify(HP))}catch(e){}pfSave(key)}
 /* ---------- parties: one list of people and companies (used by loans, transfers and income) ---------- */
@@ -2102,16 +2103,16 @@ function ptAdd(n,t){
   o={n:n,t:t==='c'?'c':'p'};PT.push(o);ptSave();return o;
 }
 /* every known name: saved parties, Family and friends names, and names already used in entries (old ones count as people) */
-function ptAll(){
-  var out=PT.map(function(o){return {n:o.n,t:o.t}});
-  function add(n){if(typeof n!=='string'||!n.trim())return;n=n.trim();if(!out.some(function(o){return pkey(o.n)===pkey(n)}))out.push({n:n,t:'p'})}
+function ptAll(withHidden){ /* withHidden: the Hide persons page needs everybody; every picker for a new entry leaves hidden persons out */
+  var out=PT.filter(function(o){return withHidden||!hpIs(o.n)}).map(function(o){return {n:o.n,t:o.t}});
+  function add(n){if(typeof n!=='string'||!n.trim())return;n=n.trim();if(!withHidden&&hpIs(n))return;if(!out.some(function(o){return pkey(o.n)===pkey(n)}))out.push({n:n,t:'p'})}
   FP.forEach(add);(S.entries||[]).forEach(function(e){if(e)add(e.person)});
   return out.sort(function(a,b){return a.n.localeCompare(b.n)});
 }
 
 function paintFchips(){
   ppRender('famp',FAMPP);
-  $('#fhint').textContent=!S.fperson?'Pick a person or company above, or choose + Add new.':S.fkind==='got'?'Money you got from '+S.fperson+'. Your balance goes up. It is not counted as income or a loan.':'Money you gave '+S.fperson+'. Your balance goes down. It is not counted as an expense or a loan.';
+  $('#fhint').textContent=!S.fperson?'Pick a person or company above, or choose + Add new.':S.fkind==='got'?'Money you got from '+pnm(S.fperson)+'. Your balance goes up. It is not counted as income or a loan.':'Money you gave '+pnm(S.fperson)+'. Your balance goes down. It is not counted as an expense or a loan.';
 }
 function paintTmode(){
   var tr=S.ftype==='transfer',pm=tr&&S.tmode==='person';
@@ -2264,7 +2265,7 @@ function ppRender(id,cfg){
   if(cfg)st.cfg=cfg;cfg=st.cfg;if(!cfg)return;
   if(!host._pp){host._pp=1;ppWire(host,id)}
   var v=(cfg.value()||'').trim(),vt=cfg.simple?'s':(v?ptType(v):'p');
-  var h='<button type="button" class="ppbtn" data-pp="toggle" aria-expanded="'+st.open+'"><span class="ppav'+(vt==='c'?' co':'')+'">'+PPI[vt]+'</span><span class="ppv'+(v?'':' ph')+'">'+esc(v||cfg.ph)+'</span>'+PPI.d+'</button>';
+  var h='<button type="button" class="ppbtn" data-pp="toggle" aria-expanded="'+st.open+'"><span class="ppav'+(vt==='c'?' co':'')+'">'+PPI[vt]+'</span><span class="ppv'+(v?'':' ph')+'">'+esc(v?pnm(v):cfg.ph)+'</span>'+PPI.d+'</button>';
   if(st.open)h+='<div class="ppdrop"><input class="ppq" type="search" placeholder="Search" autocomplete="off" value="'+esc(st.q)+'"><button type="button" class="ppnew" data-pp="new">+ Add new</button>'+(cfg.clear&&v?'<button type="button" class="ppnew" data-pp="clear">Clear selection</button>':'')+'<div class="pplist">'+ppRows(id)+'</div></div>';
   if(st.add)h+='<div class="ppadd"><b>Add new</b><input class="ppname" maxlength="40" placeholder="Name" autocomplete="off">'+(cfg.simple?'':'<div class="seg2" role="group" aria-label="Type"><button type="button" data-pp="type" data-t="p" aria-pressed="'+(st.type==='p')+'">Person</button><button type="button" data-pp="type" data-t="c" aria-pressed="'+(st.type==='c')+'">Company / Firm</button></div>')+'<p class="ppmsg" role="alert"></p><div class="ppacts"><button type="button" class="btn2" data-pp="cancel">Cancel</button><button type="button" class="btn" data-pp="save">Save</button></div></div>';
   host.innerHTML=h;
@@ -2302,7 +2303,7 @@ function loanPickList(){
     if(rc)return 'written off '+woCurs(o).map(function(c){return money(woLeft(o,c),c)}).join(' · ');
     return ['OMR','INR'].filter(function(c){return rnd(o.net[c],c)!==0}).map(function(c){return (o.net[c]<0?'owe ':'owed ')+money(Math.abs(o.net[c]),c)}).join(' · ');
   }
-  if(rc||cw)return lp.filter(function(o){return rc?woCurs(o).length>0:dirCurs(o,k).length>0}).map(function(o){return {n:o.name,t:ptType(o.name),sub:bal(o)}});
+  if(rc||cw)return lp.filter(function(o){return !hpIs(o.name)&&(rc?woCurs(o).length>0:dirCurs(o,k).length>0)}).map(function(o){return {n:o.name,t:ptType(o.name),sub:bal(o)}});
   return ptAll().map(function(o){return {n:o.n,t:o.t,sub:bal(by[pkey(o.n)])}});
 }
 var FAMPP={ph:'Pick a person or company',value:function(){return S.fperson},list:function(){return ptAll().map(function(o){return {n:o.n,t:o.t,sub:''}})},onPick:function(n){S.fperson=n;paintFchips()}};
@@ -2410,7 +2411,7 @@ function plAvg(cur){
 }
 function plOptions(){
   var h='<option value="">Custom amount</option>';
-  loanPeople().forEach(function(o){['OMR','INR'].forEach(function(c){var v=rnd(o.net[c],c);if(v<0)h+='<option value="'+esc(o.key)+'|'+c+'">'+esc(o.name)+' · you owe '+money(-v,c)+'</option>'})});
+  loanPeople().forEach(function(o){['OMR','INR'].forEach(function(c){var v=rnd(o.net[c],c);if(v<0)h+='<option value="'+esc(o.key)+'|'+c+'">'+esc(pnm(o.name))+' · you owe '+money(-v,c)+'</option>'})});
   var el=$('#plperson');if(el.dataset.h!==h){var cur=el.value;el.innerHTML=h;el.dataset.h=h;el.value=cur;if(el.value!==cur)el.value=''}
 }
 function planCalc(){
@@ -2484,13 +2485,13 @@ function renderLoans(){
   if(!ppl.length){$('#lpeople').innerHTML='<div class="empty"><b>No loans yet</b>When you borrow from or lend to someone, add it with "+ New loan entry". Borrowed money is added to your balance as a debt; lent money is taken from it as money to receive.</div>';return}
   var open=ppl.filter(function(o){return !settled(o)}),done=ppl.filter(settled);
   var card=function(o){
-    var st=settled(o),owe=['OMR','INR'].filter(function(c){return rnd(o.net[c],c)<0}),owed=['OMR','INR'].filter(function(c){return rnd(o.net[c],c)>0});
+    var hid=hpIs(o.name),st=settled(o),owe=['OMR','INR'].filter(function(c){return rnd(o.net[c],c)<0}),owed=['OMR','INR'].filter(function(c){return rnd(o.net[c],c)>0});
     var pill=st?'<span class="pill">Settled</span>':owe.length&&!owed.length?'<span class="pill bad">You owe</span>':owed.length&&!owe.length?'<span class="pill good">Owes you</span>':'<span class="pill">Mixed</span>';
-    var amts=owe.map(function(c){return '<div class="pamt neg">You owe '+money(-o.net[c],c)+'</div><button class="btn2" data-lact="repay" data-p="'+esc(o.name)+'" data-c="'+c+'" data-v="'+(-o.net[c])+'">Pay back</button>'}).concat(owed.map(function(c){return '<div class="pamt pos">Owes you '+money(o.net[c],c)+'</div><button class="btn2" data-lact="collect" data-p="'+esc(o.name)+'" data-c="'+c+'" data-v="'+o.net[c]+'">Got it back</button>'})).join('');
+    var amts=owe.map(function(c){return '<div class="pamt neg">You owe '+money(-o.net[c],c)+'</div>'+(hid?'':'<button class="btn2" data-lact="repay" data-p="'+esc(o.name)+'" data-c="'+c+'" data-v="'+(-o.net[c])+'">Pay back</button>')}).concat(owed.map(function(c){return '<div class="pamt pos">Owes you '+money(o.net[c],c)+'</div>'+(hid?'':'<button class="btn2" data-lact="collect" data-p="'+esc(o.name)+'" data-c="'+c+'" data-v="'+o.net[c]+'">Got it back</button>')})).join('');
     var hist=o.list.slice().sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.ts||0)-(a.ts||0)}).map(function(e){
       return '<div class="it"><div class="tt"><div class="nar"><span class="vc loan">'+esc(loanLabel(e))+'</span>'+esc(e.note||'')+'</div><div class="nsub">'+fShort(e.date)+' · '+(e.noBal?'Balance not changed':esc(accOf(e)))+esc(woText(e))+'</div></div><div class="am"><div class="num '+(!e.noBal&&loanIn(e)?'pos':'')+'">'+(e.noBal?'':loanIn(e)?'+':'−')+money(e.amount+(e.interest||0),e.currency)+'</div><div>'+actionsHtml(e)+'</div></div></div>'}).join('');
-    var wol=woCurs(o).map(function(c){return '<div class="sub" style="margin:6px 0">Written off '+money(woLeft(o,c),c)+' <button class="btn2" data-lact="recall" data-p="'+esc(o.name)+'" data-c="'+c+'" data-v="'+woLeft(o,c)+'">Recall write-off</button></div>'}).join('');
-    return '<div class="person"><div class="ph"><span class="pn" data-chat="person" data-key="'+esc(o.key)+'" data-cur="'+(['OMR','INR'].filter(function(c){return rnd(o.net[c],c)!==0})[0]||o.cur||'OMR')+'" data-ct="" role="button" tabindex="0">'+esc(o.name)+'</span>'+pill+'</div>'+amts+wol+'</div>';
+    var wol=woCurs(o).map(function(c){return '<div class="sub" style="margin:6px 0">Written off '+money(woLeft(o,c),c)+(hid?'':' <button class="btn2" data-lact="recall" data-p="'+esc(o.name)+'" data-c="'+c+'" data-v="'+woLeft(o,c)+'">Recall write-off</button>')+'</div>'}).join('');
+    return '<div class="person"><div class="ph"><span class="pn" data-chat="person" data-key="'+esc(o.key)+'" data-cur="'+(['OMR','INR'].filter(function(c){return rnd(o.net[c],c)!==0})[0]||o.cur||'OMR')+'" data-ct="" role="button" tabindex="0">'+esc(pnm(o.name))+'</span>'+pill+'</div>'+amts+wol+'</div>';
   };
   $('#lpeople').innerHTML=open.map(card).join('')+(done.length?'<div class="cats-h">Settled</div>'+done.map(card).join(''):'');
 }
@@ -2701,7 +2702,7 @@ function paintBC(){
     h='<div class="bc-row"><button class="bc-btn" type="button" data-bc="open" aria-expanded="false">Balance<small>Tap to view</small></button><button class="bc-btn" type="button" data-bc="cred" aria-expanded="false">Creditor<small>You owe</small></button><button class="bc-btn" type="button" data-bc="debt" aria-expanded="false">Debtor<small>Owes you</small></button></div>';
   }else if(m==='cred'||m==='debt'){
     var rows=[],tot={OMR:0,INR:0};
-    loanPeople(todayStr()).forEach(function(o){var parts=[];['OMR','INR'].forEach(function(c){var v=rnd(o.net[c],c);if(m==='cred'&&v<0){parts.push(money(-v,c));tot[c]+=-v}else if(m==='debt'&&v>0){parts.push(money(v,c));tot[c]+=v}});if(parts.length)rows.push([o.name,parts.join(' · ')])});
+    loanPeople(todayStr()).forEach(function(o){var parts=[];['OMR','INR'].forEach(function(c){var v=rnd(o.net[c],c);if(m==='cred'&&v<0){parts.push(money(-v,c));tot[c]+=-v}else if(m==='debt'&&v>0){parts.push(money(v,c));tot[c]+=v}});if(parts.length)rows.push([pnm(o.name),parts.join(' · ')])});
     var cl=function(label,v,c){return '<div><small>'+label+'</small><b>'+money(v,c)+'</b></div>'};
     h='<div class="bc-card" style="--dur:12s"><div class="bc-top"><b>'+(m==='cred'?'Creditors · you owe':'Debtors · owe you')+'</b><button class="bc-x" type="button" data-bc="close" aria-label="Hide">✕</button></div>'+
       (rows.length?rows.map(function(r){return '<div class="bc-line"><span>'+esc(r[0])+'</span><span class="num">'+esc(r[1])+'</span></div>'}).join('')+'<div class="bc-sec">Total</div><div class="bc-grid">'+cl('OMR',tot.OMR,'OMR')+cl('INR',tot.INR,'INR')+'</div>':'<div class="bc-name">'+(m==='cred'?'You owe nobody.':'Nobody owes you.')+'</div>')+
@@ -3242,7 +3243,7 @@ function renderBalance(){
       '<section class="card"><div class="chead"><h2>Invested in SIP</h2><div class="sub">Net, what you put in</div></div><div class="rl"><div class="it"><span>OMR</span><span class="num">'+money(sp.OMR,'OMR')+'</span></div><div class="it"><span>₹ INR</span><span class="num">'+money(sp.INR,'INR')+'</span></div></div></section></div>';
   }else{
     var m=sub==='cred'?'cred':'debt',rows=[],tot={OMR:0,INR:0};
-    loanPeople(todayStr()).forEach(function(o){var parts=[];['OMR','INR'].forEach(function(c){var v=rnd(o.net[c],c);if(m==='cred'&&v<0){parts.push(money(-v,c));tot[c]+=-v}else if(m==='debt'&&v>0){parts.push(money(v,c));tot[c]+=v}});if(parts.length)rows.push([o.name,parts.join(' · '),o.key,['OMR','INR'].filter(function(c){var v=rnd(o.net[c],c);return m==='cred'?v<0:v>0})[0]])});
+    loanPeople(todayStr()).forEach(function(o){var parts=[];['OMR','INR'].forEach(function(c){var v=rnd(o.net[c],c);if(m==='cred'&&v<0){parts.push(money(-v,c));tot[c]+=-v}else if(m==='debt'&&v>0){parts.push(money(v,c));tot[c]+=v}});if(parts.length)rows.push([pnm(o.name),parts.join(' · '),o.key,['OMR','INR'].filter(function(c){var v=rnd(o.net[c],c);return m==='cred'?v<0:v>0})[0]])});
     h+='<section class="card"><div class="chead"><h2>'+(m==='cred'?'Creditors':'Debtors')+'</h2><div class="sub">'+(m==='cred'?'People you owe':'People who owe you')+'</div></div>'+
       (rows.length?'<div class="rl">'+rows.map(function(r){return '<div class="it" data-chat="person" data-key="'+esc(r[2])+'" data-cur="'+r[3]+'" data-ct="" role="button" tabindex="0"><span>'+esc(r[0])+'</span><span class="num">'+esc(r[1])+'</span></div>'}).join('')+'</div><div class="trio" style="grid-template-columns:repeat(2,minmax(0,1fr));margin:12px 0 0">'+balTile('Total OMR','<span class="num">'+money(tot.OMR,'OMR')+'</span>')+balTile('Total INR','<span class="num">'+money(tot.INR,'INR')+'</span>')+'</div>':'<div class="empty"><b>'+(m==='cred'?'You owe nobody':'Nobody owes you')+'</b>Loans you record appear here.</div>')+
       '<div class="toolrow"><button class="btn2" type="button" data-balgo="loans">Open loans</button></div></section>';
@@ -3381,7 +3382,7 @@ function igFind(){
   if(!q&&!ty&&!f&&!t){box.innerHTML='<p class="fine">Type a keyword or pick a type or dates to search every entry.</p>';return}
   var hits=S.entries.filter(function(e){
     if(ty&&e.type!==ty)return false;if(f&&e.date<f)return false;if(t&&e.date>t)return false;
-    return !q||[e.note,e.person,e.category,e.account,(e.tags||[]).join(' '),e.amount,e.date,e.type].join(' ').toLowerCase().indexOf(q)>-1;
+    return !q||[e.note,pnm(e.person),e.category,e.account,(e.tags||[]).join(' '),e.amount,e.date,e.type].join(' ').toLowerCase().indexOf(q)>-1;
   }).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:0});
   box.innerHTML='<div class="fine" style="margin-bottom:4px">'+hits.length+' found'+(hits.length>60?' (showing 60)':'')+'</div>'+
     hits.slice(0,60).map(function(e){
@@ -3563,7 +3564,7 @@ function accClick(k){
 var HPG={sel:'',step:'list',msg:'',q:''};
 function hpReset(){HPG={sel:'',step:'list',msg:'',q:''}}
 function hpListHtml(){
-  var q=HPG.q.trim().toLowerCase(),all=ptAll().filter(function(o){return !hpIs(o.n)}),L=all.filter(function(o){return !q||o.n.toLowerCase().indexOf(q)>-1});
+  var q=HPG.q.trim().toLowerCase(),all=ptAll(1).filter(function(o){return !hpIs(o.n)}),L=all.filter(function(o){return !q||o.n.toLowerCase().indexOf(q)>-1});
   if(!all.length)return '<p class="fine">No names yet. Names you use in loans, transfers and income will show here.</p>';
   if(!L.length)return '<p class="fine">No name matches.</p>';
   return L.map(function(o){return '<button type="button" class="setgo hprow" data-s="hpsel" data-n="'+esc(o.n)+'"><span class="segrow">'+esc(o.n)+'</span><span class="seval">'+(o.t==='c'?'Company':'Person')+'</span><span class="sech"></span></button>'}).join('');
@@ -4653,7 +4654,7 @@ function recSchedule(r){
   }
   return out;
 }
-function recKindText(r){return r.kind==='sip'?'SIP investment':r.kind==='repay'?'Loan repayment to '+(r.person||''):r.kind==='collect'?'Loan collection from '+(r.person||''):r.kind==='income'?'Income':'Expense'}
+function recKindText(r){return r.kind==='sip'?'SIP investment':r.kind==='repay'?'Loan repayment to '+(pnm(r.person)||''):r.kind==='collect'?'Loan collection from '+(pnm(r.person)||''):r.kind==='income'?'Income':'Expense'}
 function recEntry(r,mk){
   var e={id:'rec_'+r.id+'_'+mk,date:recDay(r,mk),currency:r.cur,amount:r.amount,note:r.name,ts:Date.now(),account:r.account,recurringId:r.id,recurringMonth:mk};
   if(r.kind==='repay'||r.kind==='collect'){e.type='loan';e.kind=r.kind;e.person=r.person;e.category='Loan'}
@@ -5030,7 +5031,7 @@ function paintRecForm(){
   $('#rec-personfld').hidden=!loan;$('#rec-catfld').hidden=loan;
   $('#rec-namefld').hidden=loan;
   if(loan){
-    var ppl=loanPeople().filter(function(o){return dirCurs(o,k).length>0}),old=$('#rec-person').value;
+    var ppl=loanPeople().filter(function(o){return dirCurs(o,k).length>0&&!hpIs(o.name)}),old=$('#rec-person').value;
     $('#rec-personlabel').textContent=k==='repay'?'Creditor (who you owe)':'Debtor (who owes you)';
     $('#rec-person').innerHTML=ppl.length?ppl.map(function(o){var t=dirCurs(o,k).map(function(c){return money(Math.abs(o.net[c]),c)}).join(' · ');return '<option value="'+esc(o.name)+'">'+esc(o.name)+' · '+(k==='repay'?'you owe ':'owes you ')+esc(t)+'</option>'}).join(''):'<option value="">No one yet</option>';
     if(old&&ppl.some(function(o){return o.name===old}))$('#rec-person').value=old;
@@ -5287,7 +5288,7 @@ function chatAttr(e){
 }
 function isCo(n){return ptType(n)==='c'}
 /* income line: "Salary from X Company" when a party was picked */
-function incNote(e){var p=String(e.party||'').trim();return (e.category||'Other')+(p?' from '+p:'')}
+function incNote(e){var p=pnm(String(e.party||'').trim());return (e.category||'Other')+(p?' from '+p:'')}
 function chatItems(a){
   var out=[];
   S.entries.forEach(function(e){
@@ -5323,7 +5324,7 @@ function chatItems(a){
 /* short line that says what an entry was, for the account chat */
 function acctNote(e){
   if(e.type==='transfer')return 'Transfer · '+e.from+' → '+e.to+(e.note?' · '+e.note:'');
-  if(e.type==='loan')return loanLabel(e)+' · '+(e.person||'')+woText(e)+(e.note?' · '+e.note:'');
+  if(e.type==='loan')return loanLabel(e)+' · '+(pnm(e.person)||'')+woText(e)+(e.note?' · '+e.note:'');
   if(e.type==='sip')return voucher(e)+(e.note?' · '+e.note:'');
   if(e.type==='fam')return famText(e)+(e.note?' · '+e.note:'');
   return (e.category||'')+(e.note?' · '+e.note:'');
@@ -5333,6 +5334,7 @@ function hasCurs(a){var h={OMR:0,INR:0};
 function openChat(a){
   var items=chatItems(a),last=items[items.length-1];
   var title=a.kind==='person'?(last&&String(last.e.person||'').trim())||a.key:a.kind==='fp'?(ptAll().filter(function(o){return pkey(o.n)===a.key}).map(function(o){return o.n})[0])||(last&&String(last.e.person||'').trim())||a.key:a.kind==='tot'?({expense:'Spend',income:'Income',sip:'SIP'}[a.key]||a.key):a.key;
+  if(a.kind==='person'||a.kind==='fp')title=pnm(title);
   CH={kind:a.kind,key:a.key,ct:a.ct||'',cur:a.cur==='INR'?'INR':'OMR',title:title};
   chatEl.hidden=false;renderChat(true);
 }
@@ -5424,7 +5426,8 @@ function chatAccounts(){
   });
   var res=Object.keys(m).map(function(k){return m[k]}).sort(function(a,b){return a.last.date<b.last.date?1:a.last.date>b.last.date?-1:b.last.ts-a.last.ts});
   /* saved family & friends are always listed, even before the first transfer */
-  FP.forEach(function(n){if(!res.some(function(r){return r.kind==='fp'&&r.key===pkey(n)}))res.push({kind:'fp',key:pkey(n),ct:'',cur:'OMR',title:n,last:null})});
+  FP.forEach(function(n){if(hpIs(n))return;if(!res.some(function(r){return r.kind==='fp'&&r.key===pkey(n)}))res.push({kind:'fp',key:pkey(n),ct:'',cur:'OMR',title:n,last:null})});
+  res.forEach(function(r){if(r.kind==='person'||r.kind==='fp')r.title=pnm(r.title)});
   /* every account (Cash and each bank) is always listed, after the names and categories */
   listAccs(true).forEach(function(a){['OMR','INR'].forEach(function(c){
     if(!allowsCur(a,c))return;
